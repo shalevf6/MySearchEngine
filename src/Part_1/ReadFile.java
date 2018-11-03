@@ -7,6 +7,4 @@ public class ReadFile {
     public ReadFile(String path) {
         corpusPath = path;
     }
-
-
 }
