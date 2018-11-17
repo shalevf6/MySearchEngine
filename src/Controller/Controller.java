@@ -69,6 +69,7 @@ public class Controller {
     public void onReset(ActionEvent actionEvent) {
         corpusPath.setText("");
         postingPath.setText("");
+        stemmingCheckBox.setSelected(true);
     }
 
     public void onDictionaryShow(ActionEvent actionEvent) {
