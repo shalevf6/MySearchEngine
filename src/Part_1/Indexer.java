@@ -1,3 +1,7 @@
+/**
+ * This class creates the posting files for the corpus
+ */
+
 package Part_1;
 
 import java.util.LinkedList;
@@ -21,6 +25,9 @@ public class Indexer {
         }
     }
 
+    /**
+     * stops creating the indexes
+     */
     public static void stop() {
         stop = true;
     }

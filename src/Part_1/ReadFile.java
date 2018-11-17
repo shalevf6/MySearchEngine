@@ -1,3 +1,7 @@
+/**
+ * This class reads all the corpuse's files and parses through them
+ */
+
 package Part_1;
 
 import javafx.scene.control.Alert;
@@ -11,10 +15,18 @@ import java.nio.file.Files;
 public class ReadFile implements Runnable {
 
     private String dirPath;
+
+    /**
+     * A constructor for the ReadFile class
+     * @param dirPath - the directory path in which the corpus is found
+     */
     public ReadFile(String dirPath) {
         this.dirPath = dirPath;
     }
 
+    /**
+     * Reads and parses through all the corpuse's files
+     */
     public void readThroughFiles() {
         File dir = new File(dirPath + "\\corpus");
         if (dir.exists()) {
