@@ -1,24 +1,27 @@
 package Part_1;
 
+import java.util.LinkedList;
 import java.util.Queue;
 
 public class Indexer {
 
-    static protected Queue<String> docQueue;
+    static protected Queue<String> docQueue = new LinkedList<>();
     static protected boolean stop;
 
-    public static void stop() {
-        stop = true;
-    }
-
-    public void parseAll(){
+    public void indexAll(){
         while (true) {
             if (!docQueue.isEmpty()) {
 
             }
-            if (stop) {
-                break;
+            else {
+                if (stop) {
+                    break;
+                }
             }
         }
+    }
+
+    public static void stop() {
+        stop = true;
     }
 }

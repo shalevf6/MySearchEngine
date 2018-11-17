@@ -22,14 +22,16 @@ public class Controller {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
         File selectedDirectory = directoryChooser.showDialog(corpusPath.getScene().getWindow());
-        corpusPath.setText(selectedDirectory.getAbsolutePath());
+        if (selectedDirectory != null)
+            corpusPath.setText(selectedDirectory.getAbsolutePath());
     }
 
     public void onPostingBrowse(ActionEvent actionEvent) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
         File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
-        postingPath.setText(selectedDirectory.getAbsolutePath());
+        if (selectedDirectory != null)
+            postingPath.setText(selectedDirectory.getAbsolutePath());
     }
 
     public void onActivate(ActionEvent actionEvent) {
@@ -77,6 +79,7 @@ public class Controller {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
         File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
-        postingPath.setText(selectedDirectory.getAbsolutePath());
+        if (selectedDirectory != null)
+            postingPath.setText(selectedDirectory.getAbsolutePath());
     }
 }
