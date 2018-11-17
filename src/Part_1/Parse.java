@@ -3,12 +3,14 @@ package Part_1;
 import java.util.ArrayList;
 import java.util.Queue;
 
+import static org.jsoup.helper.StringUtil.isNumeric;
+
 public class Parse {
 
     private String data;
     private ArrayList<String> parsed ;
     private ArrayList<String> StopWords ;
-    static protected Queue<String> docQueue;
+    static public Queue<String> docQueue;
     static protected boolean stop;
 
     public Parse(String data,String path){
@@ -38,6 +40,8 @@ public class Parse {
                 String[] AfterSplit = data.split(" ");    //splits the string
                 while (counter < AfterSplit.length - 1) {
                     Currant = AfterSplit[counter];
+                    if(Currant.contains(","))
+                        Currant=changeNumToRegularNum(Currant);
                     if (!isNumeric2(Currant)) {
                         if (!StopWords.contains(Currant)) { //checks if the currant string is a stop word
                             if (!Currant.equals("$") || !Currant.equals("%") || !Currant.equals(">")
@@ -99,6 +103,146 @@ public class Parse {
                 break;
             }
         }
+    }
+
+    /**This function change the number to the number as it should be in the parse rules.
+     * @param currant the number before the change
+     * @return the number after the change.
+     */
+    private String changeNumToRegularNum(String currant) {
+        String[] nums = currant.split(",");
+        String ans = "";
+        boolean to_change = true;
+        int string_len = 0;
+        while (string_len < nums.length && to_change) {
+            if (!isNumeric(nums[string_len]))
+                to_change = false;
+            string_len++;
+        }
+        if (to_change) {
+            if (nums.length == 1)
+                return currant;
+            if (nums.length == 2) {//Thousand
+                ans = nums[0];
+                String tempString = nums[1];
+                int x = 0;
+                while (x < tempString.length()) {
+                    if (tempString.charAt(tempString.length() - 1) == '0')
+                        tempString = tempString.substring(0, tempString.length() - 2);
+                    x++;
+                }
+                ans = ans + tempString + 'K';
+            }
+            if (nums.length == 3) { //million
+                ans = nums[0];
+                String tempString = nums[2];
+                int x = 0;
+                while (x < tempString.length()) {
+                    if (tempString.charAt(tempString.length() - 1) == '0')
+                        tempString = tempString.substring(0, tempString.length() - 2);
+                    x++;
+                }
+                String tempString2 = nums[1];
+                if (tempString.equals("")) {
+                    int x1 = 0;
+                    while (x1 < tempString2.length()) {
+                        if (tempString2.charAt(tempString2.length() - 1) == '0')
+                            tempString2 = tempString2.substring(0, tempString2.length() - 2);
+                        x1++;
+                    }
+                    if (tempString2.equals(""))
+                        ans = nums[0] + 'M';
+                    else {
+                        ans = nums[0] + '.' + tempString2 + 'M';
+                    }
+                } else {
+                    ans = nums[0] + '.' + nums[1] + nums[2] + 'M';
+                }
+
+            }
+            if (nums.length == 4) { //billion
+                String tempString = nums[1];
+                int x = 0;
+                while (x < tempString.length()) {
+                    if (tempString.charAt(tempString.length() - 1) == '0')
+                        tempString = tempString.substring(0, tempString.length() - 2);
+                    x++;
+                }
+                String tempString2 = nums[2];
+                if (tempString.equals("")) {
+                    int x1 = 0;
+                    while (x1 < tempString2.length()) {
+                        if (tempString2.charAt(tempString2.length() - 1) == '0')
+                            tempString2 = tempString2.substring(0, tempString2.length() - 2);
+                        x1++;
+                    }
+                    if (tempString2.equals("")) {
+                        String tempString3 = nums[3];
+                        int x12 = 0;
+                        while (x12 < tempString3.length()) {
+                            if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                tempString3 = tempString3.substring(0, tempString3.length() - 2);
+                            x12++;
+                        }
+                        if (tempString3.equals(""))
+                            ans = nums[0] + 'B';
+                        else {
+                            ans = nums[0] + ".000000" + tempString3 + 'B';
+                        }
+                    } else {
+                        ans = nums[0] + ".000" + nums[2];
+                        String tempString3 = nums[3];
+                        int x12 = 0;
+                        while (x12 < tempString3.length()) {
+                            if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                tempString3 = tempString3.substring(0, tempString3.length() - 2);
+                            x12++;
+                        }
+                        if (tempString3.equals(""))
+                            ans = ans + 'B';
+                        else
+                            ans = ans + tempString3 + 'B';
+                    }
+                } else {
+                    int x1 = 0;
+                    while (x1 < tempString2.length()) {
+                        if (tempString2.charAt(tempString2.length() - 1) == '0')
+                            tempString2 = tempString2.substring(0, tempString2.length() - 2);
+                        x1++;
+                        if (tempString2.equals("")) {
+                            String tempString3 = nums[3];
+                            int x12 = 0;
+                            while (x12 < tempString3.length()) {
+                                if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                    tempString3 = tempString3.substring(0, tempString3.length() - 2);
+                                x12++;
+                            }
+                            if (tempString3.equals(""))
+                                ans = nums[0] + '.' + tempString + 'B';
+                            else {
+                                ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
+                            }
+                        } else {
+                            String tempString3 = nums[3];
+                            int x12 = 0;
+                            while (x12 < tempString3.length()) {
+                                if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                    tempString3 = tempString3.substring(0, tempString3.length() - 2);
+                                x12++;
+                            }
+                            if (tempString3.equals("")) {
+                                ans = nums[0] + '.' + nums[1] + tempString2 + 'B';
+                            } else {
+                                ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
+                            }
+                        }
+                    }
+
+                }
+            }
+
+        }
+        return ans;
     }
 
     /** This function used when the string is a price string and the price is higher then one million, and change the string price
