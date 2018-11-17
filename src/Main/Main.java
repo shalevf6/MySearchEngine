@@ -15,10 +15,6 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
-//        ReadFile readFile = new ReadFile();
-//        Parse parse = new Parse();
-//        Thread readFileThread = new Thread(readFile.readThroughFiles());
-//        Thread parseThread = new Thread(parse.parseAll();)
     }
 
     public static void main(String[] args) {

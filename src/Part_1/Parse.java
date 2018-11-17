@@ -1,23 +1,18 @@
 package Part_1;
 
+import GeneralClasses.Document;
 import java.util.ArrayList;
 import java.util.Queue;
 
-import static org.jsoup.helper.StringUtil.isNumeric;
+public class Parse implements Runnable {
 
-public class Parse {
-
-    private String data;
-    private ArrayList<String> parsed ;
+    private ArrayList<String> parsed = new ArrayList<>();
     private ArrayList<String> StopWords ;
-    static public Queue<String> docQueue;
+    static public Queue<Document> docQueue;
     static protected boolean stop;
 
-    public Parse(String data,String path){
-        this.data = data ;
-        parsed = new ArrayList<String>();
+    public Parse(String path){
         StopWords = getStopWords(path);
-
     }
 
     /** This function generates the stop words Dictionary to Array List.
@@ -35,72 +30,75 @@ public class Parse {
     public void parseAll(){
         while (true) {
             if (!docQueue.isEmpty()) {
-                String Currant = "";
-                int counter = 0;
-                String[] AfterSplit = data.split(" ");    //splits the string
-                while (counter < AfterSplit.length - 1) {
-                    Currant = AfterSplit[counter];
-                    if(Currant.contains(","))
-                        Currant=changeNumToRegularNum(Currant);
-                    if (!isNumeric2(Currant)) {
-                        if (!StopWords.contains(Currant)) { //checks if the currant string is a stop word
-                            if (!Currant.equals("$") || !Currant.equals("%") || !Currant.equals(">")
-                                    || !Currant.equals("<")) {
-                                Currant = ChangeStringOrNot(Currant);
-                                parsed.add(Currant);
-                            }
-                        }
-                    } else {
-                        if (!isNumeric(Currant)) {
-                            /// case one:percentage
-                            if (Currant.contains("%"))
-                                parsed.add(Currant);
-                            if (counter + 1 < AfterSplit.length) {
-                                if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
-                                    Currant = Currant + "%";
+                String[] documents = docQueue.remove().getDocText();
+                for (String data:documents) {
+                    String Currant = "";
+                    int counter = 0;
+                    String[] AfterSplit = data.split(" ");    //splits the string
+                    while (counter < AfterSplit.length - 1) {
+                        Currant = AfterSplit[counter];
+                        if (Currant.contains(","))
+                            Currant = changeNumToRegularNum(Currant);
+                        if (!isNumeric2(Currant)) {
+                            if (!StopWords.contains(Currant)) { //checks if the currant string is a stop word
+                                if (!Currant.equals("$") || !Currant.equals("%") || !Currant.equals(">")
+                                        || !Currant.equals("<")) {
+                                    Currant = ChangeStringOrNot(Currant);
                                     parsed.add(Currant);
-                                    counter++;
                                 }
                             }
-                            //case two:price
-                            //1. "450,000$"
-                            if (Currant.contains("$")) {
-                                if (isLessThenMill(Currant)) {
-                                    Currant = Currant + " Dollars";
+                        } else {
+                            if (!isNumeric(Currant)) {
+                                /// case one:percentage
+                                if (Currant.contains("%"))
                                     parsed.add(Currant);
-                                } else {
-                                    //2. 450,000,000$
+                                if (counter + 1 < AfterSplit.length) {
+                                    if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
+                                        Currant = Currant + "%";
+                                        parsed.add(Currant);
+                                        counter++;
+                                    }
+                                }
+                                //case two:price
+                                //1. "450,000$"
+                                if (Currant.contains("$")) {
+                                    if (isLessThenMill(Currant)) {
+                                        Currant = Currant + " Dollars";
+                                        parsed.add(Currant);
+                                    } else {
+                                        //2. 450,000,000$
+                                        Currant = changeMillForPrice(Currant);
+                                        Currant = Currant + " Dollars";
+                                        parsed.add(Currant);
+                                    }
+                                }
+                                //3. 345,000 Dollars
+                                if (isLessThenMill(Currant))
                                     Currant = changeMillForPrice(Currant);
-                                    Currant = Currant + " Dollars";
-                                    parsed.add(Currant);
+                                if (counter + 1 < AfterSplit.length) {
+                                    if (AfterSplit[counter + 1].equals("Dollars")) {
+                                        Currant = Currant + " Dollars";
+                                        counter++;
+                                        parsed.add(Currant);
+                                    }
                                 }
-                            }
-                            //3. 345,000 Dollars
-                            if (isLessThenMill(Currant))
-                                Currant = changeMillForPrice(Currant);
-                            if (counter + 1 < AfterSplit.length) {
-                                if (AfterSplit[counter + 1].equals("Dollars")) {
-                                    Currant = Currant + " Dollars";
-                                    counter++;
-                                    parsed.add(Currant);
+                                //4. 22 2/3 Dollars
+                                if (counter + 2 < AfterSplit.length) {
+                                    if (AfterSplit[counter + 1].contains("/") && AfterSplit[counter + 2].equals("Dollars")) {
+                                        Currant = Currant + " " + AfterSplit[counter + 1] + " Dollars";
+                                        counter = counter + 2;
+                                    }
                                 }
-                            }
-                            //4. 22 2/3 Dollars
-                            if (counter + 2 < AfterSplit.length) {
-                                if (AfterSplit[counter + 1].contains("/") && AfterSplit[counter + 2].equals("Dollars")) {
-                                    Currant = Currant + " " + AfterSplit[counter + 1] + " Dollars";
-                                    counter = counter + 2;
-                                }
-                            }
-                            //case four:only number
+                                //case four:only number
 
+                            }
                         }
+                        counter++;
                     }
-                    counter++;
                 }
-            }
-            if (stop) {
-                break;
+                if (stop) {
+                    break;
+                }
             }
         }
     }
@@ -273,15 +271,6 @@ public class Parse {
         return Toreturn;
     }
 
-    public String getData() {
-        return data;
-    }
-
-    public void setData(String data) {
-        this.data = data;
-    }
-
-
     /** this function returns if the string given is a number or not
      * @param str is the string that we want to check
      * @return true if the string given is a number.
@@ -314,6 +303,11 @@ public class Parse {
 
     public static void stop() {
         stop = true;
+    }
+
+    @Override
+    public void run() {
+        parseAll();
     }
 }
 
