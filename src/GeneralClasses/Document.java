@@ -17,7 +17,7 @@ public class Document {
 
     /**
      * gets the document's id
-     * @return
+     * @return the document's id
      */
     public String getDocId() {
         return docId;
@@ -25,7 +25,7 @@ public class Document {
 
     /**
      * gets the <text></text> String array
-     * @return
+     * @return the document's <text></text> String array
      */
     public String[] getDocText() {
         return docText;
@@ -33,7 +33,7 @@ public class Document {
 
     /**
      * adds another <text></text> String to the Document
-     * @param text
+     * @param text - a new <text></text> String to the Document to be added to the document
      */
     public void addDocText(String text) {
         if (docTextSize == 0) {

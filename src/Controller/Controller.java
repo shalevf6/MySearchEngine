@@ -1,3 +1,7 @@
+/**
+ * This class controlls all the GUI elements from the main.fxml file
+ */
+
 package Controller;
 
 import Part_1.Parse;
@@ -18,6 +22,10 @@ public class Controller {
     public ChoiceBox<String> languageChoiceBox;
     public static boolean stemming = true;
 
+    /**
+     * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
+     * @param actionEvent - unused
+     */
     public void onCorpusBrowse(ActionEvent actionEvent) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
@@ -26,6 +34,10 @@ public class Controller {
             corpusPath.setText(selectedDirectory.getAbsolutePath());
     }
 
+    /**
+     * opens a Directory Chooser window in order to choose a directory path for the posting files
+     * @param actionEvent - unused
+     */
     public void onPostingBrowse(ActionEvent actionEvent) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
@@ -34,6 +46,10 @@ public class Controller {
             postingPath.setText(selectedDirectory.getAbsolutePath());
     }
 
+    /**
+     * activates the indexing process
+     * @param actionEvent - unused
+     */
     public void onActivate(ActionEvent actionEvent) {
         stemming = stemmingCheckBox.isSelected();
         if (postingPath.getText().equals("") || corpusPath.getText().equals("")) {
@@ -66,17 +82,28 @@ public class Controller {
         }
     }
 
+    /**
+     * resets all the data saved on the disk regarding the corpus and posting files
+     * @param actionEvent - unused
+     */
     public void onReset(ActionEvent actionEvent) {
         corpusPath.setText("");
         postingPath.setText("");
         stemmingCheckBox.setSelected(true);
     }
 
+    /**
+     * shows the dictionary for the corpus
+     * @param actionEvent - unused
+     */
     public void onDictionaryShow(ActionEvent actionEvent) {
     }
 
+    /**
+     * loads a new dictionary for the corpus
+     * @param actionEvent - unused
+     */
     public void onDictionaryLoad(ActionEvent actionEvent) {
-
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
         File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
