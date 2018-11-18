@@ -1,7 +1,3 @@
-/**
- * This class controlls all the GUI elements from the main.fxml file
- */
-
 package Controller;
 
 import Part_1.Parse;
@@ -14,6 +10,9 @@ import javafx.scene.control.CheckBox;
 import javafx.stage.DirectoryChooser;
 import java.io.File;
 
+/**
+ * This class controlls all the GUI elements from the main.fxml file
+ */
 public class Controller {
 
     public TextField postingPath;
