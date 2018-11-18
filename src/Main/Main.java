@@ -16,11 +16,11 @@ public class Main extends Application {
         Parent root = FXMLLoader.load(getClass().getResource("/fxml/main.fxml"));
         primaryStage.setScene(new Scene(root, 600, 400));
         primaryStage.show();
-        //Document doc = new Document("12");
-        //doc.addDocText("120,000,000,001 $");
-        //Parse parse = new Parse("");
-        //Parse.docQueue.add(doc);
-        //parse.parseAll();
+        Document doc = new Document("12");
+        doc.addDocText("120,000,000,001 $");
+        Parse parse = new Parse("");
+        Parse.docQueue.add(doc);
+        parse.parseAll();
     }
 
     public static void main(String[] args) {
