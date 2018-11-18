@@ -1,34 +1,26 @@
+package GeneralClasses;
+
+import java.util.ArrayList;
+
 /**
  * This class represents a document parsing throught its <text> </text> fields with the ReadFile class
  */
-
-package GeneralClasses;
-
 public class Document {
 
     private String docId;
     private String[] docText;
     private int docTextSize;
+    private String docTitle;
+    private String docDate;
+    private ArrayList<String> termList;
 
+    /**
+     * A constructor for the Document class which recieves the document's ID
+     * @param docId - the document's ID
+     */
     public Document(String docId) {
         this.docId = docId;
         docTextSize = 0;
-    }
-
-    /**
-     * gets the document's id
-     * @return the document's id
-     */
-    public String getDocId() {
-        return docId;
-    }
-
-    /**
-     * gets the <text></text> String array
-     * @return the document's <text></text> String array
-     */
-    public String[] getDocText() {
-        return docText;
     }
 
     /**
@@ -53,5 +45,69 @@ public class Document {
             docText[docTextSize] = text;
             docTextSize++;
         }
+    }
+
+    /**
+     * sets the doucment's title
+     * @param docTitle - the document's title
+     */
+    public void setDocTitle(String docTitle) {
+        this.docTitle = docTitle;
+    }
+
+    /**
+     * sets the document's date
+     * @param docDate - the document's date
+     */
+    public void setDocDate(String docDate) {
+        this.docDate = docDate;
+    }
+
+    /**
+     * sets the document's term list
+     * @param termList - the document's term list
+     */
+    public void setTermList(ArrayList<String> termList) {
+        this.termList = termList;
+    }
+
+    /**
+     * gets the document's id
+     * @return the document's id
+     */
+    public String getDocId() {
+        return docId;
+    }
+
+    /**
+     * gets the <text></text> String array
+     * @return the document's <text></text> String array
+     */
+    public String[] getDocText() {
+        return docText;
+    }
+
+    /**
+     * gets the document's title
+     * @return - the document's title
+     */
+    public String getDocTitle() {
+        return docTitle;
+    }
+
+    /**
+     * gets the document's date
+     * @return - the document's date
+     */
+    public String getDocDate() {
+        return docDate;
+    }
+
+    /**
+     * gets the document's term list
+     * @return - the document's term list
+     */
+    public ArrayList<String> getTermList() {
+        return termList;
     }
 }
