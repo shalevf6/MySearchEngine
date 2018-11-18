@@ -1,5 +1,7 @@
 package Part_1;
 
+import GeneralClasses.Document;
+
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -8,8 +10,8 @@ import java.util.concurrent.BlockingQueue;
  */
 public class Indexer {
 
-    static protected BlockingQueue<String> docQueue = new ArrayBlockingQueue<>(100);
-    static protected boolean stop = false;
+    static protected BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static private boolean stop = false;
 
     public void indexAll(){
         while (true) {

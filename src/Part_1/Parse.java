@@ -2,21 +2,20 @@ package Part_1;
 
 import GeneralClasses.Document;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
+/**
+ * this class parses through the documents and creates a term list for each document
+ */
 public class Parse implements Runnable {
 
-    private ArrayList<String> parsed = new ArrayList<>();
     private ArrayList<String> StopWords ;
-    static public Queue<Document> docQueue;
-    static protected boolean stop;
+    static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static private boolean stop = false;
 
     public Parse(String path){
         StopWords = getStopWords(path);
-        docQueue = new LinkedList<>();
-        stop = false;
-
     }
 
     /** This function generates the stop words Dictionary to Array List.
@@ -24,7 +23,7 @@ public class Parse implements Runnable {
      * @return the Array List with all the stop words.
      */
     private ArrayList<String> getStopWords(String path) {
-        ArrayList<String> StopWords = new ArrayList<String>();
+        StopWords = new ArrayList<String>();
         return StopWords;
     }
 
@@ -35,7 +34,9 @@ public class Parse implements Runnable {
         while (true) {
             if (!docQueue.isEmpty()) {
                 boolean added = false;
-                String[] documents = docQueue.remove().getDocText();
+                ArrayList<String> parsed = new ArrayList<>();
+                Document document = docQueue.remove();
+                String[] documents = document.getDocText();
                 for (String data:documents) {
                     String Currant = "";
                     int counter = 0;
@@ -128,6 +129,10 @@ public class Parse implements Runnable {
                         counter++;
                     }
                 }
+                document.setTermList(parsed);
+                Indexer.docQueue.add(document);
+            }
+            else {
                 if (stop) {
                     break;
                 }
@@ -383,7 +388,10 @@ public class Parse implements Runnable {
         return ans;
     }
 
-    public static void stop() {
+    /**
+     * stops creating the term lists
+     */
+    static void stop() {
         stop = true;
     }
 
