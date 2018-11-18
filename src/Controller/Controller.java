@@ -1,5 +1,6 @@
 package Controller;
 
+import Part_1.Indexer;
 import Part_1.Parse;
 import Part_1.ReadFile;
 import javafx.event.ActionEvent;
@@ -62,13 +63,17 @@ public class Controller {
             if (stopWords.exists()) {
                 Parse parse = new Parse(dirPath + "\\stop words");
                 ReadFile readFile = new ReadFile(dirPath);
+                Indexer indexer = new Indexer();
                 Thread readFileThread = new Thread(readFile);
                 Thread parseThread = new Thread(parse);
+                Thread indexThread = new Thread(indexer);
                 parseThread.start();
                 readFileThread.start();
+                indexThread.start();
                 try {
                     readFileThread.join();
                     parseThread.join();
+                    indexThread.join();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
