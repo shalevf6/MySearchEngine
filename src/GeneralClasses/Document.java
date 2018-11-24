@@ -1,9 +1,10 @@
 package GeneralClasses;
 
+import com.google.common.collect.HashMultimap;
 import java.util.ArrayList;
 
 /**
- * This class represents a document parsing throught its <text> </text> fields with the ReadFile class
+ * This class represents a document
  */
 public class Document {
 
@@ -13,6 +14,7 @@ public class Document {
     private String docTitle;
     private String docDate;
     private ArrayList<String> termList;
+    private HashMultimap<String,Integer> termDictionary;
 
     /**
      * A constructor for the Document class which recieves the document's ID
@@ -72,6 +74,14 @@ public class Document {
     }
 
     /**
+     * sets the document's term dictionary
+     * @param termDictionary - the document's term dictionary
+     */
+    public void setTermDictionary(HashMultimap<String,Integer> termDictionary) {
+        this.termDictionary = termDictionary;
+    }
+
+    /**
      * gets the document's id
      * @return the document's id
      */
@@ -109,5 +119,13 @@ public class Document {
      */
     public ArrayList<String> getTermList() {
         return termList;
+    }
+
+    /**
+     * gets the document's term dictionary
+     * @return - the document's term dictionary
+     */
+    public HashMultimap<String,Integer> getTermDictionary() {
+        return termDictionary;
     }
 }
