@@ -48,17 +48,17 @@ public class Parse implements Runnable {
                 Document document = docQueue.remove();
                 String[] documents = document.getDocText();
                 for (String data:documents) {
-                    String Currant = "";
+                    String current = "";
                     int counter = 0;
                     //splits the string
                     String[] AfterSplit = data.split(" ");
                     // goes through every word in the document
                     while (counter <= AfterSplit.length - 1) {
-                        Currant = AfterSplit[counter];
+                        current = AfterSplit[counter];
                         // Checks if there aren't any numbers in the word
-                        if (!isNumeric2(Currant)) {
+                        if (!isNumeric2(current)) {
                             //checks if the current string is a stop word
-                            if (!StopWords.contains(Currant)) {
+                            if (!StopWords.contains(current)) {
 
                                 /* need to implement Capital Letters fix */
 
@@ -75,49 +75,49 @@ public class Parse implements Runnable {
                         // means it's a number:
                         else {
                             // checks if the number is the whole word
-                            if (!isNumeric(Currant)) {
+                            if (!isNumeric(current)) {
 //                                if(!added) {
                                 // ------- PERCENTAGE CHECK -------
                                 // --- case 1: NUMBER% ---
-                                if (Currant.contains("%")) {
-                                    parsed.add(Currant);
+                                if (current.contains("%")) {
+                                    parsed.add(current);
                                     added = true;
                                 }
                                     else {
                                     if (counter + 1 < AfterSplit.length) {
                                         // --- case 2, 3: NUMBER percent, NUMBER percentage ---
                                         if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
-                                            Currant = Currant + "%";
-                                            parsed.add(Currant);
+                                            current = current + "%";
+                                            parsed.add(current);
                                             added = true;
                                             counter++;
                                         }
                                     } else {
 //                                }
-                                        String Currant2 = "";
-                                        String Currant3 = "";
-                                        String Currant4 = "";
+                                        String current2 = "";
+                                        String current3 = "";
+                                        String current4 = "";
                                         if (counter + 1 < AfterSplit.length)
-                                            Currant2 = AfterSplit[counter + 1];
+                                            current2 = AfterSplit[counter + 1];
                                         if (counter + 2 < AfterSplit.length)
-                                            Currant3 = AfterSplit[counter + 2];
+                                            current3 = AfterSplit[counter + 2];
                                         if (counter + 3 < AfterSplit.length)
-                                            Currant4 = AfterSplit[counter + 3];
+                                            current4 = AfterSplit[counter + 3];
                                         // ------- PRICE CHECK -------
-                                        dollar = checkIfMoney(Currant, Currant2, Currant3, Currant4);
+                                        dollar = checkIfMoney(current, current2, current3, current4);
                                         // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
                                         if (dollar) {
                                             /* !!! need to update counter according to term !!! */
-                                            Currant = change_to_price(Currant, Currant2, Currant3, Currant4);
-                                            parsed.add(Currant);
+                                            current = change_to_price(current, current2, current3, current4);
+                                            parsed.add(current);
                                             added = true;
                                         }
                                         else {
                                             // ------- NUMBER CHECK -------
                                             // NEED TO CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-                                            if (Currant.contains(",") && !added) {
-                                                Currant = changeNumToRegularNum(Currant);
-                                                parsed.add(Currant);
+                                            if (current.contains(",") && !added) {
+                                                current = changeNumToRegularNum(current);
+                                                parsed.add(current);
                                                 added = true;
                                             }
                                         }
@@ -142,92 +142,92 @@ public class Parse implements Runnable {
         }
     }
 
-    private String change_to_price(String Current, String Currant2, String Currant3,String Currant4) {
+    private String change_to_price(String current, String current2, String current3,String current4) {
         String ans = "";
 
         /* !!!! need to consider PRICE FRACTION for each case !!!! */
 
-        if (Current.contains("$"))
-            Current = Currant2.substring(1);
+        if (current.contains("$"))
+            current = current2.substring(1);
 
         // --- Cases 1.1,2.1: PRICE Dollars ---
-        if (Currant2.equals("Dollars") || Currant2.equals("dollars")) {
+        if (current2.equals("Dollars") || current2.equals("dollars")) {
             /*
-            if(Current.contains("m")|| Current.contains("bn")){
-                if(Current.contains("m")){
-                    Current = Current.substring(0,Current.length()-1);
-                    return Current + " M Dollars";
+            if(current.contains("m")|| current.contains("bn")){
+                if(current.contains("m")){
+                    current = current.substring(0,current.length()-1);
+                    return current + " M Dollars";
                 }
-                if(Current.contains("bn")){
-                    Current = Currant2.substring(0,Current.length()-1);
-                    return Current + "000 M Dollars";
+                if(current.contains("bn")){
+                    current = current2.substring(0,current.length()-1);
+                    return current + "000 M Dollars";
                 }
             */
-            Current = ChangeToPriceNum(Current);
-            return Current + " Dollars";
+            current = ChangeToPriceNum(current);
+            return current + " Dollars";
         }
 
         // --- Cases 2.3,2.4,2.5,2.8,2.9.2.10: PRICE_WITHOUT_DOT billion/million/trillion U.S. dollars ---
-        if (Currant2.equals("billion") || Currant2.equals("million") || Currant2.equals("trillion") && !Current.contains(".")) {
-            if (Currant2.equals("trillion")) {
-                Current = Current + "000000 M Dollars";
-                return Current;
+        if (current2.equals("billion") || current2.equals("million") || current2.equals("trillion") && !current.contains(".")) {
+            if (current2.equals("trillion")) {
+                current = current + "000000 M Dollars";
+                return current;
             }
-            if (Currant2.equals("billion")) {
-                Current = Current + "000 M Dollars";
-                return Current;
+            if (current2.equals("billion")) {
+                current = current + "000 M Dollars";
+                return current;
             }
-            if (Currant2.equals("million")) {
-                Current = Current + " M Dollars";
-                return Current;
+            if (current2.equals("million")) {
+                current = current + " M Dollars";
+                return current;
             }
         }
         else {
             // --- Cases 2.3,2.4,2.5,2.8,2.9.2.10: PRICE_WITH_DOT billion/million/trillion U.S. dollars ---
-            if (Currant2.equals("billion") || Currant2.equals("million") || Currant2.equals("trillion") && Current.contains(".")) {
+            if (current2.equals("billion") || current2.equals("million") || current2.equals("trillion") && current.contains(".")) {
                 int Count = 0;
-                if (Currant2.equals("trillion")) {
-                    String[] arr = Current.split(".");
+                if (current2.equals("trillion")) {
+                    String[] arr = current.split(".");
                     Count = arr[1].length();
                     if (Count == 1)
-                        Current = arr[0] + arr[1] + "00000";
+                        current = arr[0] + arr[1] + "00000";
                     if (Count == 2)
-                        Currant2 = arr[0] + arr[1] + "0000";
+                        current2 = arr[0] + arr[1] + "0000";
                     if (Count == 3)
-                        Current = arr[0] + arr[1] + "000";
+                        current = arr[0] + arr[1] + "000";
                     if (Count == 4)
-                        Current = arr[0] + arr[1] + "00";
+                        current = arr[0] + arr[1] + "00";
                     if (Count == 5)
-                        Current = arr[0] + arr[1] + "0";
+                        current = arr[0] + arr[1] + "0";
                     if (Count == 6)
-                        Current = arr[0] + arr[1];
-                    Current = Current + " M Dollars";
-                    return Current;
+                        current = arr[0] + arr[1];
+                    current = current + " M Dollars";
+                    return current;
                 }
-                if (Currant2.equals("billion")) {
-                    String[] arr = Current.split(".");
+                if (current2.equals("billion")) {
+                    String[] arr = current.split(".");
                     Count = arr[1].length();
                     if (Count == 1)
-                        Current = arr[0] + arr[1] + "00";
+                        current = arr[0] + arr[1] + "00";
                     if (Count == 2)
-                        Currant2 = arr[0] + arr[1] + "0";
+                        current2 = arr[0] + arr[1] + "0";
                     if (Count == 3)
-                        Current = arr[0] + arr[1];
+                        current = arr[0] + arr[1];
                     if (Count == 4)
-                        Current = Current + " M Dollars";
-                    return Current;
+                        current = current + " M Dollars";
+                    return current;
                 }
-                if (Currant2.equals("million")) {
-                    String[] arr = Current.split(".");
-                    Current = Current + " M Dollars";
-                    return Current;
+                if (current2.equals("million")) {
+                    String[] arr = current.split(".");
+                    current = current + " M Dollars";
+                    return current;
                 }
             }
         }
         // --- Cases 1.3,2.2: $PRICE ---
-        if (!Currant2.equals("Dollars") && !Currant2.equals("dollars") && !Currant3.equals("Dollars") && !Currant3.equals("dollars") &&
-                !Currant4.equals("Dollars") && !Currant4.equals("dollars")) {
-            return ChangeToPriceNum(Current) + " Dollars";
+        if (!current2.equals("Dollars") && !current2.equals("dollars") && !current3.equals("Dollars") && !current3.equals("dollars") &&
+                !current4.equals("Dollars") && !current4.equals("dollars")) {
+            return ChangeToPriceNum(current) + " Dollars";
         }
 
        /* //1. "$450,000"
@@ -318,26 +318,26 @@ public class Parse implements Runnable {
     }
 
     /** this function checks if the Currant string should be a price number.
-     * @param currant
+     * @param current
      * @param p1
-     * @param currant3
+     * @param current3
      * @return true if the Currant string should be consider as a price.
      */
-    private boolean checkIfMoney(String currant, String p1, String currant3,String currant4) {
+    private boolean checkIfMoney(String current, String p1, String current3,String current4) {
         boolean ans = false;
-        if (currant.contains("$") || p1.equals("Dollars") || currant3.equals("Dollars") || currant4.equals("Dollars") ||
-                p1.equals("dollars") || currant3.equals("dollars")
-                || currant4.equals("dollars"))
+        if (current.contains("$") || p1.equals("Dollars") || current3.equals("Dollars") || current4.equals("Dollars") ||
+                p1.equals("dollars") || current3.equals("dollars")
+                || current4.equals("dollars"))
             ans = true;
         return ans;
     }
 
     /**This function change the number to the number as it should be in the parse rules.
-     * @param currant the number before the change
+     * @param current the number before the change
      * @return the number after the change.
      */
-    private String changeNumToRegularNum(String currant) {
-        String[] nums = currant.split(",");
+    private String changeNumToRegularNum(String current) {
+        String[] nums = current.split(",");
         String signal = "";
         String ans = "";
         boolean to_change = true;
@@ -351,7 +351,7 @@ public class Parse implements Runnable {
         // if there are elements which are not numbers
         if (to_change) {
             if (nums.length == 1)
-                return currant;
+                return current;
             if (nums.length == 2) {//Thousand
                 if(nums[1].contains("$")) {
                     signal = "$";
@@ -526,16 +526,16 @@ public class Parse implements Runnable {
 
     /** This function used when the string is a price string and the price is higher then one million, and change the string price
      * according to the directions.
-     * @param currant is the string that we need to be changed.
+     * @param current is the string that we need to be changed.
      * @return the string changed according to the rules given.
      */
-    private String changeMillForPrice(String currant) {
+    private String changeMillForPrice(String current) {
         String Toreturn = "" ;
-        if(currant.contains("$")) {
-            if(currant.endsWith("$"))
-                currant = currant.substring(0,currant.length()-1);
+        if(current.contains("$")) {
+            if(current.endsWith("$"))
+                current = current.substring(0,current.length()-1);
             else{
-                currant = currant.substring(1);
+                current = current.substring(1);
             }
 
         }
@@ -543,19 +543,19 @@ public class Parse implements Runnable {
     }
 
     /**This function returns True if the string given contains number that smaller then one million
-     * @param currant is the string given
+     * @param current is the string given
      * @return true if the number is smaller then one million
      */
-    private boolean isLessThenMill(String currant) {
+    private boolean isLessThenMill(String current) {
         boolean ans = false;
         return ans;
     }
 
     /** this function checks if the string need to change in cases of lower case/upper case and change him if needed.
-     * @param currant the string that we want to check his variations
+     * @param current the string that we want to check his variations
      * @return the string after check the variation of thw string and change if needed.
      */
-    private String ChangeStringOrNot(String currant) {
+    private String ChangeStringOrNot(String current) {
         String Toreturn = "";
         return Toreturn;
     }
