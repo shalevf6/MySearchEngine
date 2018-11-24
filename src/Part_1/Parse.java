@@ -2,11 +2,12 @@ package Part_1;
 
 import GeneralClasses.Document;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 /**
- * this class parses through the documents and creates a term list for each document
+ * this class parses through the documents and creates a term list and a dictionary for every document
  */
 public class Parse implements Runnable {
 
@@ -27,12 +28,13 @@ public class Parse implements Runnable {
         return StopWords;
     }
 
-    /** This is the main Parse Function
-     * @return the Array List after parsing.
+    /**
+     * This is the main Parse Function
      */
     public void parseAll(){
         while (true) {
             if (!docQueue.isEmpty()) {
+                HashMap<String,String> termDictionary = new HashMap<>();
                 boolean added = false;
                 boolean dollar = false;
                 ArrayList<String> parsed = new ArrayList<>();
