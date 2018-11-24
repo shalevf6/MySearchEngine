@@ -1,7 +1,8 @@
 package GeneralClasses;
 
-import com.google.common.collect.HashMultimap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * This class represents a document
@@ -14,7 +15,7 @@ public class Document {
     private String docTitle;
     private String docDate;
     private ArrayList<String> termList;
-    private HashMultimap<String,Integer> termDictionary;
+    private HashMap<String,List<Integer>> termDictionary;
 
     /**
      * A constructor for the Document class which recieves the document's ID
@@ -77,7 +78,7 @@ public class Document {
      * sets the document's term dictionary
      * @param termDictionary - the document's term dictionary
      */
-    public void setTermDictionary(HashMultimap<String,Integer> termDictionary) {
+    public void setTermDictionary(HashMap<String,List<Integer>> termDictionary) {
         this.termDictionary = termDictionary;
     }
 
@@ -125,7 +126,7 @@ public class Document {
      * gets the document's term dictionary
      * @return - the document's term dictionary
      */
-    public HashMultimap<String,Integer> getTermDictionary() {
+    public HashMap<String,List<Integer>> getTermDictionary() {
         return termDictionary;
     }
 }

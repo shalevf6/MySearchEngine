@@ -1,8 +1,10 @@
 package Part_1;
 
 import GeneralClasses.Document;
+
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -14,7 +16,12 @@ public class Parse implements Runnable {
     private ArrayList<String> StopWords ;
     static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static private boolean stop = false;
+    static public HashMap<String,List<Integer>> corpusDictionary = new HashMap<>();
 
+    /**
+     * a constructor for the Parse class
+     * @param path - the path to the stop words file
+     */
     public Parse(String path){
         StopWords = getStopWords(path);
     }
@@ -34,7 +41,7 @@ public class Parse implements Runnable {
     public void parseAll(){
         while (true) {
             if (!docQueue.isEmpty()) {
-                HashMap<String,String> termDictionary = new HashMap<>();
+                HashMap<String,List<Integer>> termDictionary = new HashMap<>();
                 boolean added = false;
                 boolean dollar = false;
                 ArrayList<String> parsed = new ArrayList<>();
