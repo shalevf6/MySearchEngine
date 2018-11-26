@@ -15,7 +15,7 @@ public class Document {
     private String docTitle;
     private String docDate;
     private ArrayList<String> termList;
-    private HashMap<String,List<Integer>> termDictionary;
+    private HashMap<String,Integer> termDictionary;
 
     /**
      * A constructor for the Document class which recieves the document's ID
@@ -78,7 +78,7 @@ public class Document {
      * sets the document's term dictionary
      * @param termDictionary - the document's term dictionary
      */
-    public void setTermDictionary(HashMap<String,List<Integer>> termDictionary) {
+    public void setTermDictionary(HashMap<String,Integer> termDictionary) {
         this.termDictionary = termDictionary;
     }
 
@@ -126,7 +126,7 @@ public class Document {
      * gets the document's term dictionary
      * @return - the document's term dictionary
      */
-    public HashMap<String,List<Integer>> getTermDictionary() {
+    public HashMap<String,Integer> getTermDictionary() {
         return termDictionary;
     }
 }
