@@ -1,6 +1,5 @@
 package Part_1;
 
-
 import GeneralClasses.Document;
 
 import java.io.*;
@@ -24,7 +23,6 @@ public class Parse implements Runnable {
     private HashMap<String,Integer> currentTermDictionary;
     private ArrayList<String> parsed;
     private String[] AfterSplit;
-
 
     /**
      * a constructor for the Parse class
@@ -56,7 +54,7 @@ public class Parse implements Runnable {
     /**
      * This is the main Parse Function
      */
-    public void parseAll(){
+    public void parseAll() {
         while (true) {
             if (!docQueue.isEmpty()) {
                 currentTermDictionary = new HashMap<>();
@@ -66,7 +64,7 @@ public class Parse implements Runnable {
                 Document document = docQueue.remove();
                 String[] documents = document.getDocText();
                 docNumber++;
-                for (String data:documents) {
+                for (String data : documents) {
                     String current;
                     int counter = 0;
                     //splits the string
@@ -78,24 +76,11 @@ public class Parse implements Runnable {
                     }
                     // goes through every word in the document
                     while (counter <= AfterSplit.length - 1) {
-                        String current = "";
-                        String current2 = "";
-                        String current3 = "";
-                        String current4 = "";
-
-
-                        if (counter + 1 < AfterSplit.length)
-                            current2 = AfterSplit[counter + 1];
-                        if (counter + 2 < AfterSplit.length)
-                            current3 = AfterSplit[counter + 2];
-                        if (counter + 3 < AfterSplit.length)
-                            current4 = AfterSplit[counter + 3];
                         current = AfterSplit[counter];
                         // checks if the current string is a stop word (and not the word between)
                         if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
                             counter++;
-                        }
-                        else {
+                        } else {
                             // checks if there aren't any numbers in the word
                             if (!isNumeric2(current)) {
                                 // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
@@ -139,8 +124,20 @@ public class Parse implements Runnable {
                             }
                             // means it's a number:
                             else {
+                                String current2 = "";
+                                String current3 = "";
+                                String current4 = "";
+
+                                if (counter + 1 < AfterSplit.length)
+                                    current2 = AfterSplit[counter + 1];
+                                if (counter + 2 < AfterSplit.length)
+                                    current3 = AfterSplit[counter + 2];
+                                if (counter + 3 < AfterSplit.length)
+                                    current4 = AfterSplit[counter + 3];
                                 // checks if the number is the whole word
-                                if (!isNumeric(current)) {
+                                if (!isNumeric(current) && !current.contains(",") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                        current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
+                                        current4.equals("Dollars")) {
 //                                if(!added) {
                                     // ------- PERCENTAGE CHECK -------
                                     // --- case 1: NUMBER% ---
@@ -156,17 +153,9 @@ public class Parse implements Runnable {
                                                 added = true;
                                                 counter++;
                                             }
-                                        } else {
-//                                }
-                                            String current2 = "";
-                                            String current3 = "";
-                                            String current4 = "";
-                                            if (counter + 1 < AfterSplit.length)
-                                                current2 = AfterSplit[counter + 1];
-                                            if (counter + 2 < AfterSplit.length)
-                                                current3 = AfterSplit[counter + 2];
-                                            if (counter + 3 < AfterSplit.length)
-                                                current4 = AfterSplit[counter + 3];
+                                        }
+                                        if (!added) {
+
                                             // ------- PRICE CHECK -------
                                             dollar = checkIfMoney(current, current2, current3, current4);
                                             // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
@@ -174,152 +163,113 @@ public class Parse implements Runnable {
                                                 /* !!! need to update counter according to term !!! */
                                                 current = change_to_price(current, current2, current3, current4);
                                                 parsed.add(current);
+                                                if (current2.equals("Dollars") || current2.equals("dollars"))
+                                                    counter++;
+                                                if (current3.equals("Dollars") || current3.equals("dollars"))
+                                                    counter = counter + 2;
+                                                if (current4.equals("dollars") || current4.equals("Dollars"))
+                                                    counter = counter + 3;
+                                                if (current.contains("$") && current2.equals("million") || current.contains("$") && current2.equals("billion") ||
+                                                        current.contains("$") && current2.equals("trillion") || current.contains("$") && current2.equals("MILLION")
+                                                        || current.contains("$") && current2.equals("BILLION") || current.contains("$") && current2.equals("TRILLION")
+                                                        || current.contains("$") && current2.equals("Million") || current.contains("$") && current2.equals("Billion") ||
+                                                        current.contains("$") && current2.equals("Trillion"))
+                                                    counter = counter + 1;
+
                                                 added = true;
-                                            } else {
-                                                // ------- NUMBER CHECK -------
-                                                // NEED TO CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-                                                if (current.contains(",") && !added) {
-                                                    current = changeNumToRegularNum(current);
-                                                    parsed.add(current);
-                                                    added = true;
-                                                }
+                                            }
 
-                        }
-                        // checks if the number is the whole word
-                        if (!isNumeric(current) &&!current.contains(",") ||current2.equals("Dollars")||current2.equals("dollars")||current2.equals("percentage")||
-                                current2.equals("percent")||current3.equals("Dollars") || current3.equals("dollars")|| current4.equals("dollars")||
-                                current4.equals("Dollars")) {
-//                                if(!added) {
-                            // ------- PERCENTAGE CHECK -------
-                            // --- case 1: NUMBER% ---
-                            if (current.contains("%")) {
-                                parsed.add(current);
-                                added = true;
-                            }
-                            else {
-                                if (counter + 1 < AfterSplit.length) {
-                                    // --- case 2, 3: NUMBER percent, NUMBER percentage ---
-                                    if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
-                                        current = current + "%";
-                                        parsed.add(current);
-                                        added = true;
-                                        counter++;
+                                        }
                                     }
-                                }
-                                if(!added){
+                                } else {
+                                    // ------- NUMBER CHECK -------
+                                    //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
 
-                                    // ------- PRICE CHECK -------
-                                    dollar = checkIfMoney(current, current2, current3, current4);
-                                    // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
-                                    if (dollar) {
-                                        /* !!! need to update counter according to term !!! */
-                                        current = change_to_price(current, current2, current3, current4);
-                                        parsed.add(current);
-                                        if(current2.equals("Dollars")||current2.equals("dollars") )
+                                    if (current.contains(",") && !added)
+                                        current = changeNumToRegularNum(current);
+                                    if (!added && isNumeric(current)) {
+                                        current2 = "";
+                                        if (counter < AfterSplit.length - 1)
+                                            current2 = AfterSplit[counter + 1];
+                                        if (notFraction(current2)) {
+                                            current = current + " " + current2;
                                             counter++;
-                                        if(current3.equals("Dollars")|| current3.equals("dollars"))
-                                            counter = counter + 2;
-                                        if(current4.equals("dollars")|| current4.equals("Dollars"))
-                                            counter = counter + 3;
-                                        if(current.contains("$") && current2.equals("million") ||current.contains("$") && current2.equals("billion") ||
-                                                current.contains("$") && current2.equals("trillion") ||current.contains("$") && current2.equals("MILLION")
-                                                ||current.contains("$") && current2.equals("BILLION")||current.contains("$") && current2.equals("TRILLION")
-                                                ||current.contains("$") && current2.equals("Million")||current.contains("$") && current2.equals("Billion")||
-                                                current.contains("$") && current2.equals("Trillion"))
-                                            counter = counter + 1;
+                                            parsed.add(current);
+                                            added = true;
+                                            if (counter < AfterSplit.length - 1)
+                                                current2 = AfterSplit[counter + 1];
+                                            else
+                                                current2 = "";
+                                        }
+                                        if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                            if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                //Double temp = Double.parseDouble(current);
+                                                //temp = temp*1000;
+                                                //current = String.valueOf(temp);
+                                                current = current + "K";
+                                                counter++;
+                                            }//SECOND:IF CURRENT2= MILLION
+                                            if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                //Double temp = Double.parseDouble(current);
+                                                //temp = temp*1000000;
+                                                //current = String.valueOf(temp);
+                                                current = current + "M";
+                                                counter++;
+                                            }//THIRD:IF CURRENT2= BILLION
+                                            if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                //Double temp = Double.parseDouble(current);
+                                                //temp = temp*1000000000;
+                                                //current = String.format ("%f", temp);
+                                                //current = changeNumToRegularNum(current);
+                                                current = current + "B";
+                                                counter++;
+                                            }//FORTH:IF CURRENT2= TRILLION
+                                            if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                Double temp = Double.parseDouble(current);
+                                                temp = temp * 1000;
+                                                int temp2 = temp.intValue();
+                                                ;
+                                                current = String.valueOf(temp2);
+                                                current = current + "B";
 
+                                                counter++;
+                                            }
+
+
+                                            parsed.add(current);
+                                            added = true;
+
+                                        }
+                                    }
+
+                                }
+                                // ------- FRACTION CHECK -------
+                                if (!added && isNumeric2(current)) {
+                                    if (notFraction(current)) {
+                                        parsed.add(current);
                                         added = true;
                                     }
-
                                 }
-                            }
-                        }
-                        else {
-                            // ------- NUMBER CHECK -------
-                            //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-
-                            if (current.contains(",") && !added)
-                                current = changeNumToRegularNum(current);
-                            if(!added && isNumeric(current)) {
-                                current2 ="";
-                                if(counter<AfterSplit.length-1)
-                                    current2 = AfterSplit[counter+1];
-                                if(notFraction(current2)) {
-                                    current = current + " " + current2;
-                                    counter++;
-                                    parsed.add(current);
-                                    added = true;
-                                    if(counter<AfterSplit.length-1)
-                                        current2=AfterSplit[counter+1];
-                                    else
-                                        current2 ="";
-                                }
-                                if (!added) { //FIRST:IF CURRENT2= THOUSAND
-                                    if(current2.equals("Thousand")||current2.equals("THOUSAND")||current2.equals("thousand")){
-                                        //Double temp = Double.parseDouble(current);
-                                        //temp = temp*1000;
-                                        //current = String.valueOf(temp);
-                                        current = current + "K";
-                                        counter++;
-                                    }//SECOND:IF CURRENT2= MILLION
-                                    if(current2.equals("Million")||current2.equals("MILLION")||current2.equals("million") ||current2.equals("mill")){
-                                        //Double temp = Double.parseDouble(current);
-                                        //temp = temp*1000000;
-                                        //current = String.valueOf(temp);
-                                        current = current + "M";
-                                        counter++;
-                                    }//THIRD:IF CURRENT2= BILLION
-                                    if(current2.equals("Billion")||current2.equals("BILLION")||current2.equals("billion")){
-                                        //Double temp = Double.parseDouble(current);
-                                        //temp = temp*1000000000;
-                                        //current = String.format ("%f", temp);
-                                        //current = changeNumToRegularNum(current);
-                                        current = current + "B";
-                                        counter++;
-                                    }//FORTH:IF CURRENT2= TRILLION
-                                    if(current2.equals("Trillion")||current2.equals("TRILLION")||current2.equals("trillion")){
-                                        Double temp = Double.parseDouble(current);
-                                        temp = temp*1000;
-                                        int temp2 =temp.intValue();;
-                                        current = String.valueOf(temp2);
-                                        current = current + "B";
-
-                                        counter++;
-                                    }
-
-
-                                    parsed.add(current);
-                                    added = true;
-
-                                }
+                                added = false;
+                                dollar = false;
+                                counter++;
                             }
 
                         }
-                        // ------- FRACTION CHECK -------
-                        if(!added && isNumeric2(current)){
-                            if(notFraction(current)) {
-                                parsed.add(current);
-                                added=true;
-                            }
-                            added = false;
-                            dollar = false;
-                            counter++;
-                        }
+                        //document.setTermList(parsed);
+                        //Indexer.docQueue.add(document);
                     }
-
                 }
-            //document.setTermList(parsed);
-            //Indexer.docQueue.add(document);
+
             }
-            else {
+            else{
                 if (stop) {
                     Indexer.stop();
                     break;
                 }
             }
         }
-
-  }
+    }
 
 
     /**this function checks if the string given is a fraction
