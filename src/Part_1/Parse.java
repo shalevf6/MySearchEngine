@@ -1,5 +1,6 @@
 package Part_1;
 
+
 import GeneralClasses.Document;
 
 import java.io.*;
@@ -23,6 +24,7 @@ public class Parse implements Runnable {
     private HashMap<String,Integer> currentTermDictionary;
     private ArrayList<String> parsed;
     private String[] AfterSplit;
+
 
     /**
      * a constructor for the Parse class
@@ -76,6 +78,18 @@ public class Parse implements Runnable {
                     }
                     // goes through every word in the document
                     while (counter <= AfterSplit.length - 1) {
+                        String current = "";
+                        String current2 = "";
+                        String current3 = "";
+                        String current4 = "";
+
+
+                        if (counter + 1 < AfterSplit.length)
+                            current2 = AfterSplit[counter + 1];
+                        if (counter + 2 < AfterSplit.length)
+                            current3 = AfterSplit[counter + 2];
+                        if (counter + 3 < AfterSplit.length)
+                            current4 = AfterSplit[counter + 3];
                         current = AfterSplit[counter];
                         // checks if the current string is a stop word (and not the word between)
                         if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
@@ -169,19 +183,133 @@ public class Parse implements Runnable {
                                                     parsed.add(current);
                                                     added = true;
                                                 }
-                                            }
-                                        }
+
+                        }
+                        // checks if the number is the whole word
+                        if (!isNumeric(current) &&!current.contains(",") ||current2.equals("Dollars")||current2.equals("dollars")||current2.equals("percentage")||
+                                current2.equals("percent")||current3.equals("Dollars") || current3.equals("dollars")|| current4.equals("dollars")||
+                                current4.equals("Dollars")) {
+//                                if(!added) {
+                            // ------- PERCENTAGE CHECK -------
+                            // --- case 1: NUMBER% ---
+                            if (current.contains("%")) {
+                                parsed.add(current);
+                                added = true;
+                            }
+                            else {
+                                if (counter + 1 < AfterSplit.length) {
+                                    // --- case 2, 3: NUMBER percent, NUMBER percentage ---
+                                    if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
+                                        current = current + "%";
+                                        parsed.add(current);
+                                        added = true;
+                                        counter++;
                                     }
                                 }
+                                if(!added){
+
+                                    // ------- PRICE CHECK -------
+                                    dollar = checkIfMoney(current, current2, current3, current4);
+                                    // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
+                                    if (dollar) {
+                                        /* !!! need to update counter according to term !!! */
+                                        current = change_to_price(current, current2, current3, current4);
+                                        parsed.add(current);
+                                        if(current2.equals("Dollars")||current2.equals("dollars") )
+                                            counter++;
+                                        if(current3.equals("Dollars")|| current3.equals("dollars"))
+                                            counter = counter + 2;
+                                        if(current4.equals("dollars")|| current4.equals("Dollars"))
+                                            counter = counter + 3;
+                                        if(current.contains("$") && current2.equals("million") ||current.contains("$") && current2.equals("billion") ||
+                                                current.contains("$") && current2.equals("trillion") ||current.contains("$") && current2.equals("MILLION")
+                                                ||current.contains("$") && current2.equals("BILLION")||current.contains("$") && current2.equals("TRILLION")
+                                                ||current.contains("$") && current2.equals("Million")||current.contains("$") && current2.equals("Billion")||
+                                                current.contains("$") && current2.equals("Trillion"))
+                                            counter = counter + 1;
+
+                                        added = true;
+                                    }
+
+                                }
+                            }
+                        }
+                        else {
+                            // ------- NUMBER CHECK -------
+                            //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
+
+                            if (current.contains(",") && !added)
+                                current = changeNumToRegularNum(current);
+                            if(!added && isNumeric(current)) {
+                                current2 ="";
+                                if(counter<AfterSplit.length-1)
+                                    current2 = AfterSplit[counter+1];
+                                if(notFraction(current2)) {
+                                    current = current + " " + current2;
+                                    counter++;
+                                    parsed.add(current);
+                                    added = true;
+                                    if(counter<AfterSplit.length-1)
+                                        current2=AfterSplit[counter+1];
+                                    else
+                                        current2 ="";
+                                }
+                                if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                    if(current2.equals("Thousand")||current2.equals("THOUSAND")||current2.equals("thousand")){
+                                        //Double temp = Double.parseDouble(current);
+                                        //temp = temp*1000;
+                                        //current = String.valueOf(temp);
+                                        current = current + "K";
+                                        counter++;
+                                    }//SECOND:IF CURRENT2= MILLION
+                                    if(current2.equals("Million")||current2.equals("MILLION")||current2.equals("million") ||current2.equals("mill")){
+                                        //Double temp = Double.parseDouble(current);
+                                        //temp = temp*1000000;
+                                        //current = String.valueOf(temp);
+                                        current = current + "M";
+                                        counter++;
+                                    }//THIRD:IF CURRENT2= BILLION
+                                    if(current2.equals("Billion")||current2.equals("BILLION")||current2.equals("billion")){
+                                        //Double temp = Double.parseDouble(current);
+                                        //temp = temp*1000000000;
+                                        //current = String.format ("%f", temp);
+                                        //current = changeNumToRegularNum(current);
+                                        current = current + "B";
+                                        counter++;
+                                    }//FORTH:IF CURRENT2= TRILLION
+                                    if(current2.equals("Trillion")||current2.equals("TRILLION")||current2.equals("trillion")){
+                                        Double temp = Double.parseDouble(current);
+                                        temp = temp*1000;
+                                        int temp2 =temp.intValue();;
+                                        current = String.valueOf(temp2);
+                                        current = current + "B";
+
+                                        counter++;
+                                    }
+
+
+                                    parsed.add(current);
+                                    added = true;
+
+                                }
+                            }
+
+                        }
+                        // ------- FRACTION CHECK -------
+                        if(!added && isNumeric2(current)){
+                            if(notFraction(current)) {
+                                parsed.add(current);
+                                added=true;
                             }
                             added = false;
                             dollar = false;
                             counter++;
                         }
                     }
+
                 }
-                document.setTermList(parsed);
-                Indexer.docQueue.add(document);
+            //document.setTermList(parsed);
+            //Indexer.docQueue.add(document);
             }
             else {
                 if (stop) {
@@ -190,8 +318,26 @@ public class Parse implements Runnable {
                 }
             }
         }
-    }
 
+  }
+
+
+    /**this function checks if the string given is a fraction
+     * @param s
+     * @return true if the string is a fraction
+     */
+    private boolean notFraction(String s) {
+        boolean ans = false;
+        if(s.contains("/")) {
+            String[] ans1 = s.split("/");
+            if(ans1.length>2)
+                return ans;
+            if(isNumeric(ans1[0])&& isNumeric(ans1[1]))
+                return true;
+        }
+        return ans;
+    }
+                      
     private void handleWordsWithDash(String current) {
         String[] dashSplit = current.split("-");
         boolean allWords = true;
@@ -447,14 +593,30 @@ public class Parse implements Runnable {
         return true;
     }
 
+    /**this function checks if the string given is a month
+     * @param s
+     * @return true if the string given is a Month.
+     */
+    private boolean notMonth(String s) {
+        boolean ans = false;
 
+        return ans;
+    }
+
+    /**this function changes the string current to the price according to the directions
+     * @param current
+     * @param current2
+     * @param current3
+     * @param current4
+     * @return the string with the real price.
+     */
     private String change_to_price(String current, String current2, String current3,String current4) {
         String ans = "";
 
         /* !!!! need to consider PRICE FRACTION for each case !!!! */
 
         if (current.contains("$"))
-            current = current2.substring(1);
+            current = current.substring(1);
 
         // --- Cases 1.1,2.1: PRICE Dollars ---
         if (current2.equals("Dollars") || current2.equals("dollars")) {
@@ -472,28 +634,40 @@ public class Parse implements Runnable {
             current = ChangeToPriceNum(current);
             return current + " Dollars";
         }
+        //---Case not mentioned: PRICE FRACTION Dollars -----
+        if(isNumeric(current)&& notFraction(current2)&& (current3.equals("Dollars")||current3.equals("dollars")||current3.equals("DOLLARS"))){
+            return current+" "+ current2 +" "+ "Dollars";
+        }
 
         // --- Cases 2.3,2.4,2.5,2.8,2.9.2.10: PRICE_WITHOUT_DOT billion/million/trillion U.S. dollars ---
-        if (current2.equals("billion") || current2.equals("million") || current2.equals("trillion") && !current.contains(".")) {
-            if (current2.equals("trillion")) {
+        if (current2.equals("billion") &&!current.contains(".") || current2.equals("million")&&!current.contains(".") || current2.equals("trillion") && !current.contains(".")
+                ||current2.equals("Trillion") && !current.contains(".")||current2.equals("TRILLION") && !current.contains(".")
+                ||current2.equals("Billion") && !current.contains(".")||current2.equals("BILLION") && !current.contains(".")
+                ||current2.equals("MILLION") && !current.contains(".")||current2.equals("Million") && !current.contains(".") ||
+                current2.equals("bn") && !current.contains(".")||current2.equals("m") && !current.contains(".") ) {
+            if (current2.equals("trillion") ||current2.equals("Trillion")||current2.equals("TRILLION")  ) {
                 current = current + "000000 M Dollars";
                 return current;
             }
-            if (current2.equals("billion")) {
+            if (current2.equals("billion")||current2.equals("BILLION")||current2.equals("Billion") ||current2.equals("bn") ) {
                 current = current + "000 M Dollars";
                 return current;
             }
-            if (current2.equals("million")) {
+            if (current2.equals("million") ||current2.equals("MILLION")||current2.equals("Million")||current2.equals("m")  ) {
                 current = current + " M Dollars";
                 return current;
             }
         }
         else {
             // --- Cases 2.3,2.4,2.5,2.8,2.9.2.10: PRICE_WITH_DOT billion/million/trillion U.S. dollars ---
-            if (current2.equals("billion") || current2.equals("million") || current2.equals("trillion") && current.contains(".")) {
+            if (current2.equals("billion")&& current.contains(".") || current.contains(".")&& current2.equals("million") || current2.equals("trillion") && current.contains(".")
+                    ||current2.equals("Trillion") && current.contains(".")||current2.equals("TRILLION") && current.contains(".")
+                    ||current2.equals("Billion") && current.contains(".")||current2.equals("BILLION") && current.contains(".")
+                    ||current2.equals("MILLION") && current.contains(".")||current2.equals("Million") && current.contains(".") ||
+                    current2.equals("bn") && current.contains(".")||current2.equals("m") && current.contains(".") ) {
                 int Count = 0;
-                if (current2.equals("trillion")) {
-                    String[] arr = current.split(".");
+                if (current2.equals("trillion")||current2.equals("Trillion") || current2.equals("TRILLION")) {
+                    String[] arr = current.split("\\.");
                     Count = arr[1].length();
                     if (Count == 1)
                         current = arr[0] + arr[1] + "00000";
@@ -510,8 +684,8 @@ public class Parse implements Runnable {
                     current = current + " M Dollars";
                     return current;
                 }
-                if (current2.equals("billion")) {
-                    String[] arr = current.split(".");
+                if (current2.equals("billion")|| current2.equals("BILLION")||current2.equals("bn")|| current2.equals("Biliion")) {
+                    String[] arr = current.split("\\.");
                     Count = arr[1].length();
                     if (Count == 1)
                         current = arr[0] + arr[1] + "00";
@@ -523,8 +697,8 @@ public class Parse implements Runnable {
                         current = current + " M Dollars";
                     return current;
                 }
-                if (current2.equals("million")) {
-                    String[] arr = current.split(".");
+                if (current2.equals("million")|| current2.equals("m")|| current2.equals("Million")|| current2.equals("MILLION")||current2.equals("M")) {
+                    String[] arr = current.split("\\.");
                     current = current + " M Dollars";
                     return current;
                 }
@@ -608,7 +782,7 @@ public class Parse implements Runnable {
             if(ans.contains("B")){
                 ans =ans.substring(0,ans.length()-1);
                 if(ans.contains(".")){
-                    String[] arr = ans.split(".");
+                    String[] arr = ans.split("\\.");
                     String temp = arr[1].substring(2);
                     ans = arr[0]+arr[1].charAt(0)+arr[1].charAt(1)+arr[1].charAt(2)+"."+temp + " M";
                 }
@@ -681,6 +855,7 @@ public class Parse implements Runnable {
                 }
                 else {
                     ans = ans + '.' + tempString + 'K';
+
                 }
             }
             if (nums.length == 3) { //million
@@ -704,19 +879,19 @@ public class Parse implements Runnable {
                     tempString = "";
                 String tempString2 = nums[1];
 
-                    int x1 = 0;
-                    while (x1 < tempString2.length()) {
-                        if (tempString2.charAt(tempString2.length() - 1) == '0')
-                            tempString2 = tempString2.substring(0, tempString2.length() - 1);
-                        x1++;
-                    }
-                    if(tempString2.equals("0"))
-                        tempString2 = "";
-                    if (tempString2.equals(""))
-                        ans = nums[0] + 'M';
-                    else {
-                        ans = nums[0] + '.' + tempString2 + 'M';
-                    }
+                int x1 = 0;
+                while (x1 < tempString2.length()) {
+                    if (tempString2.charAt(tempString2.length() - 1) == '0')
+                        tempString2 = tempString2.substring(0, tempString2.length() - 1);
+                    x1++;
+                }
+                if(tempString2.equals("0"))
+                    tempString2 = "";
+                if (tempString2.equals(""))
+                    ans = nums[0] + 'M';
+                else {
+                    ans = nums[0] + '.' + tempString2 + 'M';
+                }
 
                 if(tempString.length() == 3 && tempString2.length() == 3 ) {
                     ans = nums[0] + '.' + nums[1] + nums[2] + 'M';
@@ -789,37 +964,37 @@ public class Parse implements Runnable {
                     }
                     if(tempString2.equals("0"))
                         tempString2 = "";
-                        if (tempString2.equals("")) {
-                            String tempString3 = nums[3];
-                            int x12 = 0;
-                            while (x12 < tempString3.length()) {
-                                if (tempString3.charAt(tempString3.length() - 1) == '0')
-                                    tempString3 = tempString3.substring(0, tempString3.length() - 1);
-                                x12++;
-                            }
-                            if(tempString3.equals("0"))
-                                tempString3 = "";
-                            if (tempString3.equals(""))
-                                ans = nums[0] + '.' + tempString + 'B';
-                            else {
-                                ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
-                            }
-                        } else {
-                            String tempString3 = nums[3];
-                            int x12 = 0;
-                            while (x12 < tempString3.length()) {
-                                if (tempString3.charAt(tempString3.length() - 1) == '0')
-                                    tempString3 = tempString3.substring(0, tempString3.length() - 1);
-                                x12++;
-                            if(tempString3.equals("0"))
-                                tempString3 = "";
-                            }
-                            if (tempString3.equals("")) {
-                                ans = nums[0] + '.' + nums[1] + tempString2 + 'B';
-                            } else {
-                                ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
-                            }
+                    if (tempString2.equals("")) {
+                        String tempString3 = nums[3];
+                        int x12 = 0;
+                        while (x12 < tempString3.length()) {
+                            if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                tempString3 = tempString3.substring(0, tempString3.length() - 1);
+                            x12++;
                         }
+                        if(tempString3.equals("0"))
+                            tempString3 = "";
+                        if (tempString3.equals(""))
+                            ans = nums[0] + '.' + tempString + 'B';
+                        else {
+                            ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
+                        }
+                    } else {
+                        String tempString3 = nums[3];
+                        int x12 = 0;
+                        while (x12 < tempString3.length()) {
+                            if (tempString3.charAt(tempString3.length() - 1) == '0')
+                                tempString3 = tempString3.substring(0, tempString3.length() - 1);
+                            x12++;
+                            if(tempString3.equals("0"))
+                                tempString3 = "";
+                        }
+                        if (tempString3.equals("")) {
+                            ans = nums[0] + '.' + nums[1] + tempString2 + 'B';
+                        } else {
+                            ans = nums[0] + '.' + nums[1] + nums[2] + tempString3 + 'B';
+                        }
+                    }
 
 
                 }
@@ -827,6 +1002,20 @@ public class Parse implements Runnable {
 
         }
         ans = signal + ans;
+        String[] finalS = ans.split("\\.");
+        if(finalS.length == 1)
+            return ans;
+        else
+        {
+            if(finalS[1].contains("B"))
+                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"B";
+            if(finalS[1].contains("M"))
+                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"M";
+            if(finalS[1].contains("K"))
+                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"K";
+            ans=finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1);
+        }
+
         return ans;
     }
 
