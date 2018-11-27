@@ -1,6 +1,7 @@
 package Part_1;
 
 import GeneralClasses.Document;
+import com.sun.xml.internal.bind.v2.TODO;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -153,10 +154,200 @@ public class Parse implements Runnable {
                                 if (counter + 3 < AfterSplit.length)
                                     current4 = AfterSplit[counter + 3];
                                 // checks if the number is the whole word
-                                if (!isNumeric(current) && !current.contains(",") ||current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                // ---case 0:inValid String -------
+                                if(!CheckIfValidString(current)){
+                                    if(checkNumberEnding(current)) {
+                                        String wordNum=current.substring(0,current.length()-2);
+                                        if(isNumeric(wordNum)) {
+                                            parsed.add(wordNum);
+                                            continue;
+                                        }
+                                    }
+                                    parsed.add(current);
+                                    counter++;
+                                }
+                                // ---case 0.5:contains dash ------
+                                //------ONLY-ONE-DASH---------//
+                                boolean HoeMuchToChange =HandleDashwithNums(current);
+                                if(current.contains("-") && HoeMuchToChange){
+                                   String[] DashSplit = current.split("-");
+                                   //-----TWO NUMBERS------//
+                                   if(isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])){
+                                    String tempCurrant =DashSplit[0];
+                                    current=DashSplit[1];
+                                       if (current.contains(",") && !added)
+                                           current = changeNumToRegularNum(current);
+                                       if (!added && isNumeric2(current)) {
+                                           //--------NUMBER-NUMBER FRACTION----//
+                                           if (notFraction(current2)) {
+                                               current = current + " " + current2;
+                                               counter++;
+                                               parsed.add(tempCurrant+ "-"+current);
+                                               parsed.add(current);
+                                               added = true;
+                                               added = false;
+                                               added = true;
+                                               if (counter < AfterSplit.length - 1)
+                                                   current2 = AfterSplit[counter + 1];
+                                               else
+                                                   current2 = "";
+                                           }
+                                           //--------NUMBER-NUMBER THOUSAND/MILLION/BILLION/TRILLION-------//
+                                           if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                               if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                   current = current + "K";
+                                                   counter++;
+                                               }//SECOND:IF CURRENT2= MILLION
+                                               if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                   current = current + "M";
+                                                   counter++;
+                                               }//THIRD:IF CURRENT2= BILLION
+                                               if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                   current = current + "B";
+                                                   counter++;
+                                               }//FORTH:IF CURRENT2= TRILLION
+                                               if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                   Double temp = Double.parseDouble(current);
+                                                   temp = temp * 1000;
+                                                   int temp2 = temp.intValue();
+                                                   current = String.valueOf(temp2);
+                                                   current = current + "B";
+                                                   counter--;
+                                                   counter = counter+2;
+                                               }
+                                               if(current.contains("M")){
+                                                   current =current.substring(0,current.length()-1)+ " M";
+                                               }
+                                           }
+                                       }
+                                    parsed.add(tempCurrant);
+                                    parsed.add(current);
+                                    parsed.add(tempCurrant+"-"+current);
+                                   }
+                                //------ONE NUMBER------//
+                                    if((isNumeric2(DashSplit[0])||isNumeric2(DashSplit[1]))&&!added) {
+                                        String tempCurrent = DashSplit[0];
+                                        current = DashSplit[1];
+                                        if (isNumeric2(tempCurrent))
+                                            changeNumToRegularNum(tempCurrent);
+                                        if (isNumeric2(current))
+                                            changeNumToRegularNum(current);
+                                        //TODO add the word in shalev word's addition
+                                        //-----NUMBER-WORD----------//
+                                        if (isNumeric2(tempCurrent)) {
+                                            parsed.add(tempCurrent);
+                                            parsed.add(current);
+                                            parsed.add(tempCurrent + "-" + current);
+                                            added = true;
+                                        }
+                                        //----WORD-NUMBER----------//
+                                        //TODO add the word in shalev word's addition
+                                        if (isNumeric2(current)) {
+                                            if (!added && isNumeric2(current)) {
+                                                //-------WORD-NUMBER FRACTION---------//
+                                                if (notFraction(current2)) {
+                                                    current = current + " " + current2;
+                                                    counter++;
+                                                    parsed.add(current);
+                                                    parsed.add(tempCurrent);
+                                                    parsed.add(tempCurrent+"-"+current);
+                                                    added = true;
+                                                    if (counter < AfterSplit.length - 1)
+                                                        current2 = AfterSplit[counter + 1];
+                                                    else
+                                                        current2 = "";
+                                                }
+                                                //------WORD-NUMBER THOUSAND/MILLION/TRILLION/BILLION
+                                                //TODO add the word in shalev word's addition
+                                                if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                                    if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                        current = current + "K";
+                                                        counter++;
+                                                    }//SECOND:IF CURRENT2= MILLION
+                                                    if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                        current = current + "M";
+                                                        counter++;
+                                                    }//THIRD:IF CURRENT2= BILLION
+                                                    if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                        current = current + "B";
+                                                        counter++;
+                                                    }//FORTH:IF CURRENT2= TRILLION
+                                                    if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                        Double temp = Double.parseDouble(current);
+                                                        temp = temp * 1000;
+                                                        int temp2 = temp.intValue();
+                                                        int temp3;
+                                                        current = String.valueOf(temp2);
+                                                        current = current + "B";
+                                                        counter++;
+                                                    }
+                                                    if(current.contains("M")){
+                                                        current =current.substring(0,current.length()-1)+ " M";
+                                                    }
+                                                    parsed.add(tempCurrent);
+                                                    parsed.add(current);
+                                                    parsed.add(tempCurrent+"-"+current);
+                                                    added = true;
+                                                }
+                                            }
+
+                                        }
+                                    }
+                                }
+                                //-------CURRENT2 HAS DASH-------//
+                                boolean HoeMuchToChange2 =HandleDashwithNums(current2);
+                                if(current2.contains("-") && HoeMuchToChange2){
+                                    String[] DashSplit = current2.split("-");
+                                    String TempCurrent2 = DashSplit[0];
+                                    String Temp2Current2 =DashSplit[1];
+                                    if(isNumeric2(current)) {
+                                        current = changeNumToRegularNum(current);
+                                    }
+                                    if(isNumeric2(Temp2Current2))
+                                        Temp2Current2 =changeNumToRegularNum(Temp2Current2);
+                                    if(isNumeric2(TempCurrent2))
+                                        TempCurrent2 =changeNumToRegularNum(TempCurrent2);
+                                    if (!added) {
+                                        //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
+                                        if(isNumeric2(current) && isNumeric2(Temp2Current2)) {
+                                            if (TempCurrent2.equals("Thousand") || TempCurrent2.equals("THOUSAND") || TempCurrent2.equals("thousand")) {
+                                                current = current + "K";
+                                                counter++;
+                                            }//SECOND:IF CURRENT2= MILLION
+                                            if (TempCurrent2.equals("Million") || TempCurrent2.equals("MILLION") || TempCurrent2.equals("million") || TempCurrent2.equals("mill")) {
+                                                current = current + "M";
+                                                counter++;
+                                            }//THIRD:IF CURRENT2= BILLION
+                                            if (TempCurrent2.equals("Billion") || TempCurrent2.equals("BILLION") || TempCurrent2.equals("billion")) {
+                                                current = current + "B";
+                                                counter++;
+                                            }//FORTH:IF CURRENT2= TRILLION
+                                            if (TempCurrent2.equals("Trillion") || TempCurrent2.equals("TRILLION") || TempCurrent2.equals("trillion")) {
+                                                Double temp = Double.parseDouble(current);
+                                                temp = temp * 1000;
+                                                int temp2 = temp.intValue();
+                                                current = String.valueOf(temp2);
+                                                current = current + "B";
+                                                counter = counter + 1 ;
+                                            }
+                                            if (current.contains("M")) {
+                                                current = current.substring(0, current.length() - 1) + " M";
+                                            }
+                                            parsed.add(current);
+                                            parsed.add(Temp2Current2);
+                                            parsed.add(current+ "-" +Temp2Current2);
+                                            added = true;
+                                        }
+                                        //--------NUMBER FRACTION-WORD-------//
+                                        if(isNumeric2(current) && notFraction(TempCurrent2)){
+
+                                        }
+                                    }
+                                }
+                                if ((!isNumeric(current) && !current.contains(",") ||current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
                                         current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
-                                        current4.equals("Dollars")) {
-//                                if(!added) {
+                                        current4.equals("Dollars"))&&!added) {
+//
                                     // ------- PERCENTAGE CHECK -------
                                     // --- case 1: NUMBER% ---
                                     if (current.contains("%")) {
@@ -173,7 +364,6 @@ public class Parse implements Runnable {
                                             }
                                         }
                                         if (!added) {
-
                                             // ------- PRICE CHECK -------
                                             dollar = checkIfMoney(current, current2, current3, current4);
                                             // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
@@ -193,20 +383,16 @@ public class Parse implements Runnable {
                                                         || current.contains("$") && current2.equals("Million") || current.contains("$") && current2.equals("Billion") ||
                                                         current.contains("$") && current2.equals("Trillion"))
                                                     counter = counter + 1;
-
                                                 added = true;
                                             }
-
                                         }
                                     }
                                 } else {
                                     // ------- NUMBER CHECK -------
                                     //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-
                                     if (current.contains(",") && !added)
                                         current = changeNumToRegularNum(current);
                                     if (!added && isNumeric2(current)) {
-
                                         if (notFraction(current2)) {
                                             current = current + " " + current2;
                                             counter++;
@@ -219,24 +405,14 @@ public class Parse implements Runnable {
                                         }
                                         if (!added) { //FIRST:IF CURRENT2= THOUSAND
                                             if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
-                                                //Double temp = Double.parseDouble(current);
-                                                //temp = temp*1000;
-                                                //current = String.valueOf(temp);
                                                 current = current + "K";
                                                 counter++;
                                             }//SECOND:IF CURRENT2= MILLION
                                             if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
-                                                //Double temp = Double.parseDouble(current);
-                                                //temp = temp*1000000;
-                                                //current = String.valueOf(temp);
                                                 current = current + "M";
                                                 counter++;
                                             }//THIRD:IF CURRENT2= BILLION
                                             if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
-                                                //Double temp = Double.parseDouble(current);
-                                                //temp = temp*1000000000;
-                                                //current = String.format ("%f", temp);
-                                                //current = changeNumToRegularNum(current);
                                                 current = current + "B";
                                                 counter++;
                                             }//FORTH:IF CURRENT2= TRILLION
@@ -244,23 +420,17 @@ public class Parse implements Runnable {
                                                 Double temp = Double.parseDouble(current);
                                                 temp = temp * 1000;
                                                 int temp2 = temp.intValue();
-                                                ;
                                                 current = String.valueOf(temp2);
                                                 current = current + "B";
-
                                                 counter++;
                                             }
-
                                             if(current.contains("M")){
                                                 current =current.substring(0,current.length()-1)+ " M";
                                             }
-
                                             parsed.add(current);
                                             added = true;
-
                                         }
                                     }
-
                                 }
                                 // ------- FRACTION CHECK -------
                                 if (!added && isNumeric2(current)) {
@@ -273,7 +443,6 @@ public class Parse implements Runnable {
                                 dollar = false;
                                 counter++;
                             }
-
                         }
                         //document.setTermList(parsed);
                         //Indexer.docQueue.add(document);
@@ -288,6 +457,15 @@ public class Parse implements Runnable {
                 }
             }
         }
+    }
+
+    private boolean HandleDashwithNums(String current) {
+        String[] SplitDash = current.split("-");
+        boolean toAddAll = false;
+        if(SplitDash.length == 2){
+            return true;
+        }
+        return toAddAll;
     }
 
     /**
@@ -808,59 +986,6 @@ public class Parse implements Runnable {
             return ChangeToPriceNum(current) + " Dollars";
         }
 
-       /* //1. "$450,000"
-        if (!added) {
-            if (Currant.contains("$")) {
-                if (isLessThenMill(Currant)) {
-                    Currant = Currant + " Dollars";
-                    parsed.add(Currant);
-                    added = true;
-                } else {
-                    if (!added) {
-                        //2. $450,000,000
-                        Currant = changeMillForPrice(Currant);
-                        Currant = Currant + " Dollars";
-                        parsed.add(Currant);
-                    }
-                }
-            }
-        }
-        if (!added) {
-            //3. 345,000 Dollars
-            if (isLessThenMill(Currant))
-                Currant = changeMillForPrice(Currant);
-            if (counter + 1 < AfterSplit.length) {
-                if (AfterSplit[counter + 1].equals("Dollars")) {
-                    Currant = Currant + " Dollars";
-                    counter++;
-                    parsed.add(Currant);
-                    added = true;
-                }
-            }
-        }
-        if (!added) {
-            //4. 22 2/3 Dollars
-            if (counter + 2 < AfterSplit.length) {
-                if (AfterSplit[counter + 1].contains("/") && AfterSplit[counter + 2].equals("Dollars")) {
-                    if (isLessThenMill(Currant))
-                        Currant = changeMillForPrice(Currant);
-                    Currant = Currant + " " + AfterSplit[counter + 1] + " Dollars";
-                    counter = counter + 1;
-
-                }
-            }
-
-            if (counter + 1 < AfterSplit.length) {
-                if (AfterSplit[counter + 1].equals("$")) {
-                    Currant = Currant + " Dollars";
-                    counter++;
-                    parsed.add(Currant);
-                    added = true;
-                }
-            }
-        }
-    }
-    */
         return ans;
     }
 
