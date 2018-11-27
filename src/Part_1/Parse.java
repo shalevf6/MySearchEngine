@@ -23,13 +23,17 @@ public class Parse implements Runnable {
     private HashMap<String,Integer> currentTermDictionary;
     private ArrayList<String> parsed;
     private String[] AfterSplit;
+    String Path;
 
     /**
      * a constructor for the Parse class
      * @param path - the path to the stop words file
      */
     public Parse(String path){
-        getStopWords(path);
+        //getStopWords(path); !!!! delete the Path !!!!!
+        Path =path;
+        StopWords = new HashMap<>();///!!!!!///!!! delete
+
     }
 
     /** This function generates the stop words Dictionary to Array List.
@@ -56,19 +60,21 @@ public class Parse implements Runnable {
      */
     public void parseAll() {
         while (true) {
-            if (!docQueue.isEmpty()) {
+            if (!docQueue.isEmpty()||true) { //delete the true!!!!!!
                 currentTermDictionary = new HashMap<>();
                 boolean added = false;
                 boolean dollar = false;
                 parsed = new ArrayList<>();
-                Document document = docQueue.remove();
-                String[] documents = document.getDocText();
-                docNumber++;
-                for (String data : documents) {
+                //Document document = docQueue.remove();!!!!
+                //String[] documents = document.getDocText();!!!!
+                //docNumber++;!!!!
+                //for (String data : documents) { !!!!!!real for!!!!!!
+                for (int i=0 ;i<100 ;i++) { //!!!!!! not real for!!!!!
                     String current;
                     int counter = 0;
                     //splits the string
-                    AfterSplit = data.split("[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                    //AfterSplit = data.split("[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                    AfterSplit = Path.split("[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
                     int wordCounter = 0;
                     while (wordCounter < AfterSplit.length) {
                         AfterSplit[wordCounter] = removeExtraDelimiters(AfterSplit[wordCounter]);
@@ -135,7 +141,7 @@ public class Parse implements Runnable {
                                 if (counter + 3 < AfterSplit.length)
                                     current4 = AfterSplit[counter + 3];
                                 // checks if the number is the whole word
-                                if (!isNumeric(current) && !current.contains(",") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                if (!isNumeric(current) && !current.contains(",") ||current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
                                         current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
                                         current4.equals("Dollars")) {
 //                                if(!added) {
@@ -187,10 +193,8 @@ public class Parse implements Runnable {
 
                                     if (current.contains(",") && !added)
                                         current = changeNumToRegularNum(current);
-                                    if (!added && isNumeric(current)) {
-                                        current2 = "";
-                                        if (counter < AfterSplit.length - 1)
-                                            current2 = AfterSplit[counter + 1];
+                                    if (!added && isNumeric2(current)) {
+
                                         if (notFraction(current2)) {
                                             current = current + " " + current2;
                                             counter++;
@@ -235,6 +239,9 @@ public class Parse implements Runnable {
                                                 counter++;
                                             }
 
+                                            if(current.contains("M")){
+                                                current =current.substring(0,current.length()-1)+ " M";
+                                            }
 
                                             parsed.add(current);
                                             added = true;
@@ -725,6 +732,8 @@ public class Parse implements Runnable {
         String[] nums = current.split(",");
         if(nums.length >= 3){
             ans = changeNumToRegularNum(current);
+
+
             if(ans.contains("M")) {
                 ans = ans.substring(0,ans.length()-1);
                 ans = ans + " M";
@@ -769,12 +778,16 @@ public class Parse implements Runnable {
     private String changeNumToRegularNum(String current) {
         String[] nums = current.split(",");
         String signal = "";
+        if(nums[0].contains("$")) {
+            signal =""+nums[0].charAt(0);
+            nums[0].substring(0,nums[0].length()-1);
+        }
         String ans = "";
         boolean to_change = true;
         int string_len = 0;
         // checks if the whole word is a number without any commas
         while (string_len < nums.length && to_change) {
-            if (!isNumeric(nums[string_len]))
+            if (!isNumeric(nums[string_len])&& !nums[string_len].contains("$"))
                 to_change = false;
             string_len++;
         }
@@ -849,7 +862,10 @@ public class Parse implements Runnable {
                 if(tempString.length() != 0 )
                     ans = nums[0] + '.' + nums[1] + tempString + 'M';
                 else if(tempString.length() == 0) {
-                    ans = nums[0] + '.' + tempString2 + tempString +'M';
+                    if(tempString2.equals("") && !ans.contains("M"))
+                        ans = nums[0]  + tempString2 + tempString +'M';
+
+
                 }
 
 
@@ -951,18 +967,33 @@ public class Parse implements Runnable {
             }
 
         }
-        ans = signal + ans;
+
+        if(!ans.equals("") && !ans.contains("$"))
+            ans = signal + ans;
+        if(!ans.equals("") && ans.contains("$"))
+            ans= ans;
+        else if(ans.equals(""))
+            return current;
         String[] finalS = ans.split("\\.");
         if(finalS.length == 1)
             return ans;
         else
         {
-            if(finalS[1].contains("B"))
-                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"B";
-            if(finalS[1].contains("M"))
-                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"M";
-            if(finalS[1].contains("K"))
-                return finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1)+"K";
+            if(finalS[1].contains("B")) {
+                if(finalS[1].charAt(1)=='B')
+                    return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
+                return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "B";
+            }
+            if(finalS[1].contains("M")) {
+                if(finalS[1].charAt(1)=='M')
+                    return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
+                return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "M";
+            }
+            if(finalS[1].contains("K")) {
+                if(finalS[1].charAt(1)=='K')
+                    return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
+                return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "K";
+            }
             ans=finalS[0]+"."+finalS[1].charAt(0)+finalS[1].charAt(1);
         }
 
@@ -1049,14 +1080,37 @@ public class Parse implements Runnable {
         parseAll();
     }
 
+    /** this function checks if the string given is a valid string(number or word)
+     * @param str
+     * @return true if the string is valid
+     */
+    public boolean CheckIfValidString(String str){
+        boolean ans = true;
+        if(isNumeric2(str) &&!str.contains("-") &&!str.contains(",") &&!str.contains(".")){
+            for (int i = 0; i < str.length(); i++) {
+                char charAt2 = str.charAt(i);
+                if (Character.isLetter(charAt2)) {
+                   ans = false;
+                   return ans;
+                }
+
+            }
+        }
+
+        return ans;
+    }
     public static void main(String[] args) {
-        String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
-                "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
-        Scanner sc = new Scanner(System.in);
-        String s = sc.nextLine();
-        String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
-        String[] AfterSplit = s.split(toDelete);
-        System.out.println(Arrays.toString(AfterSplit));
+        //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
+          //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
+        //Scanner sc = new Scanner(System.in);
+        //String s = sc.nextLine();
+        //String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
+        //String[] AfterSplit = s.split(toDelete);
+        //System.out.println(Arrays.toString(AfterSplit));
+        System.out.println("Start Parsing");
+        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
+
+        p.parseAll();
     }
 }
 
