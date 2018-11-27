@@ -4,7 +4,6 @@ import GeneralClasses.Document;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -64,6 +63,7 @@ public class Parse implements Runnable {
                 currentTermDictionary = new HashMap<>();
                 boolean added = false;
                 boolean dollar = false;
+                boolean addedMore = false;
                 parsed = new ArrayList<>();
                 Document document = docQueue.remove();
                 String[] documents = document.getDocText();
@@ -81,6 +81,9 @@ public class Parse implements Runnable {
                     }
                     // goes through every word in the document
                     while (counter <= AfterSplitLength - 1) {
+                        if(addedMore) {
+
+                        }
                         current = AfterSplit[counter];
                         // checks if the current string is a stop word (and not the word between)
                         if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
@@ -201,12 +204,20 @@ public class Parse implements Runnable {
                                     }
                                 } else {
                                     // ------- NUMBER CHECK -------
-                                    //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
 
+                                    // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
+                                    if(isNumeric(current) || checkNumberEnding(current)) {
+                                        int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
+                                        if (toAdd != 0) {
+                                            counter = counter + toAdd;
+                                            continue;
+                                        }
+                                    }
+
+                                    //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
                                     if (current.contains(",") && !added)
                                         current = changeNumToRegularNum(current);
                                     if (!added && isNumeric2(current)) {
-
                                         if (notFraction(current2)) {
                                             current = current + " " + current2;
                                             counter++;
@@ -251,8 +262,8 @@ public class Parse implements Runnable {
                                                 counter++;
                                             }
 
-                                            if(current.contains("M")){
-                                                current =current.substring(0,current.length()-1)+ " M";
+                                            if (current.contains("M")) {
+                                                current = current.substring(0, current.length() - 1) + " M";
                                             }
 
                                             parsed.add(current);
@@ -291,6 +302,63 @@ public class Parse implements Runnable {
     }
 
     /**
+     * handles the 'DD MONTH' / 'DD MONTH YYYY' date cases
+     * @param current - an optional DD word
+     * @param current2 - an optional MONTH word
+     * @param current3 - an optional YEAR word
+     * @return - 0 if the case was found not to be true, 2 if the 'DD MONTH' case was true, and 3 if the 'DD MONTH YYYY' case was true
+     */
+    private int handleDayMonthOrDayMonthYear(String current, String current2, String current3) {
+        String monthNumber = getMonthNumber(current2);
+        // check if the next word is a month
+        if(!monthNumber.equals("00")) {
+            int currentLength = current.length();
+            // check if the number ends with an ordinal indicator (st, nd, rd, th) and remove it if so
+            if (checkNumberEnding(current)) {
+                current = current.substring(0,currentLength - 2);
+                currentLength = currentLength - 2;
+            }
+            // check if the number has 2 or less digits
+            if (currentLength <= 2){
+                // check if the number's value is of a day
+                int dayValue = Integer.valueOf(current);
+                // adds a new day date
+                if (dayValue > 31)
+                    return 0;
+                if (currentLength == 1) {
+                    updateDictionaries(current);
+                    current = "0" + current;
+                }
+                updateDictionaries(monthNumber + "-" + current);
+                handleAllLetters(getMonthNameForDictionary(monthNumber));
+                // check if there is also a year in the date term
+                int current3Length = current3.length();
+                if (isNumeric(current3) && current3Length <= 4 && current3Length > 1) {
+                    int yearValue = Integer.valueOf(current3);
+                    if (yearValue <= 31)
+                        return 2;
+                    String date = "";
+                    // need to add the YYYY-MM term separately
+                    if (current3Length == 2) {
+                        date = "00" + current3 + "-" + monthNumber + "-" + current;
+                        updateDictionaries("00" + current3 + "-" + monthNumber);
+                    }
+                    // need to add the YYYY-MM term separately
+                    if (current3Length == 3) {
+                        date = "0" + current3 + "-" + monthNumber + "-" + current;
+                        updateDictionaries("0" + current3 + "-" + monthNumber);
+                    }
+                    updateDictionaries(current3);
+                    updateDictionaries(date);
+                    return 3;
+                }
+                return 2;
+            }
+        }
+        return 0;
+    }
+
+    /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
      * @param current - a given word that might be a month
      * @param counter - the counter for the words in the split array
@@ -298,21 +366,41 @@ public class Parse implements Runnable {
      */
     private boolean handleMonthYearOrMonthDay(String current, int counter) {
         String monthNumber = getMonthNumber(current);
+        // checks if the first word is a month
         if(!monthNumber.equals("00")) {
             String current2 = AfterSplit[counter + 1];
             int current2Length = current2.length();
             String date;
+            // checks if the second word is a number
             if (isNumeric(current2) && !current2.equals("")) {
+                // check the number of characters in current2
                 if (current2Length <= 2) {
                     if (current2Length == 1)
                         date = monthNumber + "-0" + current2;
-                    else
-                        date = monthNumber + "-" + current2;
+                    // checks if the number in the second word is between 0 to 31 (a day's number)
+                    else {
+                        int dayValue = Integer.valueOf(current2);
+                        // adds a new day date
+                        if (dayValue <= 31 && dayValue >= 0)
+                            date = monthNumber + "-" + current2;
+                        else
+                            // adds a new year between 32 to 99
+                            date = "00" + current2 + "-" + monthNumber;
+                    }
                 }
+                // than its a year
                 else {
-                    date = current2 + "-" + monthNumber;
+                    // the year is between 1000 to 9999
+                    if (current2Length == 4)
+                        date = current2 + "-" + monthNumber;
+                    // the year is between 100 to 999
+                    else {
+                        date = "0" + current2 + "-" + monthNumber;
+                    }
                 }
                 updateDictionaries(date);
+                updateDictionaries(current2);
+                handleAllLetters(getMonthNameForDictionary(monthNumber));
                 return true;
             }
             else {
@@ -322,11 +410,21 @@ public class Parse implements Runnable {
                         if (current2Length - 2 == 1) {
                             date = monthNumber + "-0" + current2;
                             updateDictionaries(date);
+                            updateDictionaries(current2);
+                            handleAllLetters(getMonthNameForDictionary(monthNumber));
                             return true;
                         } else {
                             if (current2Length - 2 == 2) {
-                                date = monthNumber + "-" + current2;
+                                int dayValue = Integer.valueOf(current2);
+                                // adds a new day date
+                                if (dayValue <= 31 && dayValue >= 0)
+                                    date = monthNumber + "-" + current2;
+                                else
+                                    // adds a new year between 32 to 99
+                                    date = "00" + current2 + "-" + monthNumber;
                                 updateDictionaries(date);
+                                updateDictionaries(current2);
+                                handleAllLetters(getMonthNameForDictionary(monthNumber));
                                 return true;
                             }
                         }
@@ -349,6 +447,39 @@ public class Parse implements Runnable {
                 numberEnd.equals("st") || numberEnd.equals("St") || numberEnd.equals("ST") ||
                 numberEnd.equals("nd") || numberEnd.equals("Nd") || numberEnd.equals("ND") ||
                 numberEnd.equals("rd") || numberEnd.equals("Rd") || numberEnd.equals("RD"));
+    }
+
+    /**
+     * gets a month's name in capital letters given its number
+     * @param monthNumber - a given month's number
+     * @return - a month's name in capital letters
+     */
+    private String getMonthNameForDictionary(String monthNumber) {
+        if(monthNumber.equals("01"))
+            return "JANUARY";
+        if(monthNumber.equals("02"))
+            return "FEBRUARY";
+        if(monthNumber.equals("03"))
+            return "MARCH";
+        if(monthNumber.equals("04"))
+            return "APRIL";
+        if(monthNumber.equals("05"))
+            return "MAY";
+        if(monthNumber.equals("06"))
+            return "JUNE";
+        if(monthNumber.equals("07"))
+            return "JULY";
+        if(monthNumber.equals("08"))
+            return "AUGUST";
+        if(monthNumber.equals("09"))
+            return "SEPTEMBER";
+        if(monthNumber.equals("10"))
+            return "OCTOBER";
+        if(monthNumber.equals("11"))
+            return "NOVEMBER";
+        if(monthNumber.equals("12"))
+            return "DECEMBER";
+        return "";
     }
 
     /**

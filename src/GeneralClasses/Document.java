@@ -14,9 +14,11 @@ public class Document {
     private int docTextSize;
     private String docTitle;
     private String docDate;
-    private ArrayList<String> termList;
-    private HashMap<String,Integer> termDictionary;
+    private String city;
 
+    private ArrayList<String> termList;
+
+    private HashMap<String,Integer> termDictionary;
     /**
      * A constructor for the Document class which recieves the document's ID
      * @param docId - the document's ID
@@ -51,7 +53,7 @@ public class Document {
     }
 
     /**
-     * sets the doucment's title
+     * sets the document's title (if exists)
      * @param docTitle - the document's title
      */
     public void setDocTitle(String docTitle) {
@@ -59,7 +61,7 @@ public class Document {
     }
 
     /**
-     * sets the document's date
+     * sets the document's date (if exists)
      * @param docDate - the document's date
      */
     public void setDocDate(String docDate) {
@@ -83,6 +85,14 @@ public class Document {
     }
 
     /**
+     * sets the doucment's city (if exists)
+     * @param city
+     */
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    /**
      * gets the document's id
      * @return the document's id
      */
@@ -99,16 +109,16 @@ public class Document {
     }
 
     /**
-     * gets the document's title
-     * @return - the document's title
+     * gets the document's title (if exists)
+     * @return - the document's title if exists. Otherwise - null
      */
     public String getDocTitle() {
         return docTitle;
     }
 
     /**
-     * gets the document's date
-     * @return - the document's date
+     * gets the document's date (if exists)
+     * @return - the document's date if exists. Otherwise - null
      */
     public String getDocDate() {
         return docDate;
@@ -128,5 +138,13 @@ public class Document {
      */
     public HashMap<String,Integer> getTermDictionary() {
         return termDictionary;
+    }
+
+    /**
+     * gets the document's city (if exists)
+     * @return - the document's city if exists. Otherwise - null
+     */
+    public String getCity() {
+        return city;
     }
 }
