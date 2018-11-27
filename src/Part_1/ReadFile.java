@@ -34,12 +34,25 @@ public class ReadFile implements Runnable {
             // get to all the corpus's sub-directories
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
+                System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
                 for (File f : subDirs) {
                     // get to the file inside the corpus's sub-directory
                     File[] tempFiles = f.listFiles();
                     if (tempFiles != null) {
                         try {
                             // parse through the file and separate all the documents that are in it
+                            BufferedReader bufferedReader = new BufferedReader(new FileReader(tempFiles[0]));
+                            String line;
+                            String allDocumentLines = "";
+                            while ((line = bufferedReader.readLine()) != null) {
+                                allDocumentLines = allDocumentLines.concat(line);
+                            }
+                            bufferedReader.close();
+                            String docString = "";
+                            int docStart = allDocumentLines.indexOf("<DOC>");
+                            int docEnd = allDocumentLines.indexOf("</DOC>");
+                            docString = allDocumentLines.substring(docStart + 5,docEnd);
+                            System.out.println();
                             Document file = Jsoup.parse(new String(Files.readAllBytes(tempFiles[0].toPath())));
                             Elements docs = file.getElementsByTag("DOC");
                             for (Element doc : docs) {
@@ -83,5 +96,29 @@ public class ReadFile implements Runnable {
     @Override
     public void run() {
         readThroughFiles();
+    }
+
+    public static void main(String[] args) throws IOException {
+        File f = new File("C:\\Users\\Shalev\\Desktop\\FB496130");
+        BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
+        String line;
+        String allDocumentLines = "";
+        while ((line = bufferedReader.readLine()) != null) {
+            allDocumentLines = allDocumentLines.concat(line);
+        }
+        bufferedReader.close();
+        String docString = "";
+        String docText = "";
+        String docNumber = "";
+        int docStart = allDocumentLines.indexOf("<DOC>");
+        int docEnd = allDocumentLines.indexOf("</DOC>");
+        docString = allDocumentLines.substring(docStart + 5,docEnd);
+        int docNumberStart = docString.indexOf("<DOCNO>");
+        int docNumberEnd = docString.indexOf("</DOCNO>");
+        docNumber = docString.substring(docNumberStart + 7, docNumberEnd);
+        int textStart = docString.indexOf("<TEXT>");
+        int textEnd = docString.indexOf("</TEXT>");
+        docText = docString.substring(textStart + 6,textEnd);
+        System.out.println();
     }
 }

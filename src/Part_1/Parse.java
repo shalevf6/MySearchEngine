@@ -6,7 +6,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Scanner;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -20,10 +19,12 @@ public class Parse implements Runnable {
     static private boolean stop = false;
     static public HashMap<String,Integer> corpusDictionary = new HashMap<>();
     static public int docNumber = 0;
+    public static boolean stemming;
     private HashMap<String,Integer> currentTermDictionary;
     private ArrayList<String> parsed;
     private String[] AfterSplit;
-    String Path;
+    private int AfterSplitLength;
+    private Stemmer stemmer;
 
     /**
      * a constructor for the Parse class
@@ -60,28 +61,29 @@ public class Parse implements Runnable {
      */
     public void parseAll() {
         while (true) {
-            if (!docQueue.isEmpty()||true) { //delete the true!!!!!!
+            if (!docQueue.isEmpty()) {
+                if(stemming)
+                    stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 boolean added = false;
                 boolean dollar = false;
                 parsed = new ArrayList<>();
-                //Document document = docQueue.remove();!!!!
-                //String[] documents = document.getDocText();!!!!
-                //docNumber++;!!!!
-                //for (String data : documents) { !!!!!!real for!!!!!!
-                for (int i=0 ;i<100 ;i++) { //!!!!!! not real for!!!!!
+                Document document = docQueue.remove();
+                String[] documents = document.getDocText();
+                docNumber++;
+                for (String data : documents) {
                     String current;
                     int counter = 0;
                     //splits the string
-                    //AfterSplit = data.split("[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
-                    AfterSplit = Path.split("[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                    AfterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                    AfterSplitLength = AfterSplit.length;
                     int wordCounter = 0;
-                    while (wordCounter < AfterSplit.length) {
+                    while (wordCounter < AfterSplitLength) {
                         AfterSplit[wordCounter] = removeExtraDelimiters(AfterSplit[wordCounter]);
                         wordCounter++;
                     }
                     // goes through every word in the document
-                    while (counter <= AfterSplit.length - 1) {
+                    while (counter <= AfterSplitLength - 1) {
                         current = AfterSplit[counter];
                         // checks if the current string is a stop word (and not the word between)
                         if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
@@ -89,12 +91,11 @@ public class Parse implements Runnable {
                         } else {
                             // checks if there aren't any numbers in the word
                             if (!isNumeric2(current)) {
+
                                 // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
                                 // checks if the 1st word is "between"
                                 if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
-                                    boolean caseDone = false;
-                                    caseDone = handleBetweenNumberAndNumber(current, counter);
-                                    if (caseDone) {
+                                    if (handleBetweenNumberAndNumber(current, counter)) {
                                         counter = counter + 4;
                                         continue;
                                     } else {
@@ -102,30 +103,44 @@ public class Parse implements Runnable {
                                         continue;
                                     }
                                 }
+
                                 // ------- 'WORD-WORD' | 'WORD-WORD-WORD' CHECK -------
                                 if (current.contains("-")) {
                                     handleWordsWithDash(current);
-                                }
-                                // ------- 'WORD/WORD' CHECK -------
-                                if (current.contains("/")) {
-                                    String[] orSplit = current.split("/");
-                                    for (String orWord : orSplit) {
-                                        if (!StopWords.containsKey(orWord) && isOnlyLetters(orWord)) {
-                                            handleAllLetters(orWord);
-                                        } else {
-                                            // TODO: 26/11/2018 - consider adding a function which adds an exceptional word
-                                        }
-                                    }
                                     counter++;
                                     continue;
                                 }
+
+                                // ------- 'WORD/WORD' CHECK -------
+                                if (current.contains("/")) {
+                                    String[] orSplit = current.split("/");
+                                    checkFurtherSplits(orSplit);
+                                    counter++;
+                                    continue;
+                                }
+
+                                // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
+                                if (counter + 1 < AfterSplitLength) {
+                                    if (handleMonthYearOrMonthDay(current,counter)) {
+                                        counter = counter + 2;
+                                        continue;
+                                    }
+                                }
+
                                 // ------- CAPITAL LETTERS CHECK -------
                                 if (isOnlyLetters(current)) {
                                     handleAllLetters(current);
                                     counter++;
-                                    continue;
+                                    // means its a different/empty letter case
                                 } else {
-                                    // TODO: 26/11/2018 - consider adding a function which adds an exceptional word
+                                    if (!current.equals("")) {
+                                        String[] moreWords = current.split("[-'%$]+");
+                                        for (String anotherWord : moreWords) {
+                                            if(!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                                updateDictionaries(current);
+                                        }
+                                    }
+                                    counter++;
                                 }
                             }
                             // means it's a number:
@@ -278,6 +293,110 @@ public class Parse implements Runnable {
         }
     }
 
+    /**
+     * handles the 'MONTH YEAR' / 'MONTH DD' date case
+     * @param current - a given word that might be a month
+     * @param counter - the counter for the words in the split array
+     * @return - true if it was found that the case was verified, else - false
+     */
+    private boolean handleMonthYearOrMonthDay(String current, int counter) {
+        String monthNumber = getMonthNumber(current);
+        if(!monthNumber.equals("00")) {
+            String current2 = AfterSplit[counter + 1];
+            int current2Length = current2.length();
+            String date;
+            if (isNumeric(current2) && !current2.equals("")) {
+                if (current2Length <= 2) {
+                    if (current2Length == 1)
+                        date = monthNumber + "-0" + current2;
+                    else
+                        date = monthNumber + "-" + current2;
+                }
+                else {
+                    date = current2 + "-" + monthNumber;
+                }
+                updateDictionaries(date);
+                return true;
+            }
+            else {
+                if (!current2.equals("") && checkNumberEnding(current2)){
+                    current2 = current2.substring(0,current2Length - 2);
+                    if (!current2.equals("")) {
+                        if (current2Length - 2 == 1) {
+                            date = monthNumber + "-0" + current2;
+                            updateDictionaries(date);
+                            return true;
+                        } else {
+                            if (current2Length - 2 == 2) {
+                                date = monthNumber + "-" + current2;
+                                updateDictionaries(date);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * checks if the given word is a number which ends with st\nd\rd\th in capital or lower letters
+     * @param number - a given number
+     * @return - true if the case we check is true. else - false
+     */
+    private boolean checkNumberEnding(String number) {
+        int numberLength = number.length();
+        String numberEnd = number.substring(numberLength - 2);
+        return (numberEnd.equals("th") || numberEnd.equals("Th") || numberEnd.equals("TH") ||
+                numberEnd.equals("st") || numberEnd.equals("St") || numberEnd.equals("ST") ||
+                numberEnd.equals("nd") || numberEnd.equals("Nd") || numberEnd.equals("ND") ||
+                numberEnd.equals("rd") || numberEnd.equals("Rd") || numberEnd.equals("RD"));
+    }
+
+    /**
+     * checks and returns the number that represents the month name in the given string
+     * @param monthName - the given month name
+     * @return - the number that represents the month name in the given string. If it's not a month name, than returns "00"
+     */
+    private String getMonthNumber(String monthName) {
+        if(monthName.equals("January") || monthName.equals("JANUARY") || monthName.equals("january") || monthName.equals("Jan") || monthName.equals("JAN")
+                || monthName.equals("jan"))
+            return "01";
+        if(monthName.equals("February") || monthName.equals("FEBRUARY") || monthName.equals("february") || monthName.equals("Feb") || monthName.equals("FEB")
+                || monthName.equals("feb"))
+            return "02";
+        if(monthName.equals("March") || monthName.equals("MARCH") || monthName.equals("march") || monthName.equals("Mar") || monthName.equals("MAR")
+                || monthName.equals("mar"))
+            return "03";
+        if(monthName.equals("April") || monthName.equals("APRIL") || monthName.equals("april") || monthName.equals("Apr") || monthName.equals("APR")
+                || monthName.equals("apr"))
+            return "04";
+        if(monthName.equals("May") || monthName.equals("MAY") || monthName.equals("may"))
+            return "05";
+        if(monthName.equals("June") || monthName.equals("JUNE") || monthName.equals("june") || monthName.equals("Jun") || monthName.equals("JUN")
+                || monthName.equals("jun"))
+            return "06";
+        if(monthName.equals("July") || monthName.equals("JULY") || monthName.equals("july") || monthName.equals("Jul") || monthName.equals("JUL")
+                || monthName.equals("jul"))
+            return "07";
+        if(monthName.equals("August") || monthName.equals("AUGUST") || monthName.equals("august") || monthName.equals("Aug") || monthName.equals("AUG")
+                || monthName.equals("aug"))
+            return "08";
+        if(monthName.equals("September") || monthName.equals("SEPTEMBER") || monthName.equals("september") || monthName.equals("Sep") || monthName.equals("SEP")
+                || monthName.equals("sep"))
+            return "09";
+        if(monthName.equals("October") || monthName.equals("OCTOBER") || monthName.equals("october") || monthName.equals("Oct") || monthName.equals("OCT")
+                || monthName.equals("oct"))
+            return "10";
+        if(monthName.equals("November") || monthName.equals("NOVEMBER") || monthName.equals("november") || monthName.equals("Nov") || monthName.equals("NOV")
+                || monthName.equals("nov"))
+            return "11";
+        if(monthName.equals("December") || monthName.equals("DECEMBER") || monthName.equals("december") || monthName.equals("Dec") || monthName.equals("DEC")
+                || monthName.equals("dec"))
+            return "12";
+        return "00";
+    }
 
     /**this function checks if the string given is a fraction
      * @param s
@@ -299,15 +418,21 @@ public class Parse implements Runnable {
         String[] dashSplit = current.split("-");
         boolean allWords = true;
         int dashSplitLength = dashSplit.length;
+        String remainingDelimiters = "['.,/\\s]+";
         // if there are 2 or 3 words between the '-' delimiter
         if (dashSplitLength == 2 || dashSplitLength == 3) {
-            for (int i = 0; i < dashSplitLength; i++)
-                if (!StopWords.containsKey(dashSplit[i])) { // TODO might be unnecessary
-                    if (!isOnlyLetters(dashSplit[i])) {
+            for (String aDashSplit : dashSplit)
+                if (!StopWords.containsKey(aDashSplit)) {
+                    // if there is a delimiter in the word
+                    if (!isOnlyLetters(aDashSplit)) {
                         allWords = false;
-                        handleNormalLetters(dashSplit[i]);
-                    } else
-                        handleAllLetters(dashSplit[i]);
+                        String[] moreWords = aDashSplit.split(remainingDelimiters);
+                        for (String moreWord : moreWords)
+                            if (!moreWord.equals(""))
+                                handleAllLetters(moreWord);
+                        // if there is no delimiter in the word
+                    } else if (!aDashSplit.equals(""))
+                        handleAllLetters(aDashSplit);
                 }
             // if all the words between the '-' delimiter are letters
             if (allWords) {
@@ -316,12 +441,31 @@ public class Parse implements Runnable {
         }
         // if there are more than 3 words between the '-' delimiter
         else {
-            for (String dashWord : dashSplit) {
-                if (!StopWords.containsKey(dashWord)) {
-                    if(isOnlyLetters(dashWord))
-                        handleAllLetters(dashWord);
-                } else
-                    handleNormalLetters(dashWord);
+            checkFurtherSplits(dashSplit);
+
+        }
+    }
+
+    /**
+     * checks if there are more delimiters which we didn't check before in the given string array
+     * @param delimiterSplit - a given string array
+     */
+    private void checkFurtherSplits(String[] delimiterSplit) {
+        String remainingDelimiters = "[.,'/\\s]+";
+        for (String delimiterWord : delimiterSplit) {
+            if (!StopWords.containsKey(delimiterWord)) {
+                // if there is no delimiter in the word
+                if (isOnlyLetters(delimiterWord)) {
+                    if (!delimiterWord.equals(""))
+                        handleAllLetters(delimiterWord);
+                }
+                // if there is a delimiter in the word
+                else {
+                    String[] moreWords = delimiterWord.split(remainingDelimiters);
+                    for (String moreWord : moreWords)
+                        if (!moreWord.equals(""))
+                            handleAllLetters(moreWord);
+                }
             }
         }
     }
@@ -338,14 +482,14 @@ public class Parse implements Runnable {
         String current3;
         String current4 ;
         // checks if the 2nd word is a NUMBER
-        if (counter + 1 < AfterSplit.length && isNumeric2(AfterSplit[counter + 1])) {
+        if (counter + 1 < AfterSplitLength && isNumeric2(AfterSplit[counter + 1])) {
             current2 = AfterSplit[counter + 1];
             // checks if the 3rd word is "and"
-            if (counter + 2 < AfterSplit.length && (AfterSplit[counter + 2].equals("and") || AfterSplit[counter + 2].equals("And") ||
+            if (counter + 2 < AfterSplitLength && (AfterSplit[counter + 2].equals("and") || AfterSplit[counter + 2].equals("And") ||
                     AfterSplit[counter + 2].equals("AND"))) {
                 current3 = AfterSplit[counter + 2];
                 // checks if the 4th word is a NUMBER
-                if (counter + 3 < AfterSplit.length && isNumeric2(AfterSplit[counter + 3])) {
+                if (counter + 3 < AfterSplitLength && isNumeric2(AfterSplit[counter + 3])) {
                     current4 = AfterSplit[counter + 3];
                     // TODO add a number fix for current2 and current4
                     handleNormalLetters(current1 + current2 + current3 + current4);
@@ -418,7 +562,7 @@ public class Parse implements Runnable {
                 word = word.substring(0, length);
                 length = length - 1;
             }
-            if (!word.equals("") && word.length()>1 && (word.charAt(0) == ',' || word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-'))
+            if (!word.equals("") && length > 1 && (word.charAt(0) == ',' || word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-'))
                 word = word.substring(1);
         }
         return word;
@@ -1042,7 +1186,7 @@ public class Parse implements Runnable {
      */
     public static boolean isNumeric(String str)
     {
-        /* Might change to take less time */
+        // TODO: Might change to take less time
         try
         {
             double d = Double.parseDouble(str);
@@ -1111,6 +1255,13 @@ public class Parse implements Runnable {
         Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
 
         p.parseAll();
+//         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
+//        Scanner sc = new Scanner(System.in);
+//        String s = sc.nextLine();
+//         String remainingDelimiters = "[.,/\\s]+";
+//         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
+//         String[] AfterSplit = sTry.split(remainingDelimiters);
+//         System.out.println(Arrays.toString(AfterSplit));
     }
 }
 

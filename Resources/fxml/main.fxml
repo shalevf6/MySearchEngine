@@ -12,7 +12,7 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.Controller">
    <children>
-      <CheckBox fx:id="stemmingCheckBox" layoutX="414.0" layoutY="254.0" mnemonicParsing="false" selected="true" text="Stemming" />
+      <CheckBox fx:id="stemmingCheckBox" layoutX="414.0" layoutY="254.0" mnemonicParsing="false" onAction="#handleStemmingCheck" selected="true" text="Stemming" />
       <Button layoutX="472.0" layoutY="111.0" mnemonicParsing="false" onAction="#onCorpusBrowse" text="Browse" />
       <TextField fx:id="postingPath" layoutX="225.0" layoutY="175.0" prefHeight="31.0" prefWidth="238.0" />
       <TextField fx:id="corpusPath" layoutX="224.0" layoutY="111.0" prefHeight="31.0" prefWidth="238.0" />
