@@ -20,7 +20,6 @@ public class Controller {
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
     public ChoiceBox<String> languageChoiceBox;
-    public static boolean stemming = true;
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -51,7 +50,7 @@ public class Controller {
      * @param actionEvent - unused
      */
     public void onActivate(ActionEvent actionEvent) {
-        stemming = stemmingCheckBox.isSelected();
+        Parse.stemming = stemmingCheckBox.isSelected();
         if (postingPath.getText().equals("") || corpusPath.getText().equals("")) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("You must fill all necessary paths!");
@@ -113,5 +112,13 @@ public class Controller {
         File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
         if (selectedDirectory != null)
             postingPath.setText(selectedDirectory.getAbsolutePath());
+    }
+
+    public void handleStemmingCheck(ActionEvent actionEvent) {
+        if (stemmingCheckBox.isSelected())
+            Parse.stemming = true;
+        else
+            Parse.stemming = false;
+
     }
 }
