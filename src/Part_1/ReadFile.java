@@ -1,12 +1,7 @@
 package Part_1;
 
 import javafx.scene.control.Alert;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 import java.io.*;
-import java.nio.file.Files;
 
 /**
  * This class reads all the corpus's files and parses through them
@@ -15,6 +10,7 @@ import java.nio.file.Files;
 public class ReadFile implements Runnable {
 
     private String dirPath;
+    private StringBuilder allDocumentLines;
 
     /**
      * A constructor for the ReadFile class
@@ -41,43 +37,20 @@ public class ReadFile implements Runnable {
                     if (tempFiles != null) {
                         try {
                             // parse through the file and separate all the documents that are in it
-                            BufferedReader bufferedReader = new BufferedReader(new FileReader(tempFiles[0]));
+                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(tempFiles[0])));
                             String line;
-                            String allDocumentLines = "";
+                            allDocumentLines = new StringBuilder();
                             while ((line = bufferedReader.readLine()) != null) {
-                                allDocumentLines = allDocumentLines.concat(line);
+                                allDocumentLines.append(line);
                             }
                             bufferedReader.close();
                             String docString = "";
                             int docStart = allDocumentLines.indexOf("<DOC>");
                             int docEnd = allDocumentLines.indexOf("</DOC>");
-                            docString = allDocumentLines.substring(docStart + 5,docEnd);
-                            System.out.println();
-                            Document file = Jsoup.parse(new String(Files.readAllBytes(tempFiles[0].toPath())));
-                            Elements docs = file.getElementsByTag("DOC");
-                            for (Element doc : docs) {
-                                /* parse through each document and find its ID, all its text tags (could be more than 1),
-                                   its title (if exists), and its date (if exists) */
-                                Document document = Jsoup.parse(doc.text());
-                                Elements docNumber = document.getElementsByTag("DOCNO");
-                                Elements docTexts = document.getElementsByTag("TEXT");
-                                Elements docTitle = document.getElementsByTag("TI");
-                                Elements docDate = document.getElementsByTag("DATE1");
-                                GeneralClasses.Document newDoc = new GeneralClasses.Document(docNumber.text());
-                                String documentTitle = docTitle.text();
-                                String documentDate = docDate.text();
-                                if (!documentTitle.equals(""))
-                                    newDoc.setDocTitle(documentTitle);
-                                if (!documentDate.equals(""))
-                                    newDoc.setDocDate(documentDate);
-                                for (Element docText:docTexts) {
-                                    String documentText = docText.text();
-                                    newDoc.addDocText(documentText);
-                                }
-                                // add the document to the static Document Queue in the Parse class
-                                Parse.docQueue.add(newDoc);
-                            }
-                        } catch (IOException e) {
+                            docString = allDocumentLines.substring(docStart + 5, docEnd);
+                            parseThroughDoc(docStart);
+                        }
+                        catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
@@ -93,32 +66,109 @@ public class ReadFile implements Runnable {
         }
     }
 
+    /**
+     * parses through each document and finds its ID, all its text tags (could be more than 1),
+     * its title (if exists), its date (if exists), and its city (if exists)
+     * @param docStart - a given document's start index
+     */
+    private void parseThroughDoc(int docStart) {
+        // checks if there are any more document's to fetch from the file
+        while (docStart != -1) {
+            String docString = "";
+            String docNumber = "";
+            String docText = "";
+            String docTitle = "";
+            String docDate = "";
+            String docCity = "";
+
+            int docEnd = allDocumentLines.indexOf("</DOC>", docStart);
+            docString = allDocumentLines.substring(docStart + 5,docEnd);
+
+            int docNumberStart = docString.indexOf("<DOCNO>");
+            int docNumberEnd = docString.indexOf("</DOCNO>");
+
+            // gets the document's number
+            docNumber = (docString.substring(docNumberStart + 7, docNumberEnd)).trim();
+
+            System.out.println(docNumber);
+
+            GeneralClasses.Document newDoc = new GeneralClasses.Document(docNumber);
+
+            // gets the contents of the document's title (if there is one)
+            if (docString.contains("<TI>")) {
+                int titleStart = docString.indexOf("<TI>");
+                int titleEnd = docString.indexOf("</TI>");
+                docTitle = (docString.substring(titleStart + 4, titleEnd)).trim();
+                if (!docTitle.equals(""))
+                    newDoc.setDocTitle(docTitle);
+            }
+
+            // gets the document's date (if there is one)
+            if (docString.contains("<DATE1>")) {
+                int dateStart = docString.indexOf("<DATE1>");
+                int dateEnd = docString.indexOf("</DATE1>");
+                docDate = (docString.substring(dateStart + 7, dateEnd)).trim();
+            }
+            else {
+                if (docString.contains("<DATE>")) {
+                    int dateStart = docString.indexOf("<DATE>");
+                    int dateEnd = docString.indexOf("</DATE>");
+                    docDate = (docString.substring(dateStart + 6, dateEnd)).trim();
+                }
+            }
+
+            if (!docDate.equals(""))
+                newDoc.setDocDate(docDate);
+
+            // gets the document's city (if there is one)
+            if (docString.contains("<F P=104>")) {
+                int cityStart = docString.indexOf("<F P=104>");
+                int cityEnd = docString.indexOf("</F>",cityStart);
+                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
+                for (String city : docCityArr) {
+                    if (!city.equals("")) {
+                        docCity = city;
+                        newDoc.setCity(docCity);
+                        break;
+                    }
+                }
+            }
+
+            // gets the document's <TEXT></TEXT> tags
+            if (docString.contains("<TEXT>")) {
+                int textStart = docString.indexOf("<TEXT>");
+                while (textStart != -1) {
+                    int textEnd = docString.indexOf("</TEXT>");
+                    docText = docString.substring(textStart + 6, textEnd);
+                    if (docText.contains("<F P=106>")) {
+                        int tempDocStart = docText.indexOf("[Text]");
+                        docText = docText.substring(tempDocStart + 6);
+                    }
+                    textStart = docString.indexOf("<TEXT>", textEnd);
+                    if (!docText.equals(""))
+                        newDoc.addDocText(docText);
+                }
+            }
+
+            // add the document to the static Document Queue in the Parse class
+//            Parse.docQueue.add(newDoc);
+
+            // gets the next document's start index
+            docStart = allDocumentLines.indexOf("<DOC>", docEnd);
+        }
+    }
+
     @Override
     public void run() {
         readThroughFiles();
     }
 
-    public static void main(String[] args) throws IOException {
-        File f = new File("C:\\Users\\Shalev\\Desktop\\FB496130");
-        BufferedReader bufferedReader = new BufferedReader(new FileReader(f));
-        String line;
-        String allDocumentLines = "";
-        while ((line = bufferedReader.readLine()) != null) {
-            allDocumentLines = allDocumentLines.concat(line);
-        }
-        bufferedReader.close();
-        String docString = "";
-        String docText = "";
-        String docNumber = "";
-        int docStart = allDocumentLines.indexOf("<DOC>");
-        int docEnd = allDocumentLines.indexOf("</DOC>");
-        docString = allDocumentLines.substring(docStart + 5,docEnd);
-        int docNumberStart = docString.indexOf("<DOCNO>");
-        int docNumberEnd = docString.indexOf("</DOCNO>");
-        docNumber = docString.substring(docNumberStart + 7, docNumberEnd);
-        int textStart = docString.indexOf("<TEXT>");
-        int textEnd = docString.indexOf("</TEXT>");
-        docText = docString.substring(textStart + 6,textEnd);
+    public static void main(String[] args) {
+        String path = "C:\\Users\\Shalev\\Desktop";
+        ReadFile readFile = new ReadFile(path);
+        long startTime = System.nanoTime();
+        readFile.readThroughFiles();
+        System.out.println((System.nanoTime() - startTime)*Math.pow(10,-9));
         System.out.println();
     }
 }
