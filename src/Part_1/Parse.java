@@ -1,7 +1,6 @@
 package Part_1;
 
 import GeneralClasses.Document;
-import com.sun.xml.internal.bind.v2.TODO;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -14,27 +13,31 @@ import java.util.concurrent.BlockingQueue;
  */
 public class Parse implements Runnable {
 
-    private HashMap<String,Integer> StopWords;
+    private HashMap<String, Integer> StopWords;
     static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static private boolean stop = false;
-    static public HashMap<String,Integer> corpusDictionary = new HashMap<>();
+    static public HashMap<String, Integer> corpusDictionary = new HashMap<>();
+    static public HashMap<String, Integer> cityDictionary = new HashMap<>();
     static public int docNumber = 0;
     public static boolean stemming;
-    private HashMap<String,Integer> currentTermDictionary;
+    private HashMap<String, Integer> currentTermDictionary;
     private ArrayList<String> parsed;
-    private String[] AfterSplit;
-    private int AfterSplitLength;
+    private String[] afterSplit;
+    private int afterSplitLength;
     private Stemmer stemmer;
 
     /**
      * a constructor for the Parse class
+     *
      * @param path - the path to the stop words file
      */
-    public Parse(String path){
+    public Parse(String path) {
         getStopWords(path);
     }
 
-    /** This function generates the stop words Dictionary to Array List.
+    /**
+     * This function generates the stop words Dictionary to Array List.
+     *
      * @param path is the location of the Dictionary
      */
     private void getStopWords(String path) {
@@ -43,9 +46,9 @@ public class Parse implements Runnable {
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordsFile));
             String stopWord = bufferedReader.readLine();
-            while(stopWord != null) {
+            while (stopWord != null) {
                 stopWord = stopWord.trim();
-                StopWords.put(stopWord,1);
+                StopWords.put(stopWord, 1);
             }
             bufferedReader.close();
         } catch (IOException e) {
@@ -59,7 +62,7 @@ public class Parse implements Runnable {
     public void parseAll() {
         while (true) {
             if (!docQueue.isEmpty()) {
-                if(stemming)
+                if (stemming)
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 boolean added = false;
@@ -73,19 +76,19 @@ public class Parse implements Runnable {
                     String current;
                     int counter = 0;
                     //splits the string
-                    AfterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
-                    AfterSplitLength = AfterSplit.length;
+                    afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                    afterSplitLength = afterSplit.length;
                     int wordCounter = 0;
-                    while (wordCounter < AfterSplitLength) {
-                        AfterSplit[wordCounter] = removeExtraDelimiters(AfterSplit[wordCounter]);
+                    while (wordCounter < afterSplitLength) {
+                        afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
                         wordCounter++;
                     }
                     // goes through every word in the document
-                    while (counter <= AfterSplitLength - 1) {
-                        if(addedMore) {
+                    while (counter <= afterSplitLength - 1) {
+                        if (addedMore) {
 
                         }
-                        current = AfterSplit[counter];
+                        current = afterSplit[counter];
                         // checks if the current string is a stop word (and not the word between)
                         if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
                             counter++;
@@ -121,8 +124,8 @@ public class Parse implements Runnable {
                                 }
 
                                 // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
-                                if (counter + 1 < AfterSplitLength) {
-                                    if (handleMonthYearOrMonthDay(current,counter)) {
+                                if (counter + 1 < afterSplitLength) {
+                                    if (handleMonthYearOrMonthDay(current, counter)) {
                                         counter = counter + 2;
                                         continue;
                                     }
@@ -137,8 +140,8 @@ public class Parse implements Runnable {
                                     if (!current.equals("")) {
                                         String[] moreWords = current.split("[-'%$]+");
                                         for (String anotherWord : moreWords) {
-                                            if(!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
-                                                updateDictionaries(current);
+                                            if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                                handleNormalLetters(current);
                                         }
                                     }
                                     counter++;
@@ -150,18 +153,18 @@ public class Parse implements Runnable {
                                 String current3 = "";
                                 String current4 = "";
 
-                                if (counter + 1 < AfterSplit.length)
-                                    current2 = AfterSplit[counter + 1];
-                                if (counter + 2 < AfterSplit.length)
-                                    current3 = AfterSplit[counter + 2];
-                                if (counter + 3 < AfterSplit.length)
-                                    current4 = AfterSplit[counter + 3];
+                                if (counter + 1 < afterSplit.length)
+                                    current2 = afterSplit[counter + 1];
+                                if (counter + 2 < afterSplit.length)
+                                    current3 = afterSplit[counter + 2];
+                                if (counter + 3 < afterSplit.length)
+                                    current4 = afterSplit[counter + 3];
                                 // checks if the number is the whole word
                                 // ---case 0:inValid String -------
-                                if(!CheckIfValidString(current)){
-                                    if(checkNumberEnding(current)) {
-                                        String wordNum=current.substring(0,current.length()-2);
-                                        if(isNumeric(wordNum)) {
+                                if (!CheckIfValidString(current)) {
+                                    if (checkNumberEnding(current)) {
+                                        String wordNum = current.substring(0, current.length() - 2);
+                                        if (isNumeric(wordNum)) {
                                             parsed.add(wordNum);
                                             continue;
                                         }
@@ -171,71 +174,87 @@ public class Parse implements Runnable {
                                 }
                                 // ---case 0.5:contains dash ------
                                 //------ONLY-ONE-DASH---------//
-                                boolean HoeMuchToChange =HandleDashwithNums(current);
-                                if(current.contains("-") && HoeMuchToChange){
-                                   String[] DashSplit = current.split("-");
-                                   //-----TWO NUMBERS------//
-                                   if(isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])){
-                                    String tempCurrant =DashSplit[0];
-                                    current=DashSplit[1];
-                                       if (current.contains(",") && !added)
-                                           current = changeNumToRegularNum(current);
-                                       if (!added && isNumeric2(current)) {
-                                           //--------NUMBER-NUMBER FRACTION----//
-                                           if (notFraction(current2)) {
-                                               current = current + " " + current2;
-                                               counter++;
-                                               parsed.add(tempCurrant+ "-"+current);
-                                               parsed.add(current);
-                                               added = true;
-                                               added = false;
-                                               added = true;
-                                               if (counter < AfterSplit.length - 1)
-                                                   current2 = AfterSplit[counter + 1];
-                                               else
-                                                   current2 = "";
-                                           }
-                                           //--------NUMBER-NUMBER THOUSAND/MILLION/BILLION/TRILLION-------//
-                                           if (!added) { //FIRST:IF CURRENT2= THOUSAND
-                                               if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
-                                                   current = current + "K";
-                                                   counter++;
-                                               }//SECOND:IF CURRENT2= MILLION
-                                               if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
-                                                   current = current + "M";
-                                                   counter++;
-                                               }//THIRD:IF CURRENT2= BILLION
-                                               if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
-                                                   current = current + "B";
-                                                   counter++;
-                                               }//FORTH:IF CURRENT2= TRILLION
-                                               if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
-                                                   Double temp = Double.parseDouble(current);
-                                                   temp = temp * 1000;
-                                                   int temp2 = temp.intValue();
-                                                   current = String.valueOf(temp2);
-                                                   current = current + "B";
-                                                   counter--;
-                                                   counter = counter+2;
-                                               }
-                                               if(current.contains("M")){
-                                                   current =current.substring(0,current.length()-1)+ " M";
-                                               }
-                                           }
-                                       }
-                                    parsed.add(tempCurrant);
-                                    parsed.add(current);
-                                    parsed.add(tempCurrant+"-"+current);
-                                   }
-                                //------ONE NUMBER------//
-                                    if((isNumeric2(DashSplit[0])||isNumeric2(DashSplit[1]))&&!added) {
+                                boolean HoeMuchToChange = HandleDashwithNums(current);
+                                if (current.contains("-") && HoeMuchToChange) {
+                                    String[] DashSplit = current.split("-");
+                                    //-----TWO NUMBERS------//
+                                    if (isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])) {
+                                        String tempCurrant = DashSplit[0];
+                                        current = DashSplit[1];
+                                        if (current.contains(",") && !added)
+                                            current = changeNumToRegularNum(current);
+                                        if (!added && isNumeric2(current)) {
+                                            //--------NUMBER-NUMBER FRACTION----//
+                                            if (notFraction(current2)) {
+                                                current = current + " " + current2;
+                                                counter++;
+                                                parsed.add(tempCurrant + "-" + current);
+                                                parsed.add(current);
+                                                added = true;
+                                                added = false;
+                                                added = true;
+                                                if (counter < afterSplit.length - 1)
+                                                    current2 = afterSplit[counter + 1];
+                                                else
+                                                    current2 = "";
+                                            }
+                                            //--------NUMBER-NUMBER THOUSAND/MILLION/BILLION/TRILLION-------//
+                                            if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                                if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                    current = current + "K";
+                                                    counter++;
+                                                }//SECOND:IF CURRENT2= MILLION
+                                                if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                    current = current + "M";
+                                                    counter++;
+                                                }//THIRD:IF CURRENT2= BILLION
+                                                if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                    current = current + "B";
+                                                    counter++;
+                                                }//FORTH:IF CURRENT2= TRILLION
+                                                if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                    Double temp = Double.parseDouble(current);
+                                                    temp = temp * 1000;
+                                                    int temp2 = temp.intValue();
+                                                    current = String.valueOf(temp2);
+                                                    current = current + "B";
+                                                    counter--;
+                                                    counter = counter + 2;
+                                                }
+                                                if (current.contains("M")) {
+                                                    current = current.substring(0, current.length() - 1) + " M";
+                                                }
+                                            }
+                                        }
+                                        parsed.add(tempCurrant);
+                                        parsed.add(current);
+                                        parsed.add(tempCurrant + "-" + current);
+                                    }
+                                    //------ONE NUMBER------//
+                                    if ((isNumeric2(DashSplit[0]) || isNumeric2(DashSplit[1])) && !added) {
                                         String tempCurrent = DashSplit[0];
                                         current = DashSplit[1];
                                         if (isNumeric2(tempCurrent))
                                             changeNumToRegularNum(tempCurrent);
                                         if (isNumeric2(current))
                                             changeNumToRegularNum(current);
+
                                         //TODO add the word in shalev word's addition
+                                        if (isOnlyLetters(current)) {
+                                            if (!StopWords.containsKey(current)) {
+                                                // if there is a delimiter in the word
+                                                if (!isOnlyLetters(current)) {
+                                                    String remainingDelimiters = "['.,/\\s]+";
+                                                    String[] moreWords = current.split(remainingDelimiters);
+                                                    for (String moreWord : moreWords)
+                                                        if (!moreWord.equals(""))
+                                                            handleAllLetters(moreWord);
+                                                    // if there is no delimiter in the word
+                                                } else if (!current.equals(""))
+                                                    handleAllLetters(current);
+                                            }
+                                        }
+
                                         //-----NUMBER-WORD----------//
                                         if (isNumeric2(tempCurrent)) {
                                             parsed.add(tempCurrent);
@@ -253,10 +272,10 @@ public class Parse implements Runnable {
                                                     counter++;
                                                     parsed.add(current);
                                                     parsed.add(tempCurrent);
-                                                    parsed.add(tempCurrent+"-"+current);
+                                                    parsed.add(tempCurrent + "-" + current);
                                                     added = true;
-                                                    if (counter < AfterSplit.length - 1)
-                                                        current2 = AfterSplit[counter + 1];
+                                                    if (counter < afterSplit.length - 1)
+                                                        current2 = afterSplit[counter + 1];
                                                     else
                                                         current2 = "";
                                                 }
@@ -284,12 +303,12 @@ public class Parse implements Runnable {
                                                         current = current + "B";
                                                         counter++;
                                                     }
-                                                    if(current.contains("M")){
-                                                        current =current.substring(0,current.length()-1)+ " M";
+                                                    if (current.contains("M")) {
+                                                        current = current.substring(0, current.length() - 1) + " M";
                                                     }
                                                     parsed.add(tempCurrent);
                                                     parsed.add(current);
-                                                    parsed.add(tempCurrent+"-"+current);
+                                                    parsed.add(tempCurrent + "-" + current);
                                                     added = true;
                                                 }
                                             }
@@ -298,21 +317,21 @@ public class Parse implements Runnable {
                                     }
                                 }
                                 //-------CURRENT2 HAS DASH-------//
-                                boolean HoeMuchToChange2 =HandleDashwithNums(current2);
-                                if(current2.contains("-") && HoeMuchToChange2){
+                                boolean HoeMuchToChange2 = HandleDashwithNums(current2);
+                                if (current2.contains("-") && HoeMuchToChange2) {
                                     String[] DashSplit = current2.split("-");
                                     String TempCurrent2 = DashSplit[0];
-                                    String Temp2Current2 =DashSplit[1];
-                                    if(isNumeric2(current)) {
+                                    String Temp2Current2 = DashSplit[1];
+                                    if (isNumeric2(current)) {
                                         current = changeNumToRegularNum(current);
                                     }
-                                    if(isNumeric2(Temp2Current2))
-                                        Temp2Current2 =changeNumToRegularNum(Temp2Current2);
-                                    if(isNumeric2(TempCurrent2))
-                                        TempCurrent2 =changeNumToRegularNum(TempCurrent2);
+                                    if (isNumeric2(Temp2Current2))
+                                        Temp2Current2 = changeNumToRegularNum(Temp2Current2);
+                                    if (isNumeric2(TempCurrent2))
+                                        TempCurrent2 = changeNumToRegularNum(TempCurrent2);
                                     if (!added) {
                                         //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
-                                        if(isNumeric2(current) && isNumeric2(Temp2Current2)) {
+                                        if (isNumeric2(current) && isNumeric2(Temp2Current2)) {
                                             if (TempCurrent2.equals("Thousand") || TempCurrent2.equals("THOUSAND") || TempCurrent2.equals("thousand")) {
                                                 current = current + "K";
                                                 counter++;
@@ -331,25 +350,25 @@ public class Parse implements Runnable {
                                                 int temp2 = temp.intValue();
                                                 current = String.valueOf(temp2);
                                                 current = current + "B";
-                                                counter = counter + 1 ;
+                                                counter = counter + 1;
                                             }
                                             if (current.contains("M")) {
                                                 current = current.substring(0, current.length() - 1) + " M";
                                             }
                                             parsed.add(current);
                                             parsed.add(Temp2Current2);
-                                            parsed.add(current+ "-" +Temp2Current2);
+                                            parsed.add(current + "-" + Temp2Current2);
                                             added = true;
                                         }
                                         //--------NUMBER FRACTION-WORD-------//
-                                        if(isNumeric2(current) && notFraction(TempCurrent2)){
+                                        if (isNumeric2(current) && notFraction(TempCurrent2)) {
 
                                         }
                                     }
                                 }
-                                if ((!isNumeric(current) && !current.contains(",") ||current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
                                         current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
-                                        current4.equals("Dollars"))&&!added) {
+                                        current4.equals("Dollars")) && !added) {
 //
                                     // ------- PERCENTAGE CHECK -------
                                     // --- case 1: NUMBER% ---
@@ -357,9 +376,9 @@ public class Parse implements Runnable {
                                         parsed.add(current);
                                         added = true;
                                     } else {
-                                        if (counter + 1 < AfterSplit.length) {
+                                        if (counter + 1 < afterSplit.length) {
                                             // --- case 2, 3: NUMBER percent, NUMBER percentage ---
-                                            if (AfterSplit[counter + 1].equals("percent") || AfterSplit[counter + 1].equals("percentage")) {
+                                            if (afterSplit[counter + 1].equals("percent") || afterSplit[counter + 1].equals("percentage")) {
                                                 current = current + "%";
                                                 parsed.add(current);
                                                 added = true;
@@ -394,7 +413,7 @@ public class Parse implements Runnable {
                                     // ------- NUMBER CHECK -------
 
                                     // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
-                                    if(isNumeric(current) || checkNumberEnding(current)) {
+                                    if (isNumeric(current) || checkNumberEnding(current)) {
                                         int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
                                         if (toAdd != 0) {
                                             counter = counter + toAdd;
@@ -411,8 +430,8 @@ public class Parse implements Runnable {
                                             counter++;
                                             parsed.add(current);
                                             added = true;
-                                            if (counter < AfterSplit.length - 1)
-                                                current2 = AfterSplit[counter + 1];
+                                            if (counter < afterSplit.length - 1)
+                                                current2 = afterSplit[counter + 1];
                                             else
                                                 current2 = "";
                                         }
@@ -463,8 +482,7 @@ public class Parse implements Runnable {
                     }
                 }
 
-            }
-            else{
+            } else {
                 if (stop) {
                     Indexer.stop();
                     break;
@@ -476,7 +494,7 @@ public class Parse implements Runnable {
     private boolean HandleDashwithNums(String current) {
         String[] SplitDash = current.split("-");
         boolean toAddAll = false;
-        if(SplitDash.length == 2){
+        if (SplitDash.length == 2) {
             return true;
         }
         return toAddAll;
@@ -484,7 +502,8 @@ public class Parse implements Runnable {
 
     /**
      * handles the 'DD MONTH' / 'DD MONTH YYYY' date cases
-     * @param current - an optional DD word
+     *
+     * @param current  - an optional DD word
      * @param current2 - an optional MONTH word
      * @param current3 - an optional YEAR word
      * @return - 0 if the case was found not to be true, 2 if the 'DD MONTH' case was true, and 3 if the 'DD MONTH YYYY' case was true
@@ -492,25 +511,25 @@ public class Parse implements Runnable {
     private int handleDayMonthOrDayMonthYear(String current, String current2, String current3) {
         String monthNumber = getMonthNumber(current2);
         // check if the next word is a month
-        if(!monthNumber.equals("00")) {
+        if (!monthNumber.equals("00")) {
             int currentLength = current.length();
             // check if the number ends with an ordinal indicator (st, nd, rd, th) and remove it if so
             if (checkNumberEnding(current)) {
-                current = current.substring(0,currentLength - 2);
+                current = current.substring(0, currentLength - 2);
                 currentLength = currentLength - 2;
             }
             // check if the number has 2 or less digits
-            if (currentLength <= 2){
+            if (currentLength <= 2) {
                 // check if the number's value is of a day
                 int dayValue = Integer.valueOf(current);
                 // adds a new day date
                 if (dayValue > 31)
                     return 0;
                 if (currentLength == 1) {
-                    updateDictionaries(current);
+                    handleNormalLetters(current);
                     current = "0" + current;
                 }
-                updateDictionaries(monthNumber + "-" + current);
+                handleNormalLetters(monthNumber + "-" + current);
                 handleAllLetters(getMonthNameForDictionary(monthNumber));
                 // check if there is also a year in the date term
                 int current3Length = current3.length();
@@ -522,15 +541,15 @@ public class Parse implements Runnable {
                     // need to add the YYYY-MM term separately
                     if (current3Length == 2) {
                         date = "00" + current3 + "-" + monthNumber + "-" + current;
-                        updateDictionaries("00" + current3 + "-" + monthNumber);
+                        handleNormalLetters("00" + current3 + "-" + monthNumber);
                     }
                     // need to add the YYYY-MM term separately
                     if (current3Length == 3) {
                         date = "0" + current3 + "-" + monthNumber + "-" + current;
-                        updateDictionaries("0" + current3 + "-" + monthNumber);
+                        handleNormalLetters("0" + current3 + "-" + monthNumber);
                     }
-                    updateDictionaries(current3);
-                    updateDictionaries(date);
+                    handleNormalLetters(current3);
+                    handleNormalLetters(date);
                     return 3;
                 }
                 return 2;
@@ -541,6 +560,7 @@ public class Parse implements Runnable {
 
     /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
+     *
      * @param current - a given word that might be a month
      * @param counter - the counter for the words in the split array
      * @return - true if it was found that the case was verified, else - false
@@ -548,8 +568,8 @@ public class Parse implements Runnable {
     private boolean handleMonthYearOrMonthDay(String current, int counter) {
         String monthNumber = getMonthNumber(current);
         // checks if the first word is a month
-        if(!monthNumber.equals("00")) {
-            String current2 = AfterSplit[counter + 1];
+        if (!monthNumber.equals("00")) {
+            String current2 = afterSplit[counter + 1];
             int current2Length = current2.length();
             String date;
             // checks if the second word is a number
@@ -558,7 +578,7 @@ public class Parse implements Runnable {
                 if (current2Length <= 2) {
                     if (current2Length == 1)
                         date = monthNumber + "-0" + current2;
-                    // checks if the number in the second word is between 0 to 31 (a day's number)
+                        // checks if the number in the second word is between 0 to 31 (a day's number)
                     else {
                         int dayValue = Integer.valueOf(current2);
                         // adds a new day date
@@ -574,24 +594,23 @@ public class Parse implements Runnable {
                     // the year is between 1000 to 9999
                     if (current2Length == 4)
                         date = current2 + "-" + monthNumber;
-                    // the year is between 100 to 999
+                        // the year is between 100 to 999
                     else {
                         date = "0" + current2 + "-" + monthNumber;
                     }
                 }
-                updateDictionaries(date);
-                updateDictionaries(current2);
+                handleNormalLetters(date);
+                handleNormalLetters(current2);
                 handleAllLetters(getMonthNameForDictionary(monthNumber));
                 return true;
-            }
-            else {
-                if (!current2.equals("") && checkNumberEnding(current2)){
-                    current2 = current2.substring(0,current2Length - 2);
+            } else {
+                if (!current2.equals("") && checkNumberEnding(current2)) {
+                    current2 = current2.substring(0, current2Length - 2);
                     if (!current2.equals("")) {
                         if (current2Length - 2 == 1) {
                             date = monthNumber + "-0" + current2;
-                            updateDictionaries(date);
-                            updateDictionaries(current2);
+                            handleNormalLetters(date);
+                            handleNormalLetters(current2);
                             handleAllLetters(getMonthNameForDictionary(monthNumber));
                             return true;
                         } else {
@@ -603,8 +622,8 @@ public class Parse implements Runnable {
                                 else
                                     // adds a new year between 32 to 99
                                     date = "00" + current2 + "-" + monthNumber;
-                                updateDictionaries(date);
-                                updateDictionaries(current2);
+                                handleNormalLetters(date);
+                                handleNormalLetters(current2);
                                 handleAllLetters(getMonthNameForDictionary(monthNumber));
                                 return true;
                             }
@@ -618,6 +637,7 @@ public class Parse implements Runnable {
 
     /**
      * checks if the given word is a number which ends with st\nd\rd\th in capital or lower letters
+     *
      * @param number - a given number
      * @return - true if the case we check is true. else - false
      */
@@ -632,97 +652,105 @@ public class Parse implements Runnable {
 
     /**
      * gets a month's name in capital letters given its number
+     *
      * @param monthNumber - a given month's number
      * @return - a month's name in capital letters
      */
     private String getMonthNameForDictionary(String monthNumber) {
-        if(monthNumber.equals("01"))
+        if (monthNumber.equals("01"))
             return "JANUARY";
-        if(monthNumber.equals("02"))
+        if (monthNumber.equals("02"))
             return "FEBRUARY";
-        if(monthNumber.equals("03"))
+        if (monthNumber.equals("03"))
             return "MARCH";
-        if(monthNumber.equals("04"))
+        if (monthNumber.equals("04"))
             return "APRIL";
-        if(monthNumber.equals("05"))
+        if (monthNumber.equals("05"))
             return "MAY";
-        if(monthNumber.equals("06"))
+        if (monthNumber.equals("06"))
             return "JUNE";
-        if(monthNumber.equals("07"))
+        if (monthNumber.equals("07"))
             return "JULY";
-        if(monthNumber.equals("08"))
+        if (monthNumber.equals("08"))
             return "AUGUST";
-        if(monthNumber.equals("09"))
+        if (monthNumber.equals("09"))
             return "SEPTEMBER";
-        if(monthNumber.equals("10"))
+        if (monthNumber.equals("10"))
             return "OCTOBER";
-        if(monthNumber.equals("11"))
+        if (monthNumber.equals("11"))
             return "NOVEMBER";
-        if(monthNumber.equals("12"))
+        if (monthNumber.equals("12"))
             return "DECEMBER";
         return "";
     }
 
     /**
      * checks and returns the number that represents the month name in the given string
+     *
      * @param monthName - the given month name
      * @return - the number that represents the month name in the given string. If it's not a month name, than returns "00"
      */
     private String getMonthNumber(String monthName) {
-        if(monthName.equals("January") || monthName.equals("JANUARY") || monthName.equals("january") || monthName.equals("Jan") || monthName.equals("JAN")
+        if (monthName.equals("January") || monthName.equals("JANUARY") || monthName.equals("january") || monthName.equals("Jan") || monthName.equals("JAN")
                 || monthName.equals("jan"))
             return "01";
-        if(monthName.equals("February") || monthName.equals("FEBRUARY") || monthName.equals("february") || monthName.equals("Feb") || monthName.equals("FEB")
+        if (monthName.equals("February") || monthName.equals("FEBRUARY") || monthName.equals("february") || monthName.equals("Feb") || monthName.equals("FEB")
                 || monthName.equals("feb"))
             return "02";
-        if(monthName.equals("March") || monthName.equals("MARCH") || monthName.equals("march") || monthName.equals("Mar") || monthName.equals("MAR")
+        if (monthName.equals("March") || monthName.equals("MARCH") || monthName.equals("march") || monthName.equals("Mar") || monthName.equals("MAR")
                 || monthName.equals("mar"))
             return "03";
-        if(monthName.equals("April") || monthName.equals("APRIL") || monthName.equals("april") || monthName.equals("Apr") || monthName.equals("APR")
+        if (monthName.equals("April") || monthName.equals("APRIL") || monthName.equals("april") || monthName.equals("Apr") || monthName.equals("APR")
                 || monthName.equals("apr"))
             return "04";
-        if(monthName.equals("May") || monthName.equals("MAY") || monthName.equals("may"))
+        if (monthName.equals("May") || monthName.equals("MAY") || monthName.equals("may"))
             return "05";
-        if(monthName.equals("June") || monthName.equals("JUNE") || monthName.equals("june") || monthName.equals("Jun") || monthName.equals("JUN")
+        if (monthName.equals("June") || monthName.equals("JUNE") || monthName.equals("june") || monthName.equals("Jun") || monthName.equals("JUN")
                 || monthName.equals("jun"))
             return "06";
-        if(monthName.equals("July") || monthName.equals("JULY") || monthName.equals("july") || monthName.equals("Jul") || monthName.equals("JUL")
+        if (monthName.equals("July") || monthName.equals("JULY") || monthName.equals("july") || monthName.equals("Jul") || monthName.equals("JUL")
                 || monthName.equals("jul"))
             return "07";
-        if(monthName.equals("August") || monthName.equals("AUGUST") || monthName.equals("august") || monthName.equals("Aug") || monthName.equals("AUG")
+        if (monthName.equals("August") || monthName.equals("AUGUST") || monthName.equals("august") || monthName.equals("Aug") || monthName.equals("AUG")
                 || monthName.equals("aug"))
             return "08";
-        if(monthName.equals("September") || monthName.equals("SEPTEMBER") || monthName.equals("september") || monthName.equals("Sep") || monthName.equals("SEP")
+        if (monthName.equals("September") || monthName.equals("SEPTEMBER") || monthName.equals("september") || monthName.equals("Sep") || monthName.equals("SEP")
                 || monthName.equals("sep"))
             return "09";
-        if(monthName.equals("October") || monthName.equals("OCTOBER") || monthName.equals("october") || monthName.equals("Oct") || monthName.equals("OCT")
+        if (monthName.equals("October") || monthName.equals("OCTOBER") || monthName.equals("october") || monthName.equals("Oct") || monthName.equals("OCT")
                 || monthName.equals("oct"))
             return "10";
-        if(monthName.equals("November") || monthName.equals("NOVEMBER") || monthName.equals("november") || monthName.equals("Nov") || monthName.equals("NOV")
+        if (monthName.equals("November") || monthName.equals("NOVEMBER") || monthName.equals("november") || monthName.equals("Nov") || monthName.equals("NOV")
                 || monthName.equals("nov"))
             return "11";
-        if(monthName.equals("December") || monthName.equals("DECEMBER") || monthName.equals("december") || monthName.equals("Dec") || monthName.equals("DEC")
+        if (monthName.equals("December") || monthName.equals("DECEMBER") || monthName.equals("december") || monthName.equals("Dec") || monthName.equals("DEC")
                 || monthName.equals("dec"))
             return "12";
         return "00";
     }
 
-    /**this function checks if the string given is a fraction
+    /**
+     * this function checks if the string given is a fraction
+     *
      * @param s
      * @return true if the string is a fraction
      */
     private boolean notFraction(String s) {
         boolean ans = false;
-        if(s.contains("/")) {
+        if (s.contains("/")) {
             String[] ans1 = s.split("/");
-            if(ans1.length>2)
+            if (ans1.length > 2)
                 return ans;
-            if(isNumeric(ans1[0])&& isNumeric(ans1[1]))
+            if (isNumeric(ans1[0]) && isNumeric(ans1[1]))
                 return true;
         }
         return ans;
     }
-                      
+
+    /**
+     * handles with words with dash between them
+     * @param current - a given string with a '-' delimiter smoewhere in the middle of it
+     */
     private void handleWordsWithDash(String current) {
         String[] dashSplit = current.split("-");
         boolean allWords = true;
@@ -757,6 +785,7 @@ public class Parse implements Runnable {
 
     /**
      * checks if there are more delimiters which we didn't check before in the given string array
+     *
      * @param delimiterSplit - a given string array
      */
     private void checkFurtherSplits(String[] delimiterSplit) {
@@ -781,81 +810,91 @@ public class Parse implements Runnable {
 
     /**
      * checks and handles the 'BETWEEN NUMBER AND NUMBER' term
+     *
      * @param current1 - the first word of the term
-     * @param counter - the counter for the words in the text
+     * @param counter  - the counter for the words in the text
      * @return - true if the term was found to be true, else - false
      */
     private boolean handleBetweenNumberAndNumber(String current1, int counter) {
         // TODO add every number to the term dictionaries
         String current2;
         String current3;
-        String current4 ;
+        String current4;
         // checks if the 2nd word is a NUMBER
-        if (counter + 1 < AfterSplitLength && isNumeric2(AfterSplit[counter + 1])) {
-            current2 = AfterSplit[counter + 1];
+        if (counter + 1 < afterSplitLength && isNumeric2(afterSplit[counter + 1])) {
+            current2 = afterSplit[counter + 1];
             // checks if the 3rd word is "and"
-            if (counter + 2 < AfterSplitLength && (AfterSplit[counter + 2].equals("and") || AfterSplit[counter + 2].equals("And") ||
-                    AfterSplit[counter + 2].equals("AND"))) {
-                current3 = AfterSplit[counter + 2];
+            if (counter + 2 < afterSplitLength && (afterSplit[counter + 2].equals("and") || afterSplit[counter + 2].equals("And") ||
+                    afterSplit[counter + 2].equals("AND"))) {
+                current3 = afterSplit[counter + 2];
                 // checks if the 4th word is a NUMBER
-                if (counter + 3 < AfterSplitLength && isNumeric2(AfterSplit[counter + 3])) {
-                    current4 = AfterSplit[counter + 3];
+                if (counter + 3 < afterSplitLength && isNumeric2(afterSplit[counter + 3])) {
+                    current4 = afterSplit[counter + 3];
                     // TODO add a number fix for current2 and current4
                     handleNormalLetters(current1 + current2 + current3 + current4);
                     return true;
-                }
-                else {
+                } else {
                     /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                        TODO if so, add one more current (and check the length of the String list accordingly)
                        TODO else, return false;
                     */
                     return false;
                 }
-            }
-            else {
+            } else {
                 /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                    TODO if so, add one more current (and check the length of the String list accordingly)
                    TODO else, return false;
                 */
                 return false;
             }
-        }
-        else {
+        } else {
             return false;
         }
     }
 
     /**
      * handles all letter cases for a given word
+     *
      * @param current - a given word
      */
     private void handleAllLetters(String current) {
+        String stemmed = "";
+        if (stemming)
+            stemmer.setTerm(current);
         // --- case 1: all of the word is in lower letters ---
         if (current.toLowerCase().equals(current)) {
-            handleLowerLetters(current);
-            parsed.add(current);
+            if (stemming) {
+                handleLowerLetters(stemmed);
+                parsed.add(stemmed);
+            } else {
+                handleLowerLetters(current);
+                parsed.add(current);
+            }
         } else {
-            // --- case 2: only first letter of word is a capital letter ---
-            if (current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
-                    current.substring(1).toLowerCase().equals(current.substring(1))) {
+            // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
+            if ((current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
+                    current.substring(1).toLowerCase().equals(current.substring(1))) || (current.toUpperCase().equals(current))) {
                 char lowerLetter = (char) (current.charAt(0) + 32);
                 String lowerCurrent = lowerLetter + current.substring(1);
-                handleCapitalLetters(lowerCurrent);
-                parsed.add(lowerCurrent);
-            } else {
-                // --- case 3: all of the word is in capital letters ---
-                if (current.toUpperCase().equals(current)) {
-                    String lowerCurrent = current.toLowerCase();
+                if (stemming) {
+                    handleCapitalLetters(stemmed); // TODO: maybe toLowerCase
+                    parsed.add(stemmed); // TODO: maybe toLowerCase
+                } else {
                     handleCapitalLetters(lowerCurrent);
                     parsed.add(lowerCurrent);
                 }
-                // --- case 4: mixed capital, lower case word - > none of the above cases ---
-                else {
+            }
+            // --- case 4: mixed capital, lower case word - > none of the above cases ---
+            else {
+                if (stemming)
+                    handleNormalLetters(stemmed);
+                else
                     handleNormalLetters(current);
-                }
+
             }
         }
     }
+
 
     /**
      * removes any extra delimiters from a given word that we didn't remove when we split the words in the text prior
@@ -895,20 +934,20 @@ public class Parse implements Runnable {
     private void handleLowerLetters(String current) {
         String currentUpper = current.toUpperCase();
         // word is not in corpus dictionary and is not in document dictionary
-        if(!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
-            corpusDictionary.put(current,1);
-            currentTermDictionary.put(current,1);
-        }
-        else {
+        if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
+            corpusDictionary.put(current, 1);
+            currentTermDictionary.put(current, 1);
+        } else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
                 // word is in document dictionary in lower case
                 if (currentTermDictionary.containsKey(current))
                     currentTermDictionary.put(current, currentTermDictionary.get(current) + 1);
-                // word is not in document dictionary
+
+                    // word is not in document dictionary
                 else {
                     currentTermDictionary.put(current, 1);
-                    corpusDictionary.put(current,corpusDictionary.get(current) + 1);
+                    corpusDictionary.put(current, corpusDictionary.get(current) + 1);
                 }
             } else {
                 // word is in corpus dictionary in upper case
@@ -918,13 +957,13 @@ public class Parse implements Runnable {
                     // word is not in document dictionary
                     if (!currentTermDictionary.containsKey(currentUpper)) {
                         df++;
-                        currentTermDictionary.put(current,1);
+                        currentTermDictionary.put(current, 1);
                     }
                     // word is in document dictionary in upper case
                     else {
                         int tf = currentTermDictionary.get(currentUpper);
                         currentTermDictionary.remove(currentUpper);
-                        currentTermDictionary.put(current,tf + 1);
+                        currentTermDictionary.put(current, tf + 1);
                     }
                     corpusDictionary.put(currentUpper, df);
                 }
