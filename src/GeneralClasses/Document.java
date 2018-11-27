@@ -15,9 +15,7 @@ public class Document {
     private String docTitle;
     private String docDate;
     private String city;
-
     private ArrayList<String> termList;
-
     private HashMap<String,Integer> termDictionary;
     /**
      * A constructor for the Document class which recieves the document's ID
