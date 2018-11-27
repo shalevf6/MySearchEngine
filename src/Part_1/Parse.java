@@ -31,10 +31,7 @@ public class Parse implements Runnable {
      * @param path - the path to the stop words file
      */
     public Parse(String path){
-        //getStopWords(path); !!!! delete the Path !!!!!
-        Path =path;
-        StopWords = new HashMap<>();///!!!!!///!!! delete
-
+        getStopWords(path);
     }
 
     /** This function generates the stop words Dictionary to Array List.
