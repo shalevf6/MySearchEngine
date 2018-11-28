@@ -861,7 +861,7 @@ public class Parse implements Runnable {
     private void handleAllLetters(String current) {
         String stemmed = "";
         if (stemming)
-            stemmer.setTerm(current);
+            stemmed = stemmer.stemTerm(current);
         // --- case 1: all of the word is in lower letters ---
         if (current.toLowerCase().equals(current)) {
             if (stemming)
