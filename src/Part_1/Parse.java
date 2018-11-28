@@ -3,6 +3,7 @@ package Part_1;
 import GeneralClasses.Document;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -24,6 +25,9 @@ public class Parse implements Runnable {
     private String[] afterSplit;
     private int afterSplitLength;
     private Stemmer stemmer;
+    private boolean turnToTitle;
+    private boolean turnToDate;
+    private boolean turnToCity;
 
     /**
      * a constructor for the Parse class
@@ -74,133 +78,371 @@ public class Parse implements Runnable {
                 String documentDate = document.getDocDate();
                 String documentCity = document.getCity();
                 docNumber++;
-                for (String data : documents) {
-                    String current;
-                    int counter = 0;
-                    //splits the string
-                    afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
-                    afterSplitLength = afterSplit.length;
-                    int wordCounter = 0;
-                    while (wordCounter < afterSplitLength) {
-                        afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
-                        wordCounter++;
-                    }
-                    // goes through every word in the document
-                    while (counter <= afterSplitLength - 1) {
-                        if (addedMore) {
-
+                while (turnToTitle && turnToDate && turnToCity) {
+                    for (String data : documents) {
+                        String current;
+                        int counter = 0;
+                        //splits the string
+                        afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                        afterSplitLength = afterSplit.length;
+                        int wordCounter = 0;
+                        while (wordCounter < afterSplitLength) {
+                            afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
+                            wordCounter++;
                         }
-                        current = afterSplit[counter];
-                        // checks if the current string is a stop word (and not the word between)
-                        if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
-                            counter++;
-                        } else {
-                            // checks if there aren't any numbers in the word
-                            if (!isNumeric2(current)) {
+                        // goes through every word in the document
+                        while (counter <= afterSplitLength - 1) {
+                            if (addedMore) {
 
-                                // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
-                                // checks if the 1st word is "between"
-                                if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
-                                    if (handleBetweenNumberAndNumber(current, counter)) {
-                                        counter = counter + 4;
-                                        continue;
-                                    } else {
-                                        counter++;
-                                        continue;
-                                    }
-                                }
-
-                                // ------- 'WORD-WORD' | 'WORD-WORD-WORD' CHECK -------
-                                if (current.contains("-")) {
-                                    handleWordsWithDash(current);
-                                    counter++;
-                                    continue;
-                                }
-
-                                // ------- 'WORD/WORD' CHECK -------
-                                if (current.contains("/")) {
-                                    String[] orSplit = current.split("/");
-                                    checkFurtherSplits(orSplit);
-                                    counter++;
-                                    continue;
-                                }
-
-                                // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
-                                if (counter + 1 < afterSplitLength) {
-                                    if (handleMonthYearOrMonthDay(current, counter)) {
-                                        counter = counter + 2;
-                                        continue;
-                                    }
-                                }
-
-                                // ------- CAPITAL LETTERS CHECK -------
-                                if (isOnlyLetters(current)) {
-                                    handleAllLetters(current);
-                                    counter++;
-                                    // means its a different/empty letter case
-                                } else {
-                                    if (!current.equals("")) {
-                                        String[] moreWords = current.split("[-'%$]+");
-                                        for (String anotherWord : moreWords) {
-                                            if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
-                                                handleNormalLetters(current);
-                                        }
-                                    }
-                                    counter++;
-                                }
                             }
-                            // means it's a number:
-                            else {
-                                String current2 = "";
-                                String current3 = "";
-                                String current4 = "";
+                            current = afterSplit[counter];
+                            // checks if the current string is a stop word (and not the word between)
+                            if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
+                                counter++;
+                            } else {
+                                // checks if there aren't any numbers in the word
+                                if (!isNumeric2(current)) {
 
-                                if (counter + 1 < afterSplit.length)
-                                    current2 = afterSplit[counter + 1];
-                                if (counter + 2 < afterSplit.length)
-                                    current3 = afterSplit[counter + 2];
-                                if (counter + 3 < afterSplit.length)
-                                    current4 = afterSplit[counter + 3];
-                                // checks if the number is the whole word
-                                // ---case 0:inValid String -------
-                                if (!CheckIfValidString(current)) {
-                                    if (checkNumberEnding(current)) {
-                                        String wordNum = current.substring(0, current.length() - 2);
-                                        if (isNumeric(wordNum)) {
-                                            handleNormalLetters(wordNum);
+                                    // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
+                                    // checks if the 1st word is "between"
+                                    if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
+                                        int toAdd = handleBetweenNumberAndNumber(current, counter);
+                                        if (toAdd > 0) {
+                                            counter = counter + toAdd;
+                                            continue;
+                                        } else {
+                                            counter++;
                                             continue;
                                         }
                                     }
-                                    handleNormalLetters(current);
-                                    counter++;
+
+                                    // ------- 'WORD-WORD' | 'WORD-WORD-WORD' CHECK -------
+                                    if (current.contains("-")) {
+                                        handleWordsWithDash(current);
+                                        counter++;
+                                        continue;
+                                    }
+
+                                    // ------- 'WORD/WORD' CHECK -------
+                                    if (current.contains("/")) {
+                                        String[] orSplit = current.split("/");
+                                        checkFurtherSplits(orSplit);
+                                        counter++;
+                                        continue;
+                                    }
+
+                                    // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
+                                    if (counter + 1 < afterSplitLength) {
+                                        if (handleMonthYearOrMonthDay(current, counter)) {
+                                            counter = counter + 2;
+                                            continue;
+                                        }
+                                    }
+
+                                    // ------- CAPITAL LETTERS CHECK -------
+                                    if (isOnlyLetters(current)) {
+                                        handleAllLetters(current);
+                                        counter++;
+                                        // means its a different/empty letter case
+                                    } else {
+                                        if (!current.equals("")) {
+                                            String[] moreWords = current.split("[-'%$]+");
+                                            for (String anotherWord : moreWords) {
+                                                if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                                    handleNormalLetters(current);
+                                            }
+                                        }
+                                        counter++;
+                                    }
                                 }
-                                // ---case 0.5:contains dash ------
-                                //------ONLY-ONE-DASH---------//
-                                boolean HoeMuchToChange = HandleDashwithNums(current);
-                                if (current.contains("-") && HoeMuchToChange) {
-                                    String[] DashSplit = current.split("-");
-                                    //-----TWO NUMBERS------//
-                                    if (isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])) {
-                                        String tempCurrent = DashSplit[0];
-                                        current = DashSplit[1];
+                                // means it's a number:
+                                else {
+                                    String current2 = "";
+                                    String current3 = "";
+                                    String current4 = "";
+
+                                    if (counter + 1 < afterSplit.length)
+                                        current2 = afterSplit[counter + 1];
+                                    if (counter + 2 < afterSplit.length)
+                                        current3 = afterSplit[counter + 2];
+                                    if (counter + 3 < afterSplit.length)
+                                        current4 = afterSplit[counter + 3];
+                                    // checks if the number is the whole word
+                                    // ---case 0:inValid String -------
+                                    if (!CheckIfValidString(current)) {
+                                        if (checkNumberEnding(current)) {
+                                            String wordNum = current.substring(0, current.length() - 2);
+                                            if (isNumeric(wordNum)) {
+                                                handleNormalLetters(wordNum);
+                                                continue;
+                                            }
+                                        }
+                                        handleNormalLetters(current);
+                                        counter++;
+                                    }
+                                    // ---case 0.5:contains dash ------
+                                    //------ONLY-ONE-DASH---------//
+                                    boolean HoeMuchToChange = HandleDashwithNums(current);
+                                    if (current.contains("-") && HoeMuchToChange) {
+                                        String[] DashSplit = current.split("-");
+                                        //-----TWO NUMBERS------//
+                                        if (isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])) {
+                                            String tempCurrent = DashSplit[0];
+                                            current = DashSplit[1];
+                                            if (current.contains(",") && !added)
+                                                current = changeNumToRegularNum(current);
+                                            if (!added && isNumeric2(current)) {
+                                                //--------NUMBER-NUMBER FRACTION----//
+                                                if (notFraction(current2)) {
+                                                    current = current + " " + current2;
+                                                    counter++;
+                                                    handleNormalLetters(tempCurrent + "-" + current);
+                                                    handleNormalLetters(current);
+                                                    added = true;
+                                                    added = false;
+                                                    added = true;
+                                                    if (counter < afterSplit.length - 1)
+                                                        current2 = afterSplit[counter + 1];
+                                                    else
+                                                        current2 = "";
+                                                }
+                                                //--------NUMBER-NUMBER THOUSAND/MILLION/BILLION/TRILLION-------//
+                                                if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                                    if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                        current = current + "K";
+                                                        counter++;
+                                                    }//SECOND:IF CURRENT2= MILLION
+                                                    if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                        current = current + "M";
+                                                        counter++;
+                                                    }//THIRD:IF CURRENT2= BILLION
+                                                    if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                        current = current + "B";
+                                                        counter++;
+                                                    }//FORTH:IF CURRENT2= TRILLION
+                                                    if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                        Double temp = Double.parseDouble(current);
+                                                        temp = temp * 1000;
+                                                        int temp2 = temp.intValue();
+                                                        current = String.valueOf(temp2);
+                                                        current = current + "B";
+                                                        counter--;
+                                                        counter = counter + 2;
+                                                    }
+                                                    if (current.contains("M")) {
+                                                        current = current.substring(0, current.length() - 1) + " M";
+                                                    }
+                                                }
+                                            }
+                                            handleNormalLetters(tempCurrent);
+                                            handleNormalLetters(current);
+                                            handleNormalLetters(tempCurrent + "-" + current);
+                                        }
+                                        //------ONE NUMBER------//
+                                        if ((isNumeric2(DashSplit[0]) || isNumeric2(DashSplit[1])) && !added) {
+                                            String tempCurrent = DashSplit[0];
+                                            current = DashSplit[1];
+                                            if (isNumeric2(tempCurrent))
+                                                changeNumToRegularNum(tempCurrent);
+                                            if (isNumeric2(current))
+                                                changeNumToRegularNum(current);
+
+                                            //TODO add the word in shalev word's addition
+                                            if (isOnlyLetters(current)) {
+                                                if (!StopWords.containsKey(current)) {
+                                                    // if there is a delimiter in the word
+                                                    if (!isOnlyLetters(current)) {
+                                                        String remainingDelimiters = "['.,/\\s]+";
+                                                        String[] moreWords = current.split(remainingDelimiters);
+                                                        for (String moreWord : moreWords)
+                                                            if (!moreWord.equals(""))
+                                                                handleAllLetters(moreWord);
+                                                        // if there is no delimiter in the word
+                                                    } else if (!current.equals(""))
+                                                        handleAllLetters(current);
+                                                }
+                                            }
+
+                                            //-----NUMBER-WORD----------//
+                                            if (isNumeric2(tempCurrent)) {
+                                                handleNormalLetters(tempCurrent);
+                                                handleNormalLetters(current);
+                                                handleNormalLetters(tempCurrent + "-" + current);
+                                                added = true;
+                                            }
+                                            //----WORD-NUMBER----------//
+                                            //TODO add the word in shalev word's addition
+                                            if (isNumeric2(current)) {
+                                                if (!added && isNumeric2(current)) {
+                                                    //-------WORD-NUMBER FRACTION---------//
+                                                    if (notFraction(current2)) {
+                                                        current = current + " " + current2;
+                                                        counter++;
+                                                        handleNormalLetters(current);
+                                                        handleNormalLetters(tempCurrent);
+                                                        handleNormalLetters(tempCurrent + "-" + current);
+                                                        added = true;
+                                                        if (counter < afterSplit.length - 1)
+                                                            current2 = afterSplit[counter + 1];
+                                                        else
+                                                            current2 = "";
+                                                    }
+                                                    //------WORD-NUMBER THOUSAND/MILLION/TRILLION/BILLION
+                                                    //TODO add the word in shalev word's addition
+                                                    if (!added) { //FIRST:IF CURRENT2= THOUSAND
+                                                        if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
+                                                            current = current + "K";
+                                                            counter++;
+                                                        }//SECOND:IF CURRENT2= MILLION
+                                                        if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
+                                                            current = current + "M";
+                                                            counter++;
+                                                        }//THIRD:IF CURRENT2= BILLION
+                                                        if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
+                                                            current = current + "B";
+                                                            counter++;
+                                                        }//FORTH:IF CURRENT2= TRILLION
+                                                        if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
+                                                            Double temp = Double.parseDouble(current);
+                                                            temp = temp * 1000;
+                                                            int temp2 = temp.intValue();
+                                                            int temp3;
+                                                            current = String.valueOf(temp2);
+                                                            current = current + "B";
+                                                            counter++;
+                                                        }
+                                                        if (current.contains("M")) {
+                                                            current = current.substring(0, current.length() - 1) + " M";
+                                                        }
+                                                        handleNormalLetters(tempCurrent);
+                                                        handleNormalLetters(current);
+                                                        handleNormalLetters(tempCurrent + "-" + current);
+                                                        added = true;
+                                                    }
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                    //-------CURRENT2 HAS DASH-------//
+                                    boolean HoeMuchToChange2 = HandleDashwithNums(current2);
+                                    if (current2.contains("-") && HoeMuchToChange2) {
+                                        String[] DashSplit = current2.split("-");
+                                        String TempCurrent2 = DashSplit[0];
+                                        String Temp2Current2 = DashSplit[1];
+                                        if (isNumeric2(current)) {
+                                            current = changeNumToRegularNum(current);
+                                        }
+                                        if (isNumeric2(Temp2Current2))
+                                            Temp2Current2 = changeNumToRegularNum(Temp2Current2);
+                                        if (isNumeric2(TempCurrent2))
+                                            TempCurrent2 = changeNumToRegularNum(TempCurrent2);
+                                        if (!added) {
+                                            //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
+                                            if (isNumeric2(current) && isNumeric2(Temp2Current2)) {
+                                                if (TempCurrent2.equals("Thousand") || TempCurrent2.equals("THOUSAND") || TempCurrent2.equals("thousand")) {
+                                                    current = current + "K";
+                                                    counter++;
+                                                }//SECOND:IF CURRENT2= MILLION
+                                                if (TempCurrent2.equals("Million") || TempCurrent2.equals("MILLION") || TempCurrent2.equals("million") || TempCurrent2.equals("mill")) {
+                                                    current = current + "M";
+                                                    counter++;
+                                                }//THIRD:IF CURRENT2= BILLION
+                                                if (TempCurrent2.equals("Billion") || TempCurrent2.equals("BILLION") || TempCurrent2.equals("billion")) {
+                                                    current = current + "B";
+                                                    counter++;
+                                                }//FORTH:IF CURRENT2= TRILLION
+                                                if (TempCurrent2.equals("Trillion") || TempCurrent2.equals("TRILLION") || TempCurrent2.equals("trillion")) {
+                                                    Double temp = Double.parseDouble(current);
+                                                    temp = temp * 1000;
+                                                    int temp2 = temp.intValue();
+                                                    current = String.valueOf(temp2);
+                                                    current = current + "B";
+                                                    counter = counter + 1;
+                                                }
+                                                if (current.contains("M")) {
+                                                    current = current.substring(0, current.length() - 1) + " M";
+                                                }
+                                                handleNormalLetters(current);
+                                                handleNormalLetters(Temp2Current2);
+                                                handleNormalLetters(current + "-" + Temp2Current2);
+                                                added = true;
+                                            }
+                                            //--------NUMBER FRACTION-WORD-------//
+                                            if (isNumeric2(current) && notFraction(TempCurrent2)) {
+
+                                            }
+                                        }
+                                    }
+                                    if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                            current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
+                                            current4.equals("Dollars")) && !added) {
+//
+                                        // ------- PERCENTAGE CHECK -------
+                                        // --- case 1: NUMBER% ---
+                                        if (current.contains("%")) {
+                                            handleNormalLetters(current);
+                                            added = true;
+                                        } else {
+                                            if (counter + 1 < afterSplit.length) {
+                                                // --- case 2, 3: NUMBER percent, NUMBER percentage ---
+                                                if (afterSplit[counter + 1].equals("percent") || afterSplit[counter + 1].equals("percentage")) {
+                                                    current = current + "%";
+                                                    handleNormalLetters(current);
+                                                    added = true;
+                                                    counter++;
+                                                }
+                                            }
+                                            if (!added) {
+                                                // ------- PRICE CHECK -------
+                                                dollar = checkIfMoney(current, current2, current3, current4);
+                                                // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
+                                                if (dollar) {
+                                                    /* !!! need to update counter according to term !!! */
+                                                    current = change_to_price(current, current2, current3, current4);
+                                                    handleNormalLetters(current);
+                                                    if (current2.equals("Dollars") || current2.equals("dollars"))
+                                                        counter++;
+                                                    if (current3.equals("Dollars") || current3.equals("dollars"))
+                                                        counter = counter + 2;
+                                                    if (current4.equals("dollars") || current4.equals("Dollars"))
+                                                        counter = counter + 3;
+                                                    if (current.contains("$") && current2.equals("million") || current.contains("$") && current2.equals("billion") ||
+                                                            current.contains("$") && current2.equals("trillion") || current.contains("$") && current2.equals("MILLION")
+                                                            || current.contains("$") && current2.equals("BILLION") || current.contains("$") && current2.equals("TRILLION")
+                                                            || current.contains("$") && current2.equals("Million") || current.contains("$") && current2.equals("Billion") ||
+                                                            current.contains("$") && current2.equals("Trillion"))
+                                                        counter = counter + 1;
+                                                    added = true;
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        // ------- NUMBER CHECK -------
+
+                                        // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
+                                        if (isNumeric(current) || checkNumberEnding(current)) {
+                                            int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
+                                            if (toAdd != 0) {
+                                                counter = counter + toAdd;
+                                                continue;
+                                            }
+                                        }
+
+                                        //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
                                         if (current.contains(",") && !added)
                                             current = changeNumToRegularNum(current);
                                         if (!added && isNumeric2(current)) {
-                                            //--------NUMBER-NUMBER FRACTION----//
                                             if (notFraction(current2)) {
                                                 current = current + " " + current2;
                                                 counter++;
-                                                handleNormalLetters(tempCurrent + "-" + current);
                                                 handleNormalLetters(current);
-                                                added = true;
-                                                added = false;
                                                 added = true;
                                                 if (counter < afterSplit.length - 1)
                                                     current2 = afterSplit[counter + 1];
                                                 else
                                                     current2 = "";
                                             }
-                                            //--------NUMBER-NUMBER THOUSAND/MILLION/BILLION/TRILLION-------//
                                             if (!added) { //FIRST:IF CURRENT2= THOUSAND
                                                 if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
                                                     current = current + "K";
@@ -220,269 +462,34 @@ public class Parse implements Runnable {
                                                     int temp2 = temp.intValue();
                                                     current = String.valueOf(temp2);
                                                     current = current + "B";
-                                                    counter--;
-                                                    counter = counter + 2;
+                                                    counter++;
                                                 }
+
                                                 if (current.contains("M")) {
                                                     current = current.substring(0, current.length() - 1) + " M";
                                                 }
-                                            }
-                                        }
-                                        handleNormalLetters(tempCurrent);
-                                        handleNormalLetters(current);
-                                        handleNormalLetters(tempCurrent + "-" + current);
-                                    }
-                                    //------ONE NUMBER------//
-                                    if ((isNumeric2(DashSplit[0]) || isNumeric2(DashSplit[1])) && !added) {
-                                        String tempCurrent = DashSplit[0];
-                                        current = DashSplit[1];
-                                        if (isNumeric2(tempCurrent))
-                                            changeNumToRegularNum(tempCurrent);
-                                        if (isNumeric2(current))
-                                            changeNumToRegularNum(current);
-
-                                        //TODO add the word in shalev word's addition
-                                        if (isOnlyLetters(current)) {
-                                            if (!StopWords.containsKey(current)) {
-                                                // if there is a delimiter in the word
-                                                if (!isOnlyLetters(current)) {
-                                                    String remainingDelimiters = "['.,/\\s]+";
-                                                    String[] moreWords = current.split(remainingDelimiters);
-                                                    for (String moreWord : moreWords)
-                                                        if (!moreWord.equals(""))
-                                                            handleAllLetters(moreWord);
-                                                    // if there is no delimiter in the word
-                                                } else if (!current.equals(""))
-                                                    handleAllLetters(current);
-                                            }
-                                        }
-
-                                        //-----NUMBER-WORD----------//
-                                        if (isNumeric2(tempCurrent)) {
-                                            handleNormalLetters(tempCurrent);
-                                            handleNormalLetters(current);
-                                            handleNormalLetters(tempCurrent + "-" + current);
-                                            added = true;
-                                        }
-                                        //----WORD-NUMBER----------//
-                                        //TODO add the word in shalev word's addition
-                                        if (isNumeric2(current)) {
-                                            if (!added && isNumeric2(current)) {
-                                                //-------WORD-NUMBER FRACTION---------//
-                                                if (notFraction(current2)) {
-                                                    current = current + " " + current2;
-                                                    counter++;
-                                                    handleNormalLetters(current);
-                                                    handleNormalLetters(tempCurrent);
-                                                    handleNormalLetters(tempCurrent + "-" + current);
-                                                    added = true;
-                                                    if (counter < afterSplit.length - 1)
-                                                        current2 = afterSplit[counter + 1];
-                                                    else
-                                                        current2 = "";
-                                                }
-                                                //------WORD-NUMBER THOUSAND/MILLION/TRILLION/BILLION
-                                                //TODO add the word in shalev word's addition
-                                                if (!added) { //FIRST:IF CURRENT2= THOUSAND
-                                                    if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
-                                                        current = current + "K";
-                                                        counter++;
-                                                    }//SECOND:IF CURRENT2= MILLION
-                                                    if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
-                                                        current = current + "M";
-                                                        counter++;
-                                                    }//THIRD:IF CURRENT2= BILLION
-                                                    if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
-                                                        current = current + "B";
-                                                        counter++;
-                                                    }//FORTH:IF CURRENT2= TRILLION
-                                                    if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
-                                                        Double temp = Double.parseDouble(current);
-                                                        temp = temp * 1000;
-                                                        int temp2 = temp.intValue();
-                                                        int temp3;
-                                                        current = String.valueOf(temp2);
-                                                        current = current + "B";
-                                                        counter++;
-                                                    }
-                                                    if (current.contains("M")) {
-                                                        current = current.substring(0, current.length() - 1) + " M";
-                                                    }
-                                                    handleNormalLetters(tempCurrent);
-                                                    handleNormalLetters(current);
-                                                    handleNormalLetters(tempCurrent + "-" + current);
-                                                    added = true;
-                                                }
-                                            }
-
-                                        }
-                                    }
-                                }
-                                //-------CURRENT2 HAS DASH-------//
-                                boolean HoeMuchToChange2 = HandleDashwithNums(current2);
-                                if (current2.contains("-") && HoeMuchToChange2) {
-                                    String[] DashSplit = current2.split("-");
-                                    String TempCurrent2 = DashSplit[0];
-                                    String Temp2Current2 = DashSplit[1];
-                                    if (isNumeric2(current)) {
-                                        current = changeNumToRegularNum(current);
-                                    }
-                                    if (isNumeric2(Temp2Current2))
-                                        Temp2Current2 = changeNumToRegularNum(Temp2Current2);
-                                    if (isNumeric2(TempCurrent2))
-                                        TempCurrent2 = changeNumToRegularNum(TempCurrent2);
-                                    if (!added) {
-                                        //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
-                                        if (isNumeric2(current) && isNumeric2(Temp2Current2)) {
-                                            if (TempCurrent2.equals("Thousand") || TempCurrent2.equals("THOUSAND") || TempCurrent2.equals("thousand")) {
-                                                current = current + "K";
-                                                counter++;
-                                            }//SECOND:IF CURRENT2= MILLION
-                                            if (TempCurrent2.equals("Million") || TempCurrent2.equals("MILLION") || TempCurrent2.equals("million") || TempCurrent2.equals("mill")) {
-                                                current = current + "M";
-                                                counter++;
-                                            }//THIRD:IF CURRENT2= BILLION
-                                            if (TempCurrent2.equals("Billion") || TempCurrent2.equals("BILLION") || TempCurrent2.equals("billion")) {
-                                                current = current + "B";
-                                                counter++;
-                                            }//FORTH:IF CURRENT2= TRILLION
-                                            if (TempCurrent2.equals("Trillion") || TempCurrent2.equals("TRILLION") || TempCurrent2.equals("trillion")) {
-                                                Double temp = Double.parseDouble(current);
-                                                temp = temp * 1000;
-                                                int temp2 = temp.intValue();
-                                                current = String.valueOf(temp2);
-                                                current = current + "B";
-                                                counter = counter + 1;
-                                            }
-                                            if (current.contains("M")) {
-                                                current = current.substring(0, current.length() - 1) + " M";
-                                            }
-                                            handleNormalLetters(current);
-                                            handleNormalLetters(Temp2Current2);
-                                            handleNormalLetters(current + "-" + Temp2Current2);
-                                            added = true;
-                                        }
-                                        //--------NUMBER FRACTION-WORD-------//
-                                        if (isNumeric2(current) && notFraction(TempCurrent2)) {
-
-                                        }
-                                    }
-                                }
-                                if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
-                                        current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
-                                        current4.equals("Dollars")) && !added) {
-//
-                                    // ------- PERCENTAGE CHECK -------
-                                    // --- case 1: NUMBER% ---
-                                    if (current.contains("%")) {
-                                        handleNormalLetters(current);
-                                        added = true;
-                                    } else {
-                                        if (counter + 1 < afterSplit.length) {
-                                            // --- case 2, 3: NUMBER percent, NUMBER percentage ---
-                                            if (afterSplit[counter + 1].equals("percent") || afterSplit[counter + 1].equals("percentage")) {
-                                                current = current + "%";
                                                 handleNormalLetters(current);
                                                 added = true;
-                                                counter++;
-                                            }
-                                        }
-                                        if (!added) {
-                                            // ------- PRICE CHECK -------
-                                            dollar = checkIfMoney(current, current2, current3, current4);
-                                            // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
-                                            if (dollar) {
-                                                /* !!! need to update counter according to term !!! */
-                                                current = change_to_price(current, current2, current3, current4);
-                                                handleNormalLetters(current);
-                                                if (current2.equals("Dollars") || current2.equals("dollars"))
-                                                    counter++;
-                                                if (current3.equals("Dollars") || current3.equals("dollars"))
-                                                    counter = counter + 2;
-                                                if (current4.equals("dollars") || current4.equals("Dollars"))
-                                                    counter = counter + 3;
-                                                if (current.contains("$") && current2.equals("million") || current.contains("$") && current2.equals("billion") ||
-                                                        current.contains("$") && current2.equals("trillion") || current.contains("$") && current2.equals("MILLION")
-                                                        || current.contains("$") && current2.equals("BILLION") || current.contains("$") && current2.equals("TRILLION")
-                                                        || current.contains("$") && current2.equals("Million") || current.contains("$") && current2.equals("Billion") ||
-                                                        current.contains("$") && current2.equals("Trillion"))
-                                                    counter = counter + 1;
-                                                added = true;
                                             }
                                         }
                                     }
-                                } else {
-                                    // ------- NUMBER CHECK -------
-
-                                    // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
-                                    if (isNumeric(current) || checkNumberEnding(current)) {
-                                        int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
-                                        if (toAdd != 0) {
-                                            counter = counter + toAdd;
-                                            continue;
-                                        }
-                                    }
-
-                                    //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-                                    if (current.contains(",") && !added)
-                                        current = changeNumToRegularNum(current);
+                                    // ------- FRACTION CHECK -------
                                     if (!added && isNumeric2(current)) {
-                                        if (notFraction(current2)) {
-                                            current = current + " " + current2;
-                                            counter++;
-                                            handleNormalLetters(current);
-                                            added = true;
-                                            if (counter < afterSplit.length - 1)
-                                                current2 = afterSplit[counter + 1];
-                                            else
-                                                current2 = "";
-                                        }
-                                        if (!added) { //FIRST:IF CURRENT2= THOUSAND
-                                            if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
-                                                current = current + "K";
-                                                counter++;
-                                            }//SECOND:IF CURRENT2= MILLION
-                                            if (current2.equals("Million") || current2.equals("MILLION") || current2.equals("million") || current2.equals("mill")) {
-                                                current = current + "M";
-                                                counter++;
-                                            }//THIRD:IF CURRENT2= BILLION
-                                            if (current2.equals("Billion") || current2.equals("BILLION") || current2.equals("billion")) {
-                                                current = current + "B";
-                                                counter++;
-                                            }//FORTH:IF CURRENT2= TRILLION
-                                            if (current2.equals("Trillion") || current2.equals("TRILLION") || current2.equals("trillion")) {
-                                                Double temp = Double.parseDouble(current);
-                                                temp = temp * 1000;
-                                                int temp2 = temp.intValue();
-                                                current = String.valueOf(temp2);
-                                                current = current + "B";
-                                                counter++;
-                                            }
-
-                                            if (current.contains("M")) {
-                                                current = current.substring(0, current.length() - 1) + " M";
-                                            }
+                                        if (notFraction(current)) {
                                             handleNormalLetters(current);
                                             added = true;
                                         }
                                     }
+                                    added = false;
+                                    dollar = false;
+                                    counter++;
                                 }
-                                // ------- FRACTION CHECK -------
-                                if (!added && isNumeric2(current)) {
-                                    if (notFraction(current)) {
-                                        handleNormalLetters(current);
-                                        added = true;
-                                    }
-                                }
-                                added = false;
-                                dollar = false;
-                                counter++;
                             }
+                            //Indexer.docQueue.add(document);
                         }
-                        //Indexer.docQueue.add(document);
                     }
+                    document.setTfAndTermDictionary(currentTermDictionary, max_tf);
                 }
-                document.setTfAndTermDictionary(currentTermDictionary, max_tf);
             } else {
                 if (stop) {
                     Indexer.stop();
@@ -558,6 +565,7 @@ public class Parse implements Runnable {
         }
         return 0;
     }
+
 
     /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
@@ -814,9 +822,9 @@ public class Parse implements Runnable {
      *
      * @param current1 - the first word of the term
      * @param counter  - the counter for the words in the text
-     * @return - true if the term was found to be true, else - false
+     * @return - the amount of words it checked were part of the term. If not, 0.
      */
-    private boolean handleBetweenNumberAndNumber(String current1, int counter) {
+    private int handleBetweenNumberAndNumber(String current1, int counter) {
         // TODO add every number to the term dictionaries
         String current2;
         String current3;
@@ -833,23 +841,23 @@ public class Parse implements Runnable {
                     current4 = afterSplit[counter + 3];
                     // TODO add a number fix for current2 and current4
                     handleNormalLetters(current1 + current2 + current3 + current4);
-                    return true;
+                    return 4;
                 } else {
                     /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                        TODO if so, add one more current (and check the length of the String list accordingly)
                        TODO else, return false;
                     */
-                    return false;
+                    return 5;
                 }
             } else {
                 /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                    TODO if so, add one more current (and check the length of the String list accordingly)
                    TODO else, return false;
                 */
-                return false;
+                return 6;
             }
         } else {
-            return false;
+            return 0;
         }
     }
 
@@ -865,17 +873,16 @@ public class Parse implements Runnable {
         // --- case 1: all of the word is in lower letters ---
         if (current.toLowerCase().equals(current)) {
             if (stemming)
-                handleLowerLetters(stemmed);
+                handleLowerLetters(stemmed.toLowerCase());
              else
                 handleLowerLetters(current);
         } else {
             // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
-            if ((current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
-                    current.substring(1).toLowerCase().equals(current.substring(1))) || (current.toUpperCase().equals(current))) {
-                char lowerLetter = (char) (current.charAt(0) + 32);
-                String lowerCurrent = lowerLetter + current.substring(1);
+            if ((current.toUpperCase().equals(current)) || (current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
+                    current.substring(1).toLowerCase().equals(current.substring(1)))) {
+                String lowerCurrent = current.toLowerCase();
                 if (stemming)
-                    handleCapitalLetters(stemmed); // TODO: maybe toLowerCase
+                    handleCapitalLetters(stemmed.toLowerCase());
                 else
                     handleCapitalLetters(lowerCurrent);
             }
@@ -938,7 +945,7 @@ public class Parse implements Runnable {
         } else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
-                // word is in document dictionary in lower case
+                // word is in document dictionary
                 if (currentTermDictionary.containsKey(current)) {
                     termData = currentTermDictionary.get(current);
                     int tf = termData[0];
@@ -961,7 +968,7 @@ public class Parse implements Runnable {
                     int df = corpusDictionary.get(currentUpper);
                     corpusDictionary.remove(currentUpper);
                     // word is not in document dictionary
-                    if (!currentTermDictionary.containsKey(currentUpper)) {
+                    if (!currentTermDictionary.containsKey(current)) {
                         df++;
                         termData = new int[4];
                         termData[0] = 1;
@@ -969,15 +976,13 @@ public class Parse implements Runnable {
                             max_tf = 1;
                         currentTermDictionary.put(current, termData);
                     }
-                    // word is in document dictionary in upper case
+                    // word is in document dictionary
                     else {
-                        termData = currentTermDictionary.get(currentUpper);
+                        termData = currentTermDictionary.get(current);
                         int tf = termData[0];
                         termData[0] = tf + 1;
                         if (max_tf < tf + 1)
                             max_tf = tf + 1;
-                        currentTermDictionary.remove(currentUpper);
-                        currentTermDictionary.put(current,termData);
                     }
                     corpusDictionary.put(currentUpper, df);
                 }
@@ -999,50 +1004,31 @@ public class Parse implements Runnable {
             termData[0] = 1;
             if (max_tf < 1)
                 max_tf = 1;
-            currentTermDictionary.put(currentUpper, termData);
+            currentTermDictionary.put(current, termData);
             corpusDictionary.put(currentUpper,1);
         }
         else {
-            // word is in corpus dictionary in lower case
-            if (corpusDictionary.containsKey(current)) {
-                // word is in document dictionary in lower case
-                if (currentTermDictionary.containsKey(current)) {
-                    termData = currentTermDictionary.get(current);
-                    int tf = termData[0];
-                    termData[0] = tf + 1;
-                    if (max_tf < tf + 1)
-                        max_tf = tf + 1;
-                }
-                    // word is not in document dictionary
-                else {
-                    termData = new int[4];
-                    termData[0] = 1;
-                    if (max_tf < 1)
-                        max_tf = 1;
-                    currentTermDictionary.put(current, termData);
-                    corpusDictionary.put(current,corpusDictionary.get(current) + 1);
-                }
-            } else {
-                // word is in corpus dictionary in upper case
-                if (corpusDictionary.containsKey(currentUpper)) {
-                    // word is in document dictionary in upper case
-                    if (currentTermDictionary.containsKey(currentUpper)) {
-                        termData = currentTermDictionary.get(currentUpper);
-                        int tf = termData[0];
-                        termData[0] = tf + 1;
-                        if (max_tf < tf + 1)
-                            max_tf = tf + 1;
-                    }
-                    // word is not in document dictionary
-                    else {
-                        termData = new int[4];
-                        termData[0] = 1;
-                        if (max_tf < 1)
-                            max_tf = 1;
-                        currentTermDictionary.put(currentUpper, termData);
-                        corpusDictionary.put(currentUpper,corpusDictionary.get(currentUpper) + 1);
-                    }
-                }
+            // word is in document dictionary
+            if (currentTermDictionary.containsKey(current)) {
+                termData = currentTermDictionary.get(current);
+                int tf = termData[0];
+                termData[0] = tf + 1;
+                if (max_tf < tf + 1)
+                    max_tf = tf + 1;
+            }
+            // word is not in document dictionary
+            else {
+                termData = new int[4];
+                termData[0] = 1;
+                if (max_tf < 1)
+                    max_tf = 1;
+                currentTermDictionary.put(current, termData);
+                // word is in corpus dictionary in capital letters
+                if (corpusDictionary.containsKey(currentUpper))
+                    corpusDictionary.put(currentUpper, corpusDictionary.get(currentUpper) + 1);
+                // word is in corpus dictionary in lower case
+                else
+                    corpusDictionary.put(current, corpusDictionary.get(current) + 1);
             }
         }
     }
@@ -1587,20 +1573,24 @@ public class Parse implements Runnable {
     }
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
-          //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
+        //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
         //Scanner sc = new Scanner(System.in);
         //String s = sc.nextLine();
         //String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
         //String[] AfterSplit = s.split(toDelete);
         //System.out.println(Arrays.toString(AfterSplit));
-        System.out.println("Start Parsing");
-        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
-
-        p.parseAll();
+//        System.out.println("Start Parsing");
+//        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
+//
+//        p.parseAll();
 //         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
 //        Scanner sc = new Scanner(System.in);
 //        String s = sc.nextLine();
 //         String remainingDelimiters = "[.,/\\s]+";
+        String splitBy = "[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
+        String toSplit = "shalev}:";
+        String[] afterSplit = toSplit.split(splitBy);
+        System.out.println(Arrays.toString(afterSplit));
 //         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
 //         String[] AfterSplit = sTry.split(remainingDelimiters);
 //         System.out.println(Arrays.toString(AfterSplit));
