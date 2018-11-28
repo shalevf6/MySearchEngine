@@ -4,6 +4,7 @@ import GeneralClasses.Document;
 import jdk.nashorn.internal.objects.Global;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -25,8 +26,11 @@ public class Parse implements Runnable {
     private String[] afterSplit;
     private int afterSplitLength;
     private Stemmer stemmer;
-    boolean added;
-    boolean dollar;
+    private boolean added;
+    private boolean dollar;
+    private boolean turnToTitle;
+    private boolean turnToDate;
+    private boolean turnToCity;
 
     /**
      * a constructor for the Parse class
@@ -77,107 +81,111 @@ public class Parse implements Runnable {
                 String documentDate = document.getDocDate();
                 String documentCity = document.getCity();
                 docNumber++;
-                for (String data : documents) {
-                    String current;
-                    int counter = 0;
-                    //splits the string
-                    afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
-                    afterSplitLength = afterSplit.length;
-                    int wordCounter = 0;
-                    while (wordCounter < afterSplitLength) {
-                        afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
-                        wordCounter++;
-                    }
-                    // goes through every word in the document
-                    while (counter <= afterSplitLength - 1) {
-                        if (addedMore) {
-
+                while (turnToTitle && turnToDate && turnToCity) {
+                    for (String data : documents) {
+                        String current;
+                        int counter = 0;
+                        //splits the string
+                        afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                        afterSplitLength = afterSplit.length;
+                        int wordCounter = 0;
+                        while (wordCounter < afterSplitLength) {
+                            afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
+                            wordCounter++;
                         }
-                        current = afterSplit[counter];
-                        // checks if the current string is a stop word (and not the word between)
-                        if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
-                            counter++;
-                        } else {
-                            // checks if there aren't any numbers in the word
-                            if (!isNumeric2(current)) {
+                        // goes through every word in the document
+                        while (counter <= afterSplitLength - 1) {
+                            if (addedMore) {
 
-                                // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
-                                // checks if the 1st word is "between"
-                                if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
-                                    if (handleBetweenNumberAndNumber(current, counter)) {
-                                        counter = counter + 4;
-                                        continue;
-                                    } else {
-                                        counter++;
-                                        continue;
-                                    }
-                                }
-
-                                // ------- 'WORD-WORD' | 'WORD-WORD-WORD' CHECK -------
-                                if (current.contains("-")) {
-                                    handleWordsWithDash(current);
-                                    counter++;
-                                    continue;
-                                }
-
-                                // ------- 'WORD/WORD' CHECK -------
-                                if (current.contains("/")) {
-                                    String[] orSplit = current.split("/");
-                                    checkFurtherSplits(orSplit);
-                                    counter++;
-                                    continue;
-                                }
-
-                                // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
-                                if (counter + 1 < afterSplitLength) {
-                                    if (handleMonthYearOrMonthDay(current, counter)) {
-                                        counter = counter + 2;
-                                        continue;
-                                    }
-                                }
-
-                                // ------- CAPITAL LETTERS CHECK -------
-                                if (isOnlyLetters(current)) {
-                                    handleAllLetters(current);
-                                    counter++;
-                                    // means its a different/empty letter case
-                                } else {
-                                    if (!current.equals("")) {
-                                        String[] moreWords = current.split("[-'%$]+");
-                                        for (String anotherWord : moreWords) {
-                                            if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
-                                                handleNormalLetters(current);
-                                        }
-                                    }
-                                    counter++;
-                                }
                             }
-                            // means it's a number:
-                            else {
-                                String current2 = "";
-                                String current3 = "";
-                                String current4 = "";
+                            current = afterSplit[counter];
+                            // checks if the current string is a stop word (and not the word between)
+                            if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
+                                counter++;
+                            } else {
+                                // checks if there aren't any numbers in the word
+                                if (!isNumeric2(current)) {
 
-                                if (counter + 1 < afterSplit.length)
-                                    current2 = afterSplit[counter + 1];
-                                if (counter + 2 < afterSplit.length)
-                                    current3 = afterSplit[counter + 2];
-                                if (counter + 3 < afterSplit.length)
-                                    current4 = afterSplit[counter + 3];
-                                // checks if the number is the whole word
-                                // ---case 0:inValid String -------
-                                if (!CheckIfValidString(current)) {
-                                    if (checkNumberEnding(current)) {
-                                        String wordNum = current.substring(0, current.length() - 2);
-                                        if (isNumeric(wordNum)) {
-                                            handleNormalLetters(wordNum);
+                                    // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
+                                    // checks if the 1st word is "between"
+                                    if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
+                                        int toAdd = handleBetweenNumberAndNumber(current, counter);
+                                        if (toAdd > 0) {
+                                            counter = counter + toAdd;
+                                            continue;
+                                        } else {
+                                            counter++;
                                             continue;
                                         }
                                     }
-                                    handleNormalLetters(current);
-                                    counter++;
+
+                                    // ------- 'WORD-WORD' | 'WORD-WORD-WORD' CHECK -------
+                                    if (current.contains("-")) {
+                                        handleWordsWithDash(current);
+                                        counter++;
+                                        continue;
+                                    }
+
+                                    // ------- 'WORD/WORD' CHECK -------
+                                    if (current.contains("/")) {
+                                        String[] orSplit = current.split("/");
+                                        checkFurtherSplits(orSplit);
+                                        counter++;
+                                        continue;
+                                    }
+
+                                    // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
+                                    if (counter + 1 < afterSplitLength) {
+                                        if (handleMonthYearOrMonthDay(current, counter)) {
+                                            counter = counter + 2;
+                                            continue;
+                                        }
+                                    }
+
+                                    // ------- CAPITAL LETTERS CHECK -------
+                                    if (isOnlyLetters(current)) {
+                                        handleAllLetters(current);
+                                        counter++;
+                                        // means its a different/empty letter case
+                                    } else {
+                                        if (!current.equals("")) {
+                                            String[] moreWords = current.split("[-'%$]+");
+                                            for (String anotherWord : moreWords) {
+                                                if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                                    handleNormalLetters(current);
+                                            }
+                                        }
+                                        counter++;
+                                    }
                                 }
-                                // ---case 0.5:contains dash ------//
+                                // means it's a number:
+                                else {
+                                    String current2 = "";
+                                    String current3 = "";
+                                    String current4 = "";
+
+                                    if (counter + 1 < afterSplit.length)
+                                        current2 = afterSplit[counter + 1];
+                                    if (counter + 2 < afterSplit.length)
+                                        current3 = afterSplit[counter + 2];
+                                    if (counter + 3 < afterSplit.length)
+                                        current4 = afterSplit[counter + 3];
+                                    // checks if the number is the whole word
+                                    // ---case 0:inValid String -------
+                                    if (!CheckIfValidString(current)) {
+                                        if (checkNumberEnding(current)) {
+                                            String wordNum = current.substring(0, current.length() - 2);
+                                            if (isNumeric(wordNum)) {
+                                                handleNormalLetters(wordNum);
+                                                counter++;
+                                                continue;
+                                            }
+                                        }
+                                        handleNormalLetters(current);
+                                        counter++;
+                                        continute;
+                                    }
+                                   // ---case 0.5:contains dash ------//
                                 boolean HoeMuchToChange = HandleDashwithNums(current) ;
                                 if (current.contains("-") && HoeMuchToChange ||HandleDashwithNums(current2) && current2.contains("-")) {
                                     int ToAddToCounter = HandelDashNUms(current, current2, current3, current4, counter);
@@ -199,22 +207,23 @@ public class Parse implements Runnable {
                                     }
                                 } else  {
                                     // ------- NUMBER CHECK -------
-
+                                  
                                     // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
-                                    if (isNumeric(current) || checkNumberEnding(current)) {
-                                        int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
-                                        if (toAdd != 0) {
-                                            counter = counter + toAdd;
-                                            continue;
+                                        if (isNumeric(current) || checkNumberEnding(current)) {
+                                            int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
+                                            if (toAdd != 0) {
+                                                counter = counter + toAdd;
+                                                continue;
+                                            }
                                         }
-                                    }
-                                    int regularNumCheck = RegularNumCheck(current,current2,current3,current4,counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
+                                  int regularNumCheck = RegularNumCheck(current,current2,current3,current4,counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
                                     if(regularNumCheck !=0 ){
                                         counter = counter +regularNumCheck;
                                         continue;
-                                    }
-                                }
-                                // ------- FRACTION CHECK -------
+
+                                            }
+                                        }
+                                  // ------- FRACTION CHECK -------
                                 if ( isNumeric2(current)) {
                                     if (notFraction(current)) {
                                         handleNormalLetters(current);
@@ -226,11 +235,12 @@ public class Parse implements Runnable {
                                 handleNormalLetters(current);
                                 counter++;
                             }
+                            }
+                            //Indexer.docQueue.add(document);
                         }
-                        //Indexer.docQueue.add(document);
                     }
+                    document.setTfAndTermDictionary(currentTermDictionary, max_tf);
                 }
-                document.setTfAndTermDictionary(currentTermDictionary, max_tf);
             } else {
                 if (stop) {
                     Indexer.stop();
@@ -649,6 +659,7 @@ public class Parse implements Runnable {
         return 0;
     }
 
+
     /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
      *
@@ -904,9 +915,9 @@ public class Parse implements Runnable {
      *
      * @param current1 - the first word of the term
      * @param counter  - the counter for the words in the text
-     * @return - true if the term was found to be true, else - false
+     * @return - the amount of words it checked were part of the term. If not, 0.
      */
-    private boolean handleBetweenNumberAndNumber(String current1, int counter) {
+    private int handleBetweenNumberAndNumber(String current1, int counter) {
         // TODO add every number to the term dictionaries
         String current2;
         String current3;
@@ -923,23 +934,23 @@ public class Parse implements Runnable {
                     current4 = afterSplit[counter + 3];
                     // TODO add a number fix for current2 and current4
                     handleNormalLetters(current1 + current2 + current3 + current4);
-                    return true;
+                    return 4;
                 } else {
                     /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                        TODO if so, add one more current (and check the length of the String list accordingly)
                        TODO else, return false;
                     */
-                    return false;
+                    return 5;
                 }
             } else {
                 /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                    TODO if so, add one more current (and check the length of the String list accordingly)
                    TODO else, return false;
                 */
-                return false;
+                return 6;
             }
         } else {
-            return false;
+            return 0;
         }
     }
 
@@ -955,17 +966,16 @@ public class Parse implements Runnable {
         // --- case 1: all of the word is in lower letters ---
         if (current.toLowerCase().equals(current)) {
             if (stemming)
-                handleLowerLetters(stemmed);
+                handleLowerLetters(stemmed.toLowerCase());
              else
                 handleLowerLetters(current);
         } else {
             // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
-            if ((current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
-                    current.substring(1).toLowerCase().equals(current.substring(1))) || (current.toUpperCase().equals(current))) {
-                char lowerLetter = (char) (current.charAt(0) + 32);
-                String lowerCurrent = lowerLetter + current.substring(1);
+            if ((current.toUpperCase().equals(current)) || (current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
+                    current.substring(1).toLowerCase().equals(current.substring(1)))) {
+                String lowerCurrent = current.toLowerCase();
                 if (stemming)
-                    handleCapitalLetters(stemmed); // TODO: maybe toLowerCase
+                    handleCapitalLetters(stemmed.toLowerCase());
                 else
                     handleCapitalLetters(lowerCurrent);
             }
@@ -1028,7 +1038,7 @@ public class Parse implements Runnable {
         } else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
-                // word is in document dictionary in lower case
+                // word is in document dictionary
                 if (currentTermDictionary.containsKey(current)) {
                     termData = currentTermDictionary.get(current);
                     int tf = termData[0];
@@ -1051,7 +1061,7 @@ public class Parse implements Runnable {
                     int df = corpusDictionary.get(currentUpper);
                     corpusDictionary.remove(currentUpper);
                     // word is not in document dictionary
-                    if (!currentTermDictionary.containsKey(currentUpper)) {
+                    if (!currentTermDictionary.containsKey(current)) {
                         df++;
                         termData = new int[4];
                         termData[0] = 1;
@@ -1059,15 +1069,13 @@ public class Parse implements Runnable {
                             max_tf = 1;
                         currentTermDictionary.put(current, termData);
                     }
-                    // word is in document dictionary in upper case
+                    // word is in document dictionary
                     else {
-                        termData = currentTermDictionary.get(currentUpper);
+                        termData = currentTermDictionary.get(current);
                         int tf = termData[0];
                         termData[0] = tf + 1;
                         if (max_tf < tf + 1)
                             max_tf = tf + 1;
-                        currentTermDictionary.remove(currentUpper);
-                        currentTermDictionary.put(current,termData);
                     }
                     corpusDictionary.put(currentUpper, df);
                 }
@@ -1089,50 +1097,31 @@ public class Parse implements Runnable {
             termData[0] = 1;
             if (max_tf < 1)
                 max_tf = 1;
-            currentTermDictionary.put(currentUpper, termData);
+            currentTermDictionary.put(current, termData);
             corpusDictionary.put(currentUpper,1);
         }
         else {
-            // word is in corpus dictionary in lower case
-            if (corpusDictionary.containsKey(current)) {
-                // word is in document dictionary in lower case
-                if (currentTermDictionary.containsKey(current)) {
-                    termData = currentTermDictionary.get(current);
-                    int tf = termData[0];
-                    termData[0] = tf + 1;
-                    if (max_tf < tf + 1)
-                        max_tf = tf + 1;
-                }
-                    // word is not in document dictionary
-                else {
-                    termData = new int[4];
-                    termData[0] = 1;
-                    if (max_tf < 1)
-                        max_tf = 1;
-                    currentTermDictionary.put(current, termData);
-                    corpusDictionary.put(current,corpusDictionary.get(current) + 1);
-                }
-            } else {
-                // word is in corpus dictionary in upper case
-                if (corpusDictionary.containsKey(currentUpper)) {
-                    // word is in document dictionary in upper case
-                    if (currentTermDictionary.containsKey(currentUpper)) {
-                        termData = currentTermDictionary.get(currentUpper);
-                        int tf = termData[0];
-                        termData[0] = tf + 1;
-                        if (max_tf < tf + 1)
-                            max_tf = tf + 1;
-                    }
-                    // word is not in document dictionary
-                    else {
-                        termData = new int[4];
-                        termData[0] = 1;
-                        if (max_tf < 1)
-                            max_tf = 1;
-                        currentTermDictionary.put(currentUpper, termData);
-                        corpusDictionary.put(currentUpper,corpusDictionary.get(currentUpper) + 1);
-                    }
-                }
+            // word is in document dictionary
+            if (currentTermDictionary.containsKey(current)) {
+                termData = currentTermDictionary.get(current);
+                int tf = termData[0];
+                termData[0] = tf + 1;
+                if (max_tf < tf + 1)
+                    max_tf = tf + 1;
+            }
+            // word is not in document dictionary
+            else {
+                termData = new int[4];
+                termData[0] = 1;
+                if (max_tf < 1)
+                    max_tf = 1;
+                currentTermDictionary.put(current, termData);
+                // word is in corpus dictionary in capital letters
+                if (corpusDictionary.containsKey(currentUpper))
+                    corpusDictionary.put(currentUpper, corpusDictionary.get(currentUpper) + 1);
+                // word is in corpus dictionary in lower case
+                else
+                    corpusDictionary.put(current, corpusDictionary.get(current) + 1);
             }
         }
     }
@@ -1677,20 +1666,24 @@ public class Parse implements Runnable {
     }
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
-          //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
+        //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
         //Scanner sc = new Scanner(System.in);
         //String s = sc.nextLine();
         //String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
         //String[] AfterSplit = s.split(toDelete);
         //System.out.println(Arrays.toString(AfterSplit));
-        System.out.println("Start Parsing");
-        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
-
-        p.parseAll();
+//        System.out.println("Start Parsing");
+//        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
+//
+//        p.parseAll();
 //         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
 //        Scanner sc = new Scanner(System.in);
 //        String s = sc.nextLine();
 //         String remainingDelimiters = "[.,/\\s]+";
+        String splitBy = "[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
+        String toSplit = "shalev}:";
+        String[] afterSplit = toSplit.split(splitBy);
+        System.out.println(Arrays.toString(afterSplit));
 //         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
 //         String[] AfterSplit = sTry.split(remainingDelimiters);
 //         System.out.println(Arrays.toString(AfterSplit));
