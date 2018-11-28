@@ -26,7 +26,6 @@ public class Parse implements Runnable {
     private String[] afterSplit;
     private int afterSplitLength;
     private Stemmer stemmer;
-    private boolean added;
     private boolean dollar;
     private boolean turnToTitle;
     private boolean turnToDate;
@@ -72,7 +71,6 @@ public class Parse implements Runnable {
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 max_tf = 0;
-                added = false;
                 dollar = false;
                 boolean addedMore = false;
                 Document document = docQueue.remove();
@@ -183,32 +181,32 @@ public class Parse implements Runnable {
                                         }
                                         handleNormalLetters(current);
                                         counter++;
-                                        continute;
-                                    }
-                                   // ---case 0.5:contains dash ------//
-                                boolean HoeMuchToChange = HandleDashwithNums(current) ;
-                                if (current.contains("-") && HoeMuchToChange ||HandleDashwithNums(current2) && current2.contains("-")) {
-                                    int ToAddToCounter = HandelDashNUms(current, current2, current3, current4, counter);
-                                    if(ToAddToCounter!=0) {
-                                        counter = counter + ToAddToCounter;
                                         continue;
                                     }
-                                }
-                                if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
-                                        current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
-                                        current4.equals("Dollars")) ) {
-
-                                    // -------MONEY&&PERCENTAGE CHECK--------//
-
-                                    int Add2Counter =HandleMoneyAndPercentage(current,current2,current3,current4,counter);
-                                    if(Add2Counter != 0){
-                                        counter = counter + Add2Counter;
-                                        continue;
+                                    // ---case 0.5:contains dash ------//
+                                    boolean HoeMuchToChange = HandleDashwithNums(current);
+                                    if (current.contains("-") && HoeMuchToChange || HandleDashwithNums(current2) && current2.contains("-")) {
+                                        int ToAddToCounter = HandelDashNUms(current, current2, current3, current4, counter);
+                                        if (ToAddToCounter != 0) {
+                                            counter = counter + ToAddToCounter;
+                                            continue;
+                                        }
                                     }
-                                } else  {
-                                    // ------- NUMBER CHECK -------
-                                  
-                                    // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
+                                    if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
+                                            current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
+                                            current4.equals("Dollars"))) {
+
+                                        // -------MONEY&&PERCENTAGE CHECK--------//
+
+                                        int Add2Counter = HandleMoneyAndPercentage(current, current2, current3, current4, counter);
+                                        if (Add2Counter != 0) {
+                                            counter = counter + Add2Counter;
+                                            continue;
+                                        }
+                                    } else {
+                                        // ------- NUMBER CHECK -------
+
+                                        // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
                                         if (isNumeric(current) || checkNumberEnding(current)) {
                                             int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
                                             if (toAdd != 0) {
@@ -216,25 +214,25 @@ public class Parse implements Runnable {
                                                 continue;
                                             }
                                         }
-                                  int regularNumCheck = RegularNumCheck(current,current2,current3,current4,counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
-                                    if(regularNumCheck !=0 ){
-                                        counter = counter +regularNumCheck;
-                                        continue;
+                                        int regularNumCheck = RegularNumCheck(current, current2, current3, current4, counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
+                                        if (regularNumCheck != 0) {
+                                            counter = counter + regularNumCheck;
+                                            continue;
 
-                                            }
                                         }
-                                  // ------- FRACTION CHECK -------
-                                if ( isNumeric2(current)) {
-                                    if (notFraction(current)) {
-                                        handleNormalLetters(current);
-                                        counter++;
                                     }
-                                }
+                                    // ------- FRACTION CHECK -------
+                                    if (isNumeric2(current)) {
+                                        if (notFraction(current)) {
+                                            handleNormalLetters(current);
+                                            counter++;
+                                        }
+                                    }
 
-                                dollar = false;
-                                handleNormalLetters(current);
-                                counter++;
-                            }
+                                    dollar = false;
+                                    handleNormalLetters(current);
+                                    counter++;
+                                }
                             }
                             //Indexer.docQueue.add(document);
                         }
