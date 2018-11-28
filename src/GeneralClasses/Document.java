@@ -1,8 +1,6 @@
 package GeneralClasses;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * This class represents a document
@@ -16,7 +14,10 @@ public class Document {
     private String docDate;
     private String city;
     private ArrayList<String> termList;
-    private HashMap<String,Integer> termDictionary;
+    private HashMap<String,int[]> termDictionary;
+    private int max_tf;
+    private int uniqueWords;
+
     /**
      * A constructor for the Document class which recieves the document's ID
      * @param docId - the document's ID
@@ -49,7 +50,6 @@ public class Document {
             docTextSize++;
         }
     }
-
     /**
      * sets the document's title (if exists)
      * @param docTitle - the document's title
@@ -75,11 +75,14 @@ public class Document {
     }
 
     /**
-     * sets the document's term dictionary
+     * sets the document's term dictionary, unique words count and max_tf
      * @param termDictionary - the document's term dictionary
+     * @param max_tf - ther document's max_tf
      */
-    public void setTermDictionary(HashMap<String,Integer> termDictionary) {
+    public void setTfAndTermDictionary(HashMap<String,int[]> termDictionary, int max_tf) {
         this.termDictionary = termDictionary;
+        uniqueWords = termDictionary.keySet().size();
+        this.max_tf = max_tf;
     }
 
     /**
@@ -134,7 +137,7 @@ public class Document {
      * gets the document's term dictionary
      * @return - the document's term dictionary
      */
-    public HashMap<String,Integer> getTermDictionary() {
+    public HashMap<String,int[]> getTermDictionary() {
         return termDictionary;
     }
 
@@ -144,5 +147,21 @@ public class Document {
      */
     public String getCity() {
         return city;
+    }
+
+    /**
+     * gets the document's max_tf value
+     * @return - the document's max_tf value
+     */
+    public int getMax_tf() {
+        return max_tf;
+    }
+
+    /**
+     * gets the document's unique words count
+     * @return - the document's unique words count
+     */
+    public int getUniqueWords() {
+        return uniqueWords;
     }
 }

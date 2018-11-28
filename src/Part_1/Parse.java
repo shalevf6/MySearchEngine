@@ -3,7 +3,6 @@ package Part_1;
 import GeneralClasses.Document;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -17,11 +16,11 @@ public class Parse implements Runnable {
     static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static private boolean stop = false;
     static public HashMap<String, Integer> corpusDictionary = new HashMap<>();
-    static public HashMap<String, Integer> cityDictionary = new HashMap<>();
+    static public HashMap<String, Integer> corpusCityDictionary = new HashMap<>();
     static public int docNumber = 0;
     public static boolean stemming;
-    private HashMap<String, Integer> currentTermDictionary;
-    private ArrayList<String> parsed;
+    private HashMap<String, int[]> currentTermDictionary;
+    private int max_tf;
     private String[] afterSplit;
     private int afterSplitLength;
     private Stemmer stemmer;
@@ -65,12 +64,15 @@ public class Parse implements Runnable {
                 if (stemming)
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
+                max_tf = 0;
                 boolean added = false;
                 boolean dollar = false;
                 boolean addedMore = false;
-                parsed = new ArrayList<>();
                 Document document = docQueue.remove();
                 String[] documents = document.getDocText();
+                String documentTitle = document.getDocTitle();
+                String documentDate = document.getDocDate();
+                String documentCity = document.getCity();
                 docNumber++;
                 for (String data : documents) {
                     String current;
@@ -165,11 +167,11 @@ public class Parse implements Runnable {
                                     if (checkNumberEnding(current)) {
                                         String wordNum = current.substring(0, current.length() - 2);
                                         if (isNumeric(wordNum)) {
-                                            parsed.add(wordNum);
+                                            handleNormalLetters(wordNum);
                                             continue;
                                         }
                                     }
-                                    parsed.add(current);
+                                    handleNormalLetters(current);
                                     counter++;
                                 }
                                 // ---case 0.5:contains dash ------
@@ -179,7 +181,7 @@ public class Parse implements Runnable {
                                     String[] DashSplit = current.split("-");
                                     //-----TWO NUMBERS------//
                                     if (isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])) {
-                                        String tempCurrant = DashSplit[0];
+                                        String tempCurrent = DashSplit[0];
                                         current = DashSplit[1];
                                         if (current.contains(",") && !added)
                                             current = changeNumToRegularNum(current);
@@ -188,8 +190,8 @@ public class Parse implements Runnable {
                                             if (notFraction(current2)) {
                                                 current = current + " " + current2;
                                                 counter++;
-                                                parsed.add(tempCurrant + "-" + current);
-                                                parsed.add(current);
+                                                handleNormalLetters(tempCurrent + "-" + current);
+                                                handleNormalLetters(current);
                                                 added = true;
                                                 added = false;
                                                 added = true;
@@ -226,9 +228,9 @@ public class Parse implements Runnable {
                                                 }
                                             }
                                         }
-                                        parsed.add(tempCurrant);
-                                        parsed.add(current);
-                                        parsed.add(tempCurrant + "-" + current);
+                                        handleNormalLetters(tempCurrent);
+                                        handleNormalLetters(current);
+                                        handleNormalLetters(tempCurrent + "-" + current);
                                     }
                                     //------ONE NUMBER------//
                                     if ((isNumeric2(DashSplit[0]) || isNumeric2(DashSplit[1])) && !added) {
@@ -257,9 +259,9 @@ public class Parse implements Runnable {
 
                                         //-----NUMBER-WORD----------//
                                         if (isNumeric2(tempCurrent)) {
-                                            parsed.add(tempCurrent);
-                                            parsed.add(current);
-                                            parsed.add(tempCurrent + "-" + current);
+                                            handleNormalLetters(tempCurrent);
+                                            handleNormalLetters(current);
+                                            handleNormalLetters(tempCurrent + "-" + current);
                                             added = true;
                                         }
                                         //----WORD-NUMBER----------//
@@ -270,9 +272,9 @@ public class Parse implements Runnable {
                                                 if (notFraction(current2)) {
                                                     current = current + " " + current2;
                                                     counter++;
-                                                    parsed.add(current);
-                                                    parsed.add(tempCurrent);
-                                                    parsed.add(tempCurrent + "-" + current);
+                                                    handleNormalLetters(current);
+                                                    handleNormalLetters(tempCurrent);
+                                                    handleNormalLetters(tempCurrent + "-" + current);
                                                     added = true;
                                                     if (counter < afterSplit.length - 1)
                                                         current2 = afterSplit[counter + 1];
@@ -306,9 +308,9 @@ public class Parse implements Runnable {
                                                     if (current.contains("M")) {
                                                         current = current.substring(0, current.length() - 1) + " M";
                                                     }
-                                                    parsed.add(tempCurrent);
-                                                    parsed.add(current);
-                                                    parsed.add(tempCurrent + "-" + current);
+                                                    handleNormalLetters(tempCurrent);
+                                                    handleNormalLetters(current);
+                                                    handleNormalLetters(tempCurrent + "-" + current);
                                                     added = true;
                                                 }
                                             }
@@ -355,9 +357,9 @@ public class Parse implements Runnable {
                                             if (current.contains("M")) {
                                                 current = current.substring(0, current.length() - 1) + " M";
                                             }
-                                            parsed.add(current);
-                                            parsed.add(Temp2Current2);
-                                            parsed.add(current + "-" + Temp2Current2);
+                                            handleNormalLetters(current);
+                                            handleNormalLetters(Temp2Current2);
+                                            handleNormalLetters(current + "-" + Temp2Current2);
                                             added = true;
                                         }
                                         //--------NUMBER FRACTION-WORD-------//
@@ -373,14 +375,14 @@ public class Parse implements Runnable {
                                     // ------- PERCENTAGE CHECK -------
                                     // --- case 1: NUMBER% ---
                                     if (current.contains("%")) {
-                                        parsed.add(current);
+                                        handleNormalLetters(current);
                                         added = true;
                                     } else {
                                         if (counter + 1 < afterSplit.length) {
                                             // --- case 2, 3: NUMBER percent, NUMBER percentage ---
                                             if (afterSplit[counter + 1].equals("percent") || afterSplit[counter + 1].equals("percentage")) {
                                                 current = current + "%";
-                                                parsed.add(current);
+                                                handleNormalLetters(current);
                                                 added = true;
                                                 counter++;
                                             }
@@ -392,7 +394,7 @@ public class Parse implements Runnable {
                                             if (dollar) {
                                                 /* !!! need to update counter according to term !!! */
                                                 current = change_to_price(current, current2, current3, current4);
-                                                parsed.add(current);
+                                                handleNormalLetters(current);
                                                 if (current2.equals("Dollars") || current2.equals("dollars"))
                                                     counter++;
                                                 if (current3.equals("Dollars") || current3.equals("dollars"))
@@ -428,7 +430,7 @@ public class Parse implements Runnable {
                                         if (notFraction(current2)) {
                                             current = current + " " + current2;
                                             counter++;
-                                            parsed.add(current);
+                                            handleNormalLetters(current);
                                             added = true;
                                             if (counter < afterSplit.length - 1)
                                                 current2 = afterSplit[counter + 1];
@@ -460,7 +462,7 @@ public class Parse implements Runnable {
                                             if (current.contains("M")) {
                                                 current = current.substring(0, current.length() - 1) + " M";
                                             }
-                                            parsed.add(current);
+                                            handleNormalLetters(current);
                                             added = true;
                                         }
                                     }
@@ -468,7 +470,7 @@ public class Parse implements Runnable {
                                 // ------- FRACTION CHECK -------
                                 if (!added && isNumeric2(current)) {
                                     if (notFraction(current)) {
-                                        parsed.add(current);
+                                        handleNormalLetters(current);
                                         added = true;
                                     }
                                 }
@@ -477,11 +479,10 @@ public class Parse implements Runnable {
                                 counter++;
                             }
                         }
-                        //document.setTermList(parsed);
                         //Indexer.docQueue.add(document);
                     }
                 }
-
+                document.setTfAndTermDictionary(currentTermDictionary, max_tf);
             } else {
                 if (stop) {
                     Indexer.stop();
@@ -863,26 +864,20 @@ public class Parse implements Runnable {
             stemmer.setTerm(current);
         // --- case 1: all of the word is in lower letters ---
         if (current.toLowerCase().equals(current)) {
-            if (stemming) {
+            if (stemming)
                 handleLowerLetters(stemmed);
-                parsed.add(stemmed);
-            } else {
+             else
                 handleLowerLetters(current);
-                parsed.add(current);
-            }
         } else {
             // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
             if ((current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
                     current.substring(1).toLowerCase().equals(current.substring(1))) || (current.toUpperCase().equals(current))) {
                 char lowerLetter = (char) (current.charAt(0) + 32);
                 String lowerCurrent = lowerLetter + current.substring(1);
-                if (stemming) {
+                if (stemming)
                     handleCapitalLetters(stemmed); // TODO: maybe toLowerCase
-                    parsed.add(stemmed); // TODO: maybe toLowerCase
-                } else {
+                else
                     handleCapitalLetters(lowerCurrent);
-                    parsed.add(lowerCurrent);
-                }
             }
             // --- case 4: mixed capital, lower case word - > none of the above cases ---
             else {
@@ -894,7 +889,6 @@ public class Parse implements Runnable {
             }
         }
     }
-
 
     /**
      * removes any extra delimiters from a given word that we didn't remove when we split the words in the text prior
@@ -923,7 +917,6 @@ public class Parse implements Runnable {
     private void handleNormalLetters(String current) {
         String lowerCurrent = current.toLowerCase();
         updateDictionaries(lowerCurrent);
-        parsed.add(lowerCurrent);
     }
 
     /**
@@ -933,20 +926,33 @@ public class Parse implements Runnable {
      */
     private void handleLowerLetters(String current) {
         String currentUpper = current.toUpperCase();
+        int[] termData;
         // word is not in corpus dictionary and is not in document dictionary
         if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
+            termData = new int[4];
+            termData[0] = 1;
+            if (max_tf < 1)
+                max_tf = 1;
+            currentTermDictionary.put(current, termData);
             corpusDictionary.put(current, 1);
-            currentTermDictionary.put(current, 1);
         } else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
                 // word is in document dictionary in lower case
-                if (currentTermDictionary.containsKey(current))
-                    currentTermDictionary.put(current, currentTermDictionary.get(current) + 1);
-
+                if (currentTermDictionary.containsKey(current)) {
+                    termData = currentTermDictionary.get(current);
+                    int tf = termData[0];
+                    termData[0] = tf + 1;
+                    if (max_tf < tf + 1)
+                        max_tf = tf + 1;
+                }
                     // word is not in document dictionary
                 else {
-                    currentTermDictionary.put(current, 1);
+                    termData = new int[4];
+                    termData[0] = 1;
+                    if (max_tf < 1)
+                        max_tf = 1;
+                    currentTermDictionary.put(current, termData);
                     corpusDictionary.put(current, corpusDictionary.get(current) + 1);
                 }
             } else {
@@ -957,13 +963,21 @@ public class Parse implements Runnable {
                     // word is not in document dictionary
                     if (!currentTermDictionary.containsKey(currentUpper)) {
                         df++;
-                        currentTermDictionary.put(current, 1);
+                        termData = new int[4];
+                        termData[0] = 1;
+                        if (max_tf < 1)
+                            max_tf = 1;
+                        currentTermDictionary.put(current, termData);
                     }
                     // word is in document dictionary in upper case
                     else {
-                        int tf = currentTermDictionary.get(currentUpper);
+                        termData = currentTermDictionary.get(currentUpper);
+                        int tf = termData[0];
+                        termData[0] = tf + 1;
+                        if (max_tf < tf + 1)
+                            max_tf = tf + 1;
                         currentTermDictionary.remove(currentUpper);
-                        currentTermDictionary.put(current, tf + 1);
+                        currentTermDictionary.put(current,termData);
                     }
                     corpusDictionary.put(currentUpper, df);
                 }
@@ -978,31 +992,54 @@ public class Parse implements Runnable {
      */
     private void handleCapitalLetters(String current) {
         String currentUpper = current.toUpperCase();
+        int[] termData;
         // word is not in corpus dictionary and is not in document dictionary
         if(!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
+            termData = new int[4];
+            termData[0] = 1;
+            if (max_tf < 1)
+                max_tf = 1;
+            currentTermDictionary.put(currentUpper, termData);
             corpusDictionary.put(currentUpper,1);
-            currentTermDictionary.put(currentUpper,1);
         }
         else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
                 // word is in document dictionary in lower case
-                if (currentTermDictionary.containsKey(current))
-                    currentTermDictionary.put(current, currentTermDictionary.get(current) + 1);
+                if (currentTermDictionary.containsKey(current)) {
+                    termData = currentTermDictionary.get(current);
+                    int tf = termData[0];
+                    termData[0] = tf + 1;
+                    if (max_tf < tf + 1)
+                        max_tf = tf + 1;
+                }
                     // word is not in document dictionary
                 else {
-                    currentTermDictionary.put(current, 1);
+                    termData = new int[4];
+                    termData[0] = 1;
+                    if (max_tf < 1)
+                        max_tf = 1;
+                    currentTermDictionary.put(current, termData);
                     corpusDictionary.put(current,corpusDictionary.get(current) + 1);
                 }
             } else {
                 // word is in corpus dictionary in upper case
                 if (corpusDictionary.containsKey(currentUpper)) {
                     // word is in document dictionary in upper case
-                    if (currentTermDictionary.containsKey(currentUpper))
-                        currentTermDictionary.put(currentUpper,currentTermDictionary.get(currentUpper) + 1);
+                    if (currentTermDictionary.containsKey(currentUpper)) {
+                        termData = currentTermDictionary.get(currentUpper);
+                        int tf = termData[0];
+                        termData[0] = tf + 1;
+                        if (max_tf < tf + 1)
+                            max_tf = tf + 1;
+                    }
                     // word is not in document dictionary
                     else {
-                        currentTermDictionary.put(currentUpper, 1);
+                        termData = new int[4];
+                        termData[0] = 1;
+                        if (max_tf < 1)
+                            max_tf = 1;
+                        currentTermDictionary.put(currentUpper, termData);
                         corpusDictionary.put(currentUpper,corpusDictionary.get(currentUpper) + 1);
                     }
                 }
@@ -1016,12 +1053,22 @@ public class Parse implements Runnable {
      */
     private void updateDictionaries(String current) {
         boolean newTerm = true;
+        int[] termData;
         if (currentTermDictionary.containsKey(current)) {
-            currentTermDictionary.put(current, currentTermDictionary.get(current) + 1);
+            termData = currentTermDictionary.get(current);
+            int tf = termData[0];
+            termData[0] = tf + 1;
+            if (max_tf < tf + 1)
+                max_tf = tf + 1;
             newTerm = false;
         }
-        else
-            currentTermDictionary.put(current,1);
+        else {
+            termData = new int[4];
+            termData[0] = 1;
+            if (max_tf < 1)
+                max_tf = 1;
+            currentTermDictionary.put(current, termData);
+        }
         if (newTerm)
             corpusDictionary.put(current,corpusDictionary.get(current) + 1);
     }
@@ -1559,4 +1606,3 @@ public class Parse implements Runnable {
 //         System.out.println(Arrays.toString(AfterSplit));
     }
 }
-

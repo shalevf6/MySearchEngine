@@ -11,6 +11,7 @@ public class ReadFile implements Runnable {
 
     private String dirPath;
     private StringBuilder allDocumentLines;
+    private static int docCount = 0; // TODO: maybe erase docCount
 
     /**
      * A constructor for the ReadFile class
@@ -30,7 +31,6 @@ public class ReadFile implements Runnable {
             // get to all the corpus's sub-directories
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
-                System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
                 for (File f : subDirs) {
                     // get to the file inside the corpus's sub-directory
                     File[] tempFiles = f.listFiles();
@@ -44,10 +44,7 @@ public class ReadFile implements Runnable {
                                 allDocumentLines.append(line);
                             }
                             bufferedReader.close();
-                            String docString = "";
                             int docStart = allDocumentLines.indexOf("<DOC>");
-                            int docEnd = allDocumentLines.indexOf("</DOC>");
-                            docString = allDocumentLines.substring(docStart + 5, docEnd);
                             parseThroughDoc(docStart);
                         }
                         catch (IOException e) {
@@ -56,8 +53,10 @@ public class ReadFile implements Runnable {
                     }
                 }
             }
+            System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
+            System.out.println("Number of documents: " + docCount); // TODO: erase tracking
             // inform the parse class it shouldn't wait for any more documents to parse through
-            Parse.stop();
+//            Parse.stop();
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -74,6 +73,7 @@ public class ReadFile implements Runnable {
     private void parseThroughDoc(int docStart) {
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
+            docCount++;
             String docString = "";
             String docNumber = "";
             String docText = "";
@@ -120,14 +120,14 @@ public class ReadFile implements Runnable {
             if (!docDate.equals(""))
                 newDoc.setDocDate(docDate);
 
-            // gets the document's city (if there is one)
+            // gets the document's city (if there is one)s
             if (docString.contains("<F P=104>")) {
                 int cityStart = docString.indexOf("<F P=104>");
                 int cityEnd = docString.indexOf("</F>",cityStart);
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
                 for (String city : docCityArr) {
                     if (!city.equals("")) {
-                        docCity = city;
+                        docCity = city.toUpperCase();
                         newDoc.setCity(docCity);
                         break;
                     }
@@ -168,7 +168,7 @@ public class ReadFile implements Runnable {
         ReadFile readFile = new ReadFile(path);
         long startTime = System.nanoTime();
         readFile.readThroughFiles();
-        System.out.println((System.nanoTime() - startTime)*Math.pow(10,-9));
+        System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
         System.out.println();
     }
 }
