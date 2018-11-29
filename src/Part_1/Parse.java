@@ -219,6 +219,7 @@ public class Parse implements Runnable {
                                         continue;
                                     }
                                     // ---case 0.5:contains dash ------//
+                                    //-------ONE DASH ONLY-------------//
                                     boolean HoeMuchToChange = HandleDashwithNums(current);
                                     if (current.contains("-") && HoeMuchToChange || HandleDashwithNums(current2) && current2.contains("-")) {
                                         int ToAddToCounter = HandelDashNUms(current, current2, current3, current4, counter);
@@ -226,6 +227,23 @@ public class Parse implements Runnable {
                                             counter = counter + ToAddToCounter;
                                             continue;
                                         }
+                                    }
+                                    //--------MORE THEN ONE DASH---------//
+                                    if(!HoeMuchToChange){
+                                        String[] splitedByDash =current.split("-");
+                                        for (String Dashed: splitedByDash) {
+                                            if(isNumeric2(Dashed)){
+                                                Dashed =changeNumToRegularNum(Dashed);
+                                                handleNormalLetters(Dashed);
+
+                                            }
+                                            else {
+                                                //------MEANS IT'S A WORD---------//
+                                                //TODO:SHALEV WILL FILL THIS
+
+                                            }
+                                        }
+                                        counter++;
                                     }
                                     if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
                                             current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
@@ -262,6 +280,23 @@ public class Parse implements Runnable {
                                             handleNormalLetters(current);
                                             counter++;
                                         }
+                                    }
+                                    //-------CONTAINS SLASH BUT MORE THEN ONE------//
+                                    if(current.contains("/") && notFraction(current)){
+                                        String[] splitedBySlash = current.split("/");
+                                        for (String Splited: splitedBySlash) {
+                                            if(isNumeric2(Splited)){
+                                                Splited = changeNumToRegularNum(Splited);
+                                                handleNormalLetters(Splited);
+                                            }
+                                            else {
+                                                //-----MEAN IT'S A WORD----//
+                                                //TODO:SHALEV WILL FILL THIS PART
+
+                                            }
+                                        }
+                                        counter++;
+                                        continue;
                                     }
 
                                     dollar = false;
@@ -494,40 +529,52 @@ public class Parse implements Runnable {
                 if (isNumeric2(current))
                     changeNumToRegularNum(current);
 
-                //TODO add the word in shalev word's addition
-                if (isOnlyLetters(current)) {
-                    if (!StopWords.containsKey(current)) {
-                        // if there is a delimiter in the word
-                        if (!isOnlyLetters(current)) {
-                            String remainingDelimiters = "['.,/\\s]+";
-                            String[] moreWords = current.split(remainingDelimiters);
-                            for (String moreWord : moreWords)
-                                if (!moreWord.equals(""))
-                                    handleAllLetters(moreWord);
-                            // if there is no delimiter in the word
-                        } else if (!current.equals(""))
-                            handleAllLetters(current);
-
-                    }
-                }
-
-                //-----NUMBER-WORD----------//
+                //1-----NUMBER-WORD----------1//
                 if (isNumeric2(tempCurrent)) {
+                    tempCurrent =changeNumToRegularNum(tempCurrent);
                     handleNormalLetters(tempCurrent);
-                    handleNormalLetters(current);
+                    if (isOnlyLetters(current)) {
+                        if (!StopWords.containsKey(current)) {
+                            // if there is a delimiter in the word
+                            if (!isOnlyLetters(current)) {
+                                String remainingDelimiters = "['.,/\\s]+";
+                                String[] moreWords = current.split(remainingDelimiters);
+                                for (String moreWord : moreWords)
+                                    if (!moreWord.equals(""))
+                                        handleAllLetters(moreWord);
+                                // if there is no delimiter in the word
+                            } else if (!current.equals(""))
+                                handleAllLetters(current);
+                        }
+                    }
                     handleNormalLetters(tempCurrent + "-" + current);
                     return 1;
                 }
-                //----WORD-NUMBER----------//
+                //2----WORD-NUMBER----------2//
                 //TODO add the word in shalev word's addition
                 if (isNumeric2(current)) {
                     if ( isNumeric2(current)) {
-                        //-------WORD-NUMBER FRACTION---------//
+                        //2.1-------WORD-NUMBER FRACTION---------2.1//
                         if (notFraction(current2)) {
                             current = current + " " + current2;
                             ToAdd2Counter++;
                             handleNormalLetters(current);
-                            handleNormalLetters(tempCurrent);
+                            if (isOnlyLetters(tempCurrent)) {
+                                if (!StopWords.containsKey(tempCurrent)) {
+                                    // if there is a delimiter in the word
+                                    if (!isOnlyLetters(tempCurrent)) {
+                                        String remainingDelimiters = "['.,/\\s]+";
+                                        String[] moreWords = tempCurrent.split(remainingDelimiters);
+                                        for (String moreWord : moreWords)
+                                            if (!moreWord.equals(""))
+                                                handleAllLetters(moreWord);
+                                        // if there is no delimiter in the word
+                                    }
+                                    else if (!tempCurrent.equals("") &&true)
+                                        handleAllLetters(tempCurrent);
+
+                                }
+                            }
                             handleNormalLetters(tempCurrent + "-" + current);
                             return 2;
                         }
@@ -562,7 +609,21 @@ public class Parse implements Runnable {
                             if (current.contains("M")) {
                                 current = current.substring(0, current.length() - 1) + " M";
                             }
-                            handleNormalLetters(tempCurrent);
+                        if (isOnlyLetters(tempCurrent)) {
+                            if (!StopWords.containsKey(tempCurrent)) {
+                                // if there is a delimiter in the word
+                                if (!isOnlyLetters(tempCurrent)) {
+                                    String remainingDelimiters = "['.,/\\s]+";
+                                    String[] moreWords = tempCurrent.split(remainingDelimiters);
+                                    for (String moreWord : moreWords)
+                                        if (!moreWord.equals("") && true)
+                                            handleAllLetters(moreWord);
+                                    // if there is no delimiter in the word at all
+                                } else if (!tempCurrent.equals(""))
+                                    handleAllLetters(tempCurrent);
+
+                            }
+                        }
                             handleNormalLetters(current);
                             handleNormalLetters(tempCurrent + "-" + current);
                             return ToAdd2Counter +1;
@@ -586,19 +647,20 @@ public class Parse implements Runnable {
                 Temp2Current2 = changeNumToRegularNum(Temp2Current2);
             if (isNumeric2(TempCurrent2))
                 TempCurrent2 = changeNumToRegularNum(TempCurrent2);
-                //TODO add the word in shalev word's addition
+
                 //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
+
                 if (isNumeric2(current) && isNumeric2(Temp2Current2) && !notFraction(TempCurrent2)) {
                     if (TempCurrent2.equals("Thousand") || TempCurrent2.equals("THOUSAND") || TempCurrent2.equals("thousand")) {
-                        current = current + "K";
+                        current = current + " K";
                         ToAdd2Counter++;
                     }//SECOND:IF CURRENT2= MILLION
                     if (TempCurrent2.equals("Million") || TempCurrent2.equals("MILLION") || TempCurrent2.equals("million") || TempCurrent2.equals("mill")) {
-                        current = current + "M";
+                        current = current + " M";
                         ToAdd2Counter++;
                     }//THIRD:IF CURRENT2= BILLION
                     if (TempCurrent2.equals("Billion") || TempCurrent2.equals("BILLION") || TempCurrent2.equals("billion")) {
-                        current = current + "B";
+                        current = current + " B";
                         ToAdd2Counter++;
                     }//FORTH:IF CURRENT2= TRILLION
                     if (TempCurrent2.equals("Trillion") || TempCurrent2.equals("TRILLION") || TempCurrent2.equals("trillion")) {
@@ -606,35 +668,10 @@ public class Parse implements Runnable {
                         temp = temp * 1000;
                         int temp2 = temp.intValue();
                         current = String.valueOf(temp2);
-                        current = current + "B";
+                        current = current + " B";
                         ToAdd2Counter = ToAdd2Counter + 1;
                     }
-                    if (current.contains("M")) {
-                        current = current.substring(0, current.length() - 1) + " M";
-                    }
-                    if (current3.equals("Thousand") || current3.equals("THOUSAND") || current3.equals("thousand")) {
-                        Temp2Current2 = Temp2Current2 + "K";
-                        ToAdd2Counter++;
-                    }//SECOND:IF CURRENT2= MILLION
-                    if (current3.equals("Million") || current3.equals("MILLION") || current3.equals("million") || current3.equals("mill")) {
-                        Temp2Current2 = Temp2Current2 + "M";
-                        ToAdd2Counter++;
-                    }//THIRD:IF CURRENT2= BILLION
-                    if (current3.equals("Billion") || current3.equals("BILLION") || current3.equals("billion")) {
-                        Temp2Current2 = Temp2Current2 + "B";
-                        ToAdd2Counter++;
-                    }//FORTH:IF CURRENT2= TRILLION
-                    if (current3.equals("Trillion") || current3.equals("TRILLION") || current3.equals("trillion")) {
-                        Double temp1 = Double.parseDouble(Temp2Current2);
-                        temp1 = temp1 * 1000;
-                        int temp2 = temp1.intValue();
-                        Temp2Current2 = String.valueOf(temp2);
-                        Temp2Current2 = Temp2Current2 + "B";
-                        ToAdd2Counter = ToAdd2Counter + (2 - 1);
-                    }
-                    if (Temp2Current2.contains("M")) {
-                        Temp2Current2 = Temp2Current2.substring(0, Temp2Current2.length() - 1) + " M";
-                    }
+
                     handleNormalLetters(current);
                     handleNormalLetters(Temp2Current2);
                     handleNormalLetters(current + "-" + Temp2Current2);
@@ -645,15 +682,15 @@ public class Parse implements Runnable {
                 //TODO add the word in shalev word's addition
                 if (isNumeric2(current) && notFraction(TempCurrent2) && isNumeric2(Temp2Current2)) {
                     if (current3.equals("Thousand") || current3.equals("THOUSAND") || current3.equals("thousand")) {
-                        Temp2Current2 = Temp2Current2 + "K";
+                        Temp2Current2 = Temp2Current2 + " K";
                         ToAdd2Counter++;
                     }//SECOND:IF CURRENT3= MILLION
                     if (current3.equals("Million") || current3.equals("MILLION") || current3.equals("million") || current3.equals("mill")) {
-                        Temp2Current2 = Temp2Current2 + "M";
+                        Temp2Current2 = Temp2Current2 + " M";
                         ToAdd2Counter++;
                     }//THIRD:IF CURRENT3= BILLION
                     if (current3.equals("Billion") || current3.equals("BILLION") || current3.equals("billion")) {
-                        Temp2Current2 = Temp2Current2 + "B";
+                        Temp2Current2 = Temp2Current2 + " B";
                         ToAdd2Counter++;
                     }//FORTH:IF CURRENT3= TRILLION
                     if (current3.equals("Trillion") || current3.equals("TRILLION") || current3.equals("trillion")) {
@@ -663,14 +700,26 @@ public class Parse implements Runnable {
                         counter++;
                         counter--;
                         Temp2Current2 = String.valueOf(temp22);
-                        Temp2Current2 = Temp2Current2 + "B";
+                        Temp2Current2 = Temp2Current2 + " B";
                         ToAdd2Counter = ToAdd2Counter + (2 - 1);
                     }
-                    if (Temp2Current2.contains("M")) {
-                        Temp2Current2 = Temp2Current2.substring(0, Temp2Current2.length() - 1) + " M";
-                    }
-                    handleNormalLetters(current);
+
                     handleNormalLetters(Temp2Current2);
+                    if (isOnlyLetters(Temp2Current2)) {
+                        if (!StopWords.containsKey(Temp2Current2)) {
+                            // if there is a delimiter in the word
+                            if (!isOnlyLetters(Temp2Current2)) {
+                                String remainingDelimiters = "['.,/\\s]+";
+                                String[] moreWords = current.split(remainingDelimiters);
+                                for (String moreWord : moreWords)
+                                    if (!moreWord.equals(""))
+                                        handleAllLetters(moreWord);
+                                // if there is no delimiter in the word
+                            } else if (!Temp2Current2.equals(""))
+                                handleAllLetters(Temp2Current2);
+
+                        }
+                    }
                     handleNormalLetters(current + "-" + Temp2Current2);
                     return ToAdd2Counter + 1;
                 }
@@ -1006,6 +1055,7 @@ public class Parse implements Runnable {
      */
     private int handleBetweenNumberAndNumber(String current1, int counter) {
         // TODO add every number to the term dictionaries
+        current1 ="between";
         String current2;
         String current3;
         String current4;
@@ -1019,17 +1069,59 @@ public class Parse implements Runnable {
                 // checks if the 4th word is a NUMBER
                 if (counter + 3 < afterSplitLength && isNumeric2(afterSplit[counter + 3])) {
                     current4 = afterSplit[counter + 3];
-                    // TODO add a number fix for current2 and current4
+                    //Done!
+                    current2 =changeNumToRegularNum(current2);
+                    current4 = changeNumToRegularNum(current4);
+                    String current5 = "";
+                    String current6 = "";
+                    if(counter+4 < afterSplitLength)
+                        current5 = afterSplit[counter+4];
+                    if(counter+5<afterSplitLength)
+                        current6 = afterSplit[counter+5];
+                    if(notFraction(current5)) {
+                        handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                        return 5;
+                    }
+                    if (current5.equals("Thousand") || current5.equals("THOUSAND") || current5.equals("thousand")) {
+                        current4 = current4 + " K";
+                        handleNormalLetters(current1 + current2 + current3 + current4 );
+                        return 5;
+                    }//SECOND:IF CURRENT2= MILLION
+                    if (current5.equals("Million") || current5.equals("MILLION") || current5.equals("million") || current5.equals("mill")) {
+                        current4 = current4 + " M";
+                        handleNormalLetters(current1 + current2 + current3 + current4 );
+                        return 5;
+                    }//THIRD:IF CURRENT2= BILLION
+                    if (current5.equals("Billion") || current5.equals("BILLION") || current5.equals("billion")) {
+                        current4 = current4 + " B";
+                        handleNormalLetters(current1 + current2 + current3 + current4 );
+                        return 5;
+                    }//FORTH:IF CURRENT2= TRILLION
+                    if (current5.equals("Trillion") || current5.equals("TRILLION") || current5.equals("trillion")) {
+                        Double temp = Double.parseDouble(current5);
+                        temp = temp * 1000;
+                        int temp2 = temp.intValue();
+                        current4 = String.valueOf(temp2);
+                        current4 = current4 + " B";
+                        handleNormalLetters(current1 + current2 + current3 + current4 );
+                        return 5;
+                    }
                     handleNormalLetters(current1 + current2 + current3 + current4);
                     return 4;
                 } else {
-                    /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
-                       TODO if so, add one more current (and check the length of the String list accordingly)
-                       TODO else, return false;
-                    */
-                    return 5;
+                    return 0;
                 }
             } else {
+                if(counter+3<afterSplitLength)
+                    current4 = afterSplit[counter + 3];
+                else
+                    current4="";
+                if(current4.equals("and") ||current4.equals("AND") || current4.equals("And"))
+                    if(true){
+                    //TODO:
+                    }
+                else
+                    return 0;
                 /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
                    TODO if so, add one more current (and check the length of the String list accordingly)
                    TODO else, return false;
