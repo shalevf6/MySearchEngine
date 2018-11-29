@@ -86,8 +86,8 @@ public class Document {
     }
 
     /**
-     * sets the doucment's city (if exists)
-     * @param city
+     * sets the document's city (if exists)
+     * @param city - the document's city
      */
     public void setCity(String city) {
         this.city = city;

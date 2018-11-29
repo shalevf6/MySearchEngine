@@ -1,7 +1,6 @@
 package Part_1;
 
 import GeneralClasses.Document;
-import jdk.nashorn.internal.objects.Global;
 
 import java.io.*;
 import java.util.Arrays;
@@ -19,7 +18,6 @@ public class Parse implements Runnable {
     static private boolean stop = false;
     static public HashMap<String, Integer> corpusDictionary = new HashMap<>();
     static public HashMap<String, Integer> corpusCityDictionary = new HashMap<>();
-    static public int docNumber = 0;
     public static boolean stemming;
     private HashMap<String, int[]> currentTermDictionary;
     private int max_tf;
@@ -27,9 +25,7 @@ public class Parse implements Runnable {
     private int afterSplitLength;
     private Stemmer stemmer;
     private boolean dollar;
-    private boolean turnToTitle;
-    private boolean turnToDate;
-    private boolean turnToCity;
+    private int docPart;
 
     /**
      * a constructor for the Parse class
@@ -72,41 +68,73 @@ public class Parse implements Runnable {
                 currentTermDictionary = new HashMap<>();
                 max_tf = 0;
                 dollar = false;
-                boolean addedMore = false;
+                docPart = 1;
+                boolean turnToDocument = true;
+                boolean turnToTitle = true;
+                boolean turnToDate = true;
+                boolean turnToCity = true;
                 Document document = docQueue.remove();
                 String[] documents = document.getDocText();
                 String documentTitle = document.getDocTitle();
+                if (documentTitle == null)
+                    turnToTitle = false;
                 String documentDate = document.getDocDate();
+                if (documentDate == null)
+                    turnToDate = false;
                 String documentCity = document.getCity();
-                docNumber++;
-                while (turnToTitle && turnToDate && turnToCity) {
+                if (documentCity == null)
+                    turnToCity = false;
+                while (turnToDocument || turnToTitle || turnToDate || turnToCity) {
+                    if (!turnToDocument) {
+                        documents = new String[1];
+                        if (turnToTitle) {
+                            documents[0] = documentTitle;
+                            docPart = 2;
+                        } else {
+                            if (turnToDate) {
+                                documents[0] = documentDate;
+                                docPart = 3;
+                            } else {
+                                if (turnToCity) {
+                                    documents[0] = documentCity;
+                                    docPart = 4;
+                                }
+                            }
+                        }
+                    }
                     for (String data : documents) {
                         String current;
                         int counter = 0;
                         //splits the string
-                        afterSplit = data.split("[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+");
+                        afterSplit = data.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
-                        int wordCounter = 0;
-                        while (wordCounter < afterSplitLength) {
-                            afterSplit[wordCounter] = removeExtraDelimiters(afterSplit[wordCounter]);
-                            wordCounter++;
+                        int countWord = 0;
+
+                        while (countWord < afterSplitLength - 1) {
+                            afterSplit[countWord] = removeExtraDelimiters(afterSplit[counter]);
+                            countWord++;
                         }
                         // goes through every word in the document
                         while (counter <= afterSplitLength - 1) {
-                            if (addedMore) {
-
-                            }
                             current = afterSplit[counter];
+                            String currentLower = current.toLowerCase();
                             // checks if the current string is a stop word (and not the word between)
-                            if (!(current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) && StopWords.containsKey(current)) {
+                            if (current.equals("") || (!(currentLower.equals("between")) && StopWords.containsKey(current.toLowerCase()))) {
                                 counter++;
                             } else {
+
                                 // checks if there aren't any numbers in the word
                                 if (!isNumeric2(current)) {
 
+                                    // checks if its not worth checking
+                                    if (current.length() == 1) {
+                                        counter++;
+                                        continue;
+                                    }
+
                                     // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
                                     // checks if the 1st word is "between"
-                                    if (current.equals("between") || current.equals("Between") || current.equals("BETWEEN")) {
+                                    if (currentLower.equals("between")) {
                                         int toAdd = handleBetweenNumberAndNumber(current, counter);
                                         if (toAdd > 0) {
                                             counter = counter + toAdd;
@@ -144,17 +172,24 @@ public class Parse implements Runnable {
                                     if (isOnlyLetters(current)) {
                                         handleAllLetters(current);
                                         counter++;
-                                        // means its a different/empty letter case
-                                    } else {
-                                        if (!current.equals("")) {
-                                            String[] moreWords = current.split("[-'%$]+");
-                                            for (String anotherWord : moreWords) {
-                                                if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
-                                                    handleNormalLetters(current);
-                                            }
-                                        }
-                                        counter++;
+                                        continue;
                                     }
+
+                                    // ------- INITIALS WITH DOT (.) CHECK -------
+                                    if (current.contains(".")) {
+                                        if (handleInitials(current)) {
+                                            counter++;
+                                            continue;
+                                        }
+                                    }
+
+                                    // means its a different/empty letter case
+                                    String[] moreWords = current.split("[.'%$]+");
+                                    for (String anotherWord : moreWords) {
+                                        if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                            handleNormalLetters(current);
+                                    }
+                                    counter++;
                                 }
                                 // means it's a number:
                                 else {
@@ -237,8 +272,22 @@ public class Parse implements Runnable {
                             //Indexer.docQueue.add(document);
                         }
                     }
-                    document.setTfAndTermDictionary(currentTermDictionary, max_tf);
+                    if (turnToDocument)
+                        turnToDocument = false;
+                    else {
+                        if (turnToTitle) {
+                            turnToTitle = false;
+                        } else {
+                            if (turnToDate) {
+                                turnToDate = false;
+                            } else {
+                                if (turnToCity)
+                                    turnToCity = false;
+                            }
+                        }
+                    }
                 }
+                document.setTfAndTermDictionary(currentTermDictionary, max_tf);
             } else {
                 if (stop) {
                     Indexer.stop();
@@ -246,6 +295,46 @@ public class Parse implements Runnable {
                 }
             }
         }
+    }
+
+    /**
+     * checks if a given string is an initials string (like U.S.)
+     * @param current - a given string
+     * @return - true if there only capital letters between the dots. else - false
+     */
+    private boolean handleInitials(String current) {
+        String[] initialsSplit = current.split("\\.");
+        if (initialsSplit.length >= 2) {
+            for (String initialChar : initialsSplit) {
+                if (!isOnlyLetters(initialChar) || !initialChar.equals(initialChar.toUpperCase()))
+                    return false;
+            }
+            int[] termData;
+            // if the term exists in the document's dictionary, update the tf count
+            if (currentTermDictionary.containsKey(current)) {
+                termData = currentTermDictionary.get(current);
+                int tf = termData[0];
+                termData[0] = tf + 1;
+                termData[docPart] = 1;
+                if (max_tf < tf + 1)
+                    max_tf = tf + 1;
+            }
+            // enter the new term entry to the document's dictionary
+            else {
+                termData = new int[4];
+                termData[0] = 1;
+                termData[docPart] = 1;
+                currentTermDictionary.put(current, termData);
+                // enter the new term to the corpus's dictionary
+                if (!corpusDictionary.containsKey(current))
+                    corpusDictionary.put(current, 1);
+                // update the df of the term in the corpus's dictionary
+                else
+                    corpusDictionary.put(current,corpusDictionary.get(current) + 1);
+            }
+            return true;
+        }
+        return false;
     }
 
     private int RegularNumCheck(String current, String current2, String current3, String current4, int counter) {
@@ -922,7 +1011,7 @@ public class Parse implements Runnable {
         String current4;
         // checks if the 2nd word is a NUMBER
         if (counter + 1 < afterSplitLength && isNumeric2(afterSplit[counter + 1])) {
-            current2 = afterSplit[counter + 1];
+            current2 = afterSplit[counter + 1]; // TODO: make sure its a number. else, with ',' and/or '.'
             // checks if the 3rd word is "and"
             if (counter + 2 < afterSplitLength && (afterSplit[counter + 2].equals("and") || afterSplit[counter + 2].equals("And") ||
                     afterSplit[counter + 2].equals("AND"))) {
@@ -989,7 +1078,8 @@ public class Parse implements Runnable {
     }
 
     /**
-     * removes any extra delimiters from a given word that we didn't remove when we split the words in the text prior
+     * removes any extra delimiters from a given word's start or and twice (that we didn't remove when we split the words in the text prior)
+     * except U.S.
      * @param word - a given word
      * @return - the given word after the delimiter removal (if necessary)
      */
@@ -998,11 +1088,24 @@ public class Parse implements Runnable {
             if(word.equals("U.S."))
                 return word;
             int length = word.length() - 1;
-            if (word.charAt(length) == ',' || word.charAt(length) == '.' || word.charAt(length) == '/' || word.charAt(length) == '-') {
+
+            if (word.charAt(length) == '.' || word.charAt(length) == '/' || word.charAt(length) == '-' || word.charAt(length) == '\'') {
                 word = word.substring(0, length);
                 length = length - 1;
             }
-            if (!word.equals("") && length > 1 && (word.charAt(0) == ',' || word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-'))
+
+            if (!word.equals("") && length > 1 && (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'')) {
+                word = word.substring(1);
+                length = length - 1;
+            }
+
+            if (!word.equals("") && length > 1 && (word.charAt(length) == '.' || word.charAt(length) == '/' || word.charAt(length) == '-' ||
+                    word.charAt(length) == '\'')) {
+                word = word.substring(0, length);
+                length = length - 1;
+            }
+
+            if (!word.equals("") && length > 1 && (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\''))
                 word = word.substring(1);
         }
         return word;
@@ -1029,6 +1132,7 @@ public class Parse implements Runnable {
         if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
             termData = new int[4];
             termData[0] = 1;
+            termData[docPart] = 1;
             if (max_tf < 1)
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
@@ -1039,6 +1143,7 @@ public class Parse implements Runnable {
                 // word is in document dictionary
                 if (currentTermDictionary.containsKey(current)) {
                     termData = currentTermDictionary.get(current);
+                    termData[docPart] = 1;
                     int tf = termData[0];
                     termData[0] = tf + 1;
                     if (max_tf < tf + 1)
@@ -1048,6 +1153,7 @@ public class Parse implements Runnable {
                 else {
                     termData = new int[4];
                     termData[0] = 1;
+                    termData[docPart] = 1;
                     if (max_tf < 1)
                         max_tf = 1;
                     currentTermDictionary.put(current, termData);
@@ -1063,6 +1169,7 @@ public class Parse implements Runnable {
                         df++;
                         termData = new int[4];
                         termData[0] = 1;
+                        termData[docPart] = 1;
                         if (max_tf < 1)
                             max_tf = 1;
                         currentTermDictionary.put(current, termData);
@@ -1072,6 +1179,7 @@ public class Parse implements Runnable {
                         termData = currentTermDictionary.get(current);
                         int tf = termData[0];
                         termData[0] = tf + 1;
+                        termData[docPart] = 1;
                         if (max_tf < tf + 1)
                             max_tf = tf + 1;
                     }
@@ -1093,6 +1201,7 @@ public class Parse implements Runnable {
         if(!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
             termData = new int[4];
             termData[0] = 1;
+            termData[docPart] = 1;
             if (max_tf < 1)
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
@@ -1104,6 +1213,7 @@ public class Parse implements Runnable {
                 termData = currentTermDictionary.get(current);
                 int tf = termData[0];
                 termData[0] = tf + 1;
+                termData[docPart] = 1;
                 if (max_tf < tf + 1)
                     max_tf = tf + 1;
             }
@@ -1111,6 +1221,7 @@ public class Parse implements Runnable {
             else {
                 termData = new int[4];
                 termData[0] = 1;
+                termData[docPart] = 1;
                 if (max_tf < 1)
                     max_tf = 1;
                 currentTermDictionary.put(current, termData);
@@ -1135,6 +1246,7 @@ public class Parse implements Runnable {
             termData = currentTermDictionary.get(current);
             int tf = termData[0];
             termData[0] = tf + 1;
+            termData[docPart] = 1;
             if (max_tf < tf + 1)
                 max_tf = tf + 1;
             newTerm = false;
@@ -1142,6 +1254,7 @@ public class Parse implements Runnable {
         else {
             termData = new int[4];
             termData[0] = 1;
+            termData[docPart] = 1;
             if (max_tf < 1)
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
@@ -1631,6 +1744,8 @@ public class Parse implements Runnable {
         return ans;
     }
 
+    private
+
     /**
      * stops creating the term lists
      */
@@ -1678,9 +1793,11 @@ public class Parse implements Runnable {
 //        Scanner sc = new Scanner(System.in);
 //        String s = sc.nextLine();
 //         String remainingDelimiters = "[.,/\\s]+";
-        String splitBy = "[?!:#@^&+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
-        String toSplit = "shalev}:";
-        String[] afterSplit = toSplit.split(splitBy);
+//        String splitBy = "(?!\\.[U\\.S\\.])(?!\\.[0-9])(?!,[0-9])[?!:\\.,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
+        String splitBy = "(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
+        String toSplit1 = "of an, 10,000,234 blah,bla unidentified poll U.S. 23 25 also 2.4440,made.in May' .1993 The approval disapproval for the things";
+        String toSplit = "U.S";
+        String[] afterSplit = toSplit1.split(splitBy);
         System.out.println(Arrays.toString(afterSplit));
 //         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
 //         String[] AfterSplit = sTry.split(remainingDelimiters);
