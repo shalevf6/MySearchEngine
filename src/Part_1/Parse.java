@@ -26,6 +26,7 @@ public class Parse implements Runnable {
     private Stemmer stemmer;
     private boolean dollar;
     private int docPart;
+    String path;
 
     /**
      * a constructor for the Parse class
@@ -33,7 +34,8 @@ public class Parse implements Runnable {
      * @param path - the path to the stop words file
      */
     public Parse(String path) {
-        getStopWords(path);
+        getStopWords(path); //TODO:ChangeBACk//
+        this.path = path;
     }
 
     /**
@@ -43,6 +45,7 @@ public class Parse implements Runnable {
      */
     private void getStopWords(String path) {
         StopWords = new HashMap<>();
+        /*
         File stopWordsFile = new File(path);
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordsFile));
@@ -55,6 +58,7 @@ public class Parse implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+*/
     }
 
     /**
@@ -62,8 +66,8 @@ public class Parse implements Runnable {
      */
     public void parseAll() {
         while (true) {
-            if (!docQueue.isEmpty()) {
-                if (stemming)
+            if (true) {//delete this
+                if (stemming )
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 max_tf = 0;
@@ -73,7 +77,9 @@ public class Parse implements Runnable {
                 boolean turnToTitle = true;
                 boolean turnToDate = true;
                 boolean turnToCity = true;
-                Document document = docQueue.remove();
+
+                Document document = new Document("0");
+                document.addDocText(path);
                 String[] documents = document.getDocText();
                 String documentTitle = document.getDocTitle();
                 if (documentTitle == null)
@@ -102,16 +108,18 @@ public class Parse implements Runnable {
                             }
                         }
                     }
-                    for (String data : documents) {
+
+                    for (int i =0;i<100;i++) {
                         String current;
                         int counter = 0;
                         //splits the string
-                        afterSplit = data.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
+                        afterSplit = path.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
+                        //afterSplit = path.split(" ");
                         afterSplitLength = afterSplit.length;
                         int countWord = 0;
 
                         while (countWord < afterSplitLength - 1) {
-                            afterSplit[countWord] = removeExtraDelimiters(afterSplit[counter]);
+                            afterSplit[countWord] = removeExtraDelimiters(afterSplit[countWord]);
                             countWord++;
                         }
                         // goes through every word in the document
@@ -229,7 +237,7 @@ public class Parse implements Runnable {
                                         }
                                     }
                                     //--------MORE THEN ONE DASH---------//
-                                    if(!HoeMuchToChange){
+                                    if(!HoeMuchToChange &&current.contains("-")){
                                         String[] splitedByDash =current.split("-");
                                         for (String Dashed: splitedByDash) {
                                             if(isNumeric2(Dashed)){
@@ -244,6 +252,7 @@ public class Parse implements Runnable {
                                             }
                                         }
                                         counter++;
+                                        continue;
                                     }
                                     if ((!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.equals("Dollars") || current2.equals("dollars") || current2.equals("percentage") ||
                                             current2.equals("percent") || current3.equals("Dollars") || current3.equals("dollars") || current4.equals("dollars") ||
@@ -441,6 +450,7 @@ public class Parse implements Runnable {
                 if (dollar) {
                     /* !!! need to update counter according to term !!! */
                     current = change_to_price(current, current2, current3, current4);
+
                     handleNormalLetters(current);
                     if (current2.equals("Dollars") || current2.equals("dollars"))
                         add2Counter = 2;
@@ -458,7 +468,46 @@ public class Parse implements Runnable {
                 }
 
         }
+        if(current.contains("$") ||current.contains("Dollars"))
+            add2Counter++;
         return add2Counter;
+    }
+
+    private String handleDot(String current) {
+        String ToReturn = "";
+        String[] SplitDot = current.split("\\.");
+        if(SplitDot.length ==1)
+            return current;
+        else{
+            ToReturn =SplitDot[0]+".";
+            int i =0;
+            if(SplitDot[1].length()>=2 && SplitDot[1].charAt(1)!='0' ) {
+                ToReturn = ToReturn + SplitDot[1].charAt(0) + SplitDot[1].charAt(1);
+                if(ToReturn.charAt(ToReturn.length()-1)=='.')
+                    ToReturn =ToReturn.substring(0,ToReturn.length()-1);
+                return ToReturn;
+            }
+            if(SplitDot[1].length()==1 && SplitDot[1].charAt(0)!='0') {
+                ToReturn = ToReturn + SplitDot[1].charAt(0);
+                if(ToReturn.charAt(ToReturn.length()-1)=='.')
+                    ToReturn =ToReturn.substring(0,ToReturn.length()-1);
+                return ToReturn;
+            }
+            if(SplitDot[1].length()>=2 && SplitDot[1].charAt(1)=='0' ){
+                if(SplitDot[1].charAt(0)!='0'){
+                    ToReturn =ToReturn+ SplitDot[1].charAt(0);
+                    if(ToReturn.charAt(ToReturn.length()-1)=='.')
+                        ToReturn =ToReturn.substring(0,ToReturn.length()-1);
+                    return ToReturn;
+                }
+                else {
+                    if(ToReturn.charAt(ToReturn.length()-1)=='.')
+                        ToReturn =ToReturn.substring(0,ToReturn.length()-1);
+                    return ToReturn;
+                }
+            }
+        }
+        return ToReturn;
     }
 
     private int HandelDashNUms(String current, String current2, String current3, String current4, int counter) {
@@ -515,6 +564,8 @@ public class Parse implements Runnable {
                         }
 
                 }
+                if(isNumeric2(tempCurrent) && tempCurrent.contains(","))
+                    tempCurrent = changeNumToRegularNum(tempCurrent);
                 handleNormalLetters(tempCurrent);
                 handleNormalLetters(current);
                 handleNormalLetters(tempCurrent + "-" + current);
@@ -551,7 +602,7 @@ public class Parse implements Runnable {
                     return 1;
                 }
                 //2----WORD-NUMBER----------2//
-                //TODO add the word in shalev word's addition
+
                 if (isNumeric2(current)) {
                     if ( isNumeric2(current)) {
                         //2.1-------WORD-NUMBER FRACTION---------2.1//
@@ -583,7 +634,6 @@ public class Parse implements Runnable {
                         else
                             current2 = "";
                         //------WORD-NUMBER THOUSAND/MILLION/TRILLION/BILLION
-                        //TODO add the word in shalev word's addition
                          //FIRST:IF CURRENT2= THOUSAND
                             if (current2.equals("Thousand") || current2.equals("THOUSAND") || current2.equals("thousand")) {
                                 current = current + "K";
@@ -679,7 +729,6 @@ public class Parse implements Runnable {
 
                 }
                 //--------NUMBER FRACTION-WORD-------//
-                //TODO add the word in shalev word's addition
                 if (isNumeric2(current) && notFraction(TempCurrent2) && isNumeric2(Temp2Current2)) {
                     if (current3.equals("Thousand") || current3.equals("THOUSAND") || current3.equals("thousand")) {
                         Temp2Current2 = Temp2Current2 + " K";
@@ -1054,14 +1103,13 @@ public class Parse implements Runnable {
      * @return - the amount of words it checked were part of the term. If not, 0.
      */
     private int handleBetweenNumberAndNumber(String current1, int counter) {
-        // TODO add every number to the term dictionaries
         current1 ="between";
         String current2;
         String current3;
         String current4;
         // checks if the 2nd word is a NUMBER
         if (counter + 1 < afterSplitLength && isNumeric2(afterSplit[counter + 1])) {
-            current2 = afterSplit[counter + 1]; // TODO: make sure its a number. else, with ',' and/or '.'
+            current2 = afterSplit[counter + 1];
             // checks if the 3rd word is "and"
             if (counter + 2 < afterSplitLength && (afterSplit[counter + 2].equals("and") || afterSplit[counter + 2].equals("And") ||
                     afterSplit[counter + 2].equals("AND"))) {
@@ -1070,8 +1118,12 @@ public class Parse implements Runnable {
                 if (counter + 3 < afterSplitLength && isNumeric2(afterSplit[counter + 3])) {
                     current4 = afterSplit[counter + 3];
                     //Done!
-                    current2 =changeNumToRegularNum(current2);
-                    current4 = changeNumToRegularNum(current4);
+                    if(notFraction(current2)) {
+                        current2 = changeNumToRegularNum(current2);
+                    }
+                    if(notFraction(current4)) {
+                        current4 = changeNumToRegularNum(current4);
+                    }
                     String current5 = "";
                     String current6 = "";
                     if(counter+4 < afterSplitLength)
@@ -1079,7 +1131,7 @@ public class Parse implements Runnable {
                     if(counter+5<afterSplitLength)
                         current6 = afterSplit[counter+5];
                     if(notFraction(current5)) {
-                        handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                        handleNormalLetters(current1 + current2 + current3 + current4 +" "+ current5);
                         return 5;
                     }
                     if (current5.equals("Thousand") || current5.equals("THOUSAND") || current5.equals("thousand")) {
@@ -1116,21 +1168,115 @@ public class Parse implements Runnable {
                     current4 = afterSplit[counter + 3];
                 else
                     current4="";
-                if(current4.equals("and") ||current4.equals("AND") || current4.equals("And"))
-                    if(true){
-                    //TODO:
+                current3 ="";
+                if(counter+2 < afterSplitLength)
+                    current3 = afterSplit[counter+4];
+                if(!isNumeric2(current3))
+                    return 0;
+                if(!notFraction(current3) && isNumeric2(current3))
+                    current3 =changeNumToRegularNum(current3);
+                if(current4.equals("and") ||current4.equals("AND") || current4.equals("And")) {
+                         String current5 ="";
+                         current3 = "";
+                         if(counter+4 < afterSplitLength)
+                             current3 = afterSplit[counter+2];
+                         if(counter+4 < afterSplitLength)
+                             current5 = afterSplit[counter+4];
+                         if (!isNumeric2(current5))
+                             return 0;
+                         boolean toAdd = false;
+
+                    if (current3.equals("Thousand") || current3.equals("THOUSAND") || current3.equals("thousand")) {
+                        current2 = current2 + " K";
+                        toAdd =true;
+                    }//SECOND:IF CURRENT2= MILLION
+                    if (current3.equals("Million") || current3.equals("MILLION") || current3.equals("million") || current3.equals("mill")) {
+                        current2 = current2 + " M";
+                        toAdd =true;
+                    }//THIRD:IF CURRENT2= BILLION
+                    if (current3.equals("Billion") || current3.equals("BILLION") || current3.equals("billion")) {
+                        current2 = current2 + " B";
+                        toAdd =true;
+                    }//FORTH:IF CURRENT2= TRILLION
+                    if (current3.equals("Trillion") || current3.equals("TRILLION") || current3.equals("trillion")) {
+                        Double temp = Double.parseDouble(current5);
+                        temp = temp * 1000;
+                        int temp2 = temp.intValue();
+                        current2 = String.valueOf(temp2);
+                        current2 = current2 + " B";
+                        toAdd =true;
+                    }
+                         if (notFraction(current5) && toAdd){
+                             handleNormalLetters(current1 + current2 + current4 + current5);
+                             return 5;
+                         }
+                         //--------BETWEEN NUMBER FRACTION AND FRACTION--------//
+                         if(notFraction(current3) && notFraction(current5)){
+                             handleNormalLetters(current1 + current2 +" "+ current3 + current4 + current5);
+                             return 5;
+                         }
+
+                         current5 =changeNumToRegularNum(current5);
+                         String current6 = "";
+                         if(counter+5 < afterSplitLength)
+                             current6 = afterSplit[counter+5];
+                         if (current6.equals("Thousand") || current6.equals("THOUSAND") || current6.equals("thousand")) {
+                             current5 = current5 + " K";
+                             if(toAdd) {
+                                 handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                                 return 6;
+                             }
+                             if(notFraction(current3)){
+                                 handleNormalLetters(current1 + current2 +" " + current3 + current4 + current5);
+                                 return 6;
+                             }
+                         }//SECOND:IF CURRENT2= MILLION
+                         if (current6.equals("Million") || current6.equals("MILLION") || current6.equals("million") || current6.equals("mill")) {
+                             current5 = current5 + " M";
+                             if(toAdd) {
+                                 handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                                 return 6;
+                             }
+                             if(notFraction(current3)){
+                                 handleNormalLetters(current1 + current2 +" " + current3 + current4 + current5);
+                                 return 6;
+                             }
+                         }//THIRD:IF CURRENT2= BILLION
+                         if (current6.equals("Billion") || current6.equals("BILLION") || current6.equals("billion")) {
+                             current5 = current5 + " B";
+                             if(toAdd) {
+                                 handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                                 return 6;
+                             }
+                             if(notFraction(current3)){
+                                 handleNormalLetters(current1 + current2 +" " + current3 + current4 + current5);
+                                 return 6;
+                             }
+                         }//FORTH:IF CURRENT2= TRILLION
+                         if (current6.equals("Trillion") || current6.equals("TRILLION") || current6.equals("trillion")) {
+                             Double temp = Double.parseDouble(current5);
+                             temp = temp * 1000;
+                             int temp2 = temp.intValue();
+                             current5 = String.valueOf(temp2);
+                             current5 = current4 + " B";
+                             if(toAdd) {
+                                 handleNormalLetters(current1 + current2 + current3 + current4 + current5);
+                                 return 6;
+                             }
+                             if(notFraction(current3)){
+                                 handleNormalLetters(current1 + current2 +" " + current3 + current4 + current5);
+                                 return 6;
+                             }
+                         }
                     }
                 else
                     return 0;
-                /* TODO add a fraction check and a number with a "thousand" / "million" / "billion" / "trillion" after check for current2 and current 3
-                   TODO if so, add one more current (and check the length of the String list accordingly)
-                   TODO else, return false;
-                */
-                return 6;
             }
-        } else {
+        }
+        else {
             return 0;
         }
+        return 0;
     }
 
     /**
@@ -1351,8 +1497,11 @@ public class Parse implements Runnable {
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
         }
+        /*
         if (newTerm)
+
             corpusDictionary.put(current,corpusDictionary.get(current) + 1);
+            */
     }
 
     /**
@@ -1445,6 +1594,11 @@ public class Parse implements Runnable {
                     current2.equals("bn") && current.contains(".")||current2.equals("m") && current.contains(".") ) {
                 int Count = 0;
                 if (current2.equals("trillion")||current2.equals("Trillion") || current2.equals("TRILLION")) {
+                    Double temp = Double.parseDouble(current);
+                    temp = temp * 1000000000;
+                    current = String.valueOf(temp);
+                    current = handleDot(current);
+                    /*
                     String[] arr = current.split("\\.");
                     Count = arr[1].length();
                     if (Count == 1)
@@ -1459,6 +1613,7 @@ public class Parse implements Runnable {
                         current = arr[0] + arr[1] + "0";
                     if (Count == 6)
                         current = arr[0] + arr[1];
+                        */
                     current = current + " M Dollars";
                     return current;
                 }
@@ -1504,21 +1659,29 @@ public class Parse implements Runnable {
 
             if(ans.contains("M")) {
                 ans = ans.substring(0,ans.length()-1);
+                if(ans.contains("."))
+                    ans= handleDot(ans);
                 ans = ans + " M";
             }
             if(ans.contains("B")){
                 ans =ans.substring(0,ans.length()-1);
                 if(ans.contains(".")){
-                    String[] arr = ans.split("\\.");
-                    String temp = arr[1].substring(2);
-                    ans = arr[0]+arr[1].charAt(0)+arr[1].charAt(1)+arr[1].charAt(2)+"."+temp + " M";
+                    ans = handleDot(ans);
+                    //String[] arr = ans.split("\\.");
+                    //String temp = arr[1].substring(2);
+                    ans = ans+ " M";
                 }
                 else{
-                    ans = ans + "000 M";
+                    ans = ans + "000";
+                    if(ans.contains("."))
+                        ans =handleDot(ans);
+                    ans = ans+  " M";
                 }
             }
         }
         else {
+            if(current.contains("."))
+                current = handleDot(current);
             return current;
         }
         return ans;
@@ -1735,7 +1898,12 @@ public class Parse implements Runnable {
             }
 
         }
-
+        if(ans.contains("M")){
+            String tempi = ans.substring(ans.length()-1);
+            ans = ans.substring(0,ans.length()-1);
+            ans =handleDot(ans);
+            ans = ans + "M";
+        }
         if(!ans.equals("") && !ans.contains("$"))
             ans = signal + ans;
         if(!ans.equals("") && ans.contains("$"))
@@ -1877,20 +2045,20 @@ public class Parse implements Runnable {
         //String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
         //String[] AfterSplit = s.split(toDelete);
         //System.out.println(Arrays.toString(AfterSplit));
-//        System.out.println("Start Parsing");
-//        Parse p = new Parse("320 million U.S. dollars 1 trillion U.S. dollars");
+        System.out.println("Start Parsing");
+        Parse p = new Parse("$100,000,021 $100,000 $210 trillion  2.5 million dollars 2.61 trillion U.S. dollars 10 3/25 dollars 200 12/78 U.S. dollars");
 //
-//        p.parseAll();
+        p.parseAll();
 //         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
 //        Scanner sc = new Scanner(System.in);
 //        String s = sc.nextLine();
 //         String remainingDelimiters = "[.,/\\s]+";
 //        String splitBy = "(?!\\.[U\\.S\\.])(?!\\.[0-9])(?!,[0-9])[?!:\\.,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
-        String splitBy = "(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
-        String toSplit1 = "of an, 10,000,234 blah,bla unidentified poll U.S. 23 25 also 2.4440,made.in May' .1993 The approval disapproval for the things";
-        String toSplit = "U.S";
-        String[] afterSplit = toSplit1.split(splitBy);
-        System.out.println(Arrays.toString(afterSplit));
+//        String splitBy = "(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
+//        String toSplit1 = "of an, 10,000,234 blah,bla unidentified poll U.S. 23 25 also 2.4440,made.in May' .1993 The approval disapproval for the things";
+//        String toSplit = "U.S";
+//        String[] afterSplit = toSplit1.split(splitBy);
+//        System.out.println(Arrays.toString(afterSplit));
 //         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
 //         String[] AfterSplit = sTry.split(remainingDelimiters);
 //         System.out.println(Arrays.toString(AfterSplit));
