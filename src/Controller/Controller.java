@@ -14,7 +14,8 @@ import javafx.scene.control.CheckBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import java.io.File;
+
+import java.io.*;
 
 /**
  * This class controlls all the GUI elements from the main.fxml file
@@ -69,6 +70,21 @@ public class Controller {
                             (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
                         else
                             (new File(postingPathText + "\\postingFilesWithoutStemming")).mkdir();
+                        /*
+                        File postingPathFile = new File (ClassLoader.g"\\fxml\\postingPath");
+                        try {
+                            postingPathFile.createNewFile();
+                            FileOutputStream fileOutputStream = new FileOutputStream(postingPathFile.getAbsolutePath());
+                            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                            BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+                            bufferedWriter.write(postingPathText);
+                            bufferedWriter.close();
+                            outputStreamWriter.close();
+                            fileOutputStream.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        */
                         Parse parse = new Parse(dirPath + "\\stop words");
                         ReadFile readFile = new ReadFile(dirPath);
                         Indexer indexer = new Indexer();
@@ -124,15 +140,21 @@ public class Controller {
             corpusPath.setText("");
             postingPath.setText("");
             stemmingCheckBox.setSelected(true);
-            File dir = new File(postingPathText);
-            for (File dir2 : dir.listFiles()) {
-                for (File f : dir2.listFiles())
-                    f.delete();
-                dir2.delete();
+            try {
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(new File("/fxml/postingPath"))));
+                File dir = new File(bufferedReader.readLine());
+                bufferedReader.close();
+                for (File dir2 : dir.listFiles()) {
+                    for (File f : dir2.listFiles())
+                        f.delete();
+                    dir2.delete();
+                }
+                Indexer.termDictionary = null;
+                Indexer.documentDictionary = null;
+                alreadyIndexed = false;
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            Indexer.termDictionary = null;
-            Indexer.documentDictionary = null;
-            alreadyIndexed = false;
         }
     }
 

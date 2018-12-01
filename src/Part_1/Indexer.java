@@ -162,8 +162,8 @@ public class Indexer implements Runnable {
 
         // ------ START: MERGE ALL WRITTEN POSTING TEMP FILES ------
 
-        // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES ------
 
+        // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES ------
     }
 
     /**

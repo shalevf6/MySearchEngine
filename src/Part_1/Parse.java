@@ -25,7 +25,6 @@ public class Parse implements Runnable {
     private Stemmer stemmer;
     private boolean dollar;
     private int docPart;
-    String path;
 
     /**
      * a constructor for the Parse class
@@ -34,7 +33,6 @@ public class Parse implements Runnable {
      */
     public Parse(String path) {
         getStopWords(path);
-        this.path = path;
     }
 
     /**
@@ -44,7 +42,6 @@ public class Parse implements Runnable {
      */
     private void getStopWords(String path) {
         StopWords = new HashMap<>();
-        
         File stopWordsFile = new File(path);
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordsFile));
@@ -120,8 +117,7 @@ public class Parse implements Runnable {
                         String current;
                         int counter = 0;
                         //splits the string
-                        afterSplit = path.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
-                        //afterSplit = path.split(" ");
+                        afterSplit = data.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
                         int countWord = 0;
 
