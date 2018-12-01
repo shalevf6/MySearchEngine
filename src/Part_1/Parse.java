@@ -405,12 +405,7 @@ public class Parse implements Runnable {
             int[] termData;
             // if the term exists in the document's dictionary, update the tf count
             if (currentTermDictionary.containsKey(current)) {
-                termData = currentTermDictionary.get(current);
-                int tf = termData[0];
-                termData[0] = tf + 1;
-                termData[docPart] = 1;
-                if (max_tf < tf + 1)
-                    max_tf = tf + 1;
+                existsInDocumentDictionaryCase(current);
             }
             // enter the new term entry to the document's dictionary
             else {
@@ -428,6 +423,19 @@ public class Parse implements Runnable {
             return true;
         }
         return false;
+    }
+
+    /**
+     * handles a string that exists in documentDictionary and updates the dictionary accordingly
+     * @param current - a given string
+     */
+    private void existsInDocumentDictionaryCase(String current) {
+        int[] termData = currentTermDictionary.get(current);
+        int tf = termData[0];
+        termData[0] = tf + 1;
+        termData[docPart] = 1;
+        if (max_tf < tf + 1)
+            max_tf = tf + 1;
     }
 
     private int RegularNumCheck(String current, int counter) {
@@ -1367,15 +1375,9 @@ public class Parse implements Runnable {
         String currentUpper = current.toUpperCase();
         int[] termData;
         // word is not in corpus dictionary and is not in document dictionary
-        if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
-            termData = new int[4];
-            termData[0] = 1;
-            termData[docPart] = 1;
-            if (max_tf < 1)
-                max_tf = 1;
-            currentTermDictionary.put(current, termData);
-            corpusDictionary.put(current, 1);
-        } else {
+        if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper))
+            notInDictionaries(current, false);
+        else {
             // word is in corpus dictionary in lower case
             if (corpusDictionary.containsKey(current)) {
                 // word is in document dictionary
@@ -1387,7 +1389,7 @@ public class Parse implements Runnable {
                     if (max_tf < tf + 1)
                         max_tf = tf + 1;
                 }
-                    // word is not in document dictionary
+                // word is not in document dictionary
                 else {
                     termData = new int[4];
                     termData[0] = 1;
@@ -1414,12 +1416,7 @@ public class Parse implements Runnable {
                     }
                     // word is in document dictionary
                     else {
-                        termData = currentTermDictionary.get(current);
-                        int tf = termData[0];
-                        termData[0] = tf + 1;
-                        termData[docPart] = 1;
-                        if (max_tf < tf + 1)
-                            max_tf = tf + 1;
+                        existsInDocumentDictionaryCase(current);
                     }
                     corpusDictionary.put(currentUpper, df);
                 }
@@ -1436,24 +1433,12 @@ public class Parse implements Runnable {
         String currentUpper = current.toUpperCase();
         int[] termData;
         // word is not in corpus dictionary and is not in document dictionary
-        if(!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper)) {
-            termData = new int[4];
-            termData[0] = 1;
-            termData[docPart] = 1;
-            if (max_tf < 1)
-                max_tf = 1;
-            currentTermDictionary.put(current, termData);
-            corpusDictionary.put(currentUpper,1);
-        }
+        if (!corpusDictionary.containsKey(current) && !corpusDictionary.containsKey(currentUpper))
+            notInDictionaries(current, true);
         else {
             // word is in document dictionary
             if (currentTermDictionary.containsKey(current)) {
-                termData = currentTermDictionary.get(current);
-                int tf = termData[0];
-                termData[0] = tf + 1;
-                termData[docPart] = 1;
-                if (max_tf < tf + 1)
-                    max_tf = tf + 1;
+                existsInDocumentDictionaryCase(current);
             }
             // word is not in document dictionary
             else {
@@ -1466,11 +1451,29 @@ public class Parse implements Runnable {
                 // word is in corpus dictionary in capital letters
                 if (corpusDictionary.containsKey(currentUpper))
                     corpusDictionary.put(currentUpper, corpusDictionary.get(currentUpper) + 1);
-                // word is in corpus dictionary in lower case
+                    // word is in corpus dictionary in lower case
                 else
                     corpusDictionary.put(current, corpusDictionary.get(current) + 1);
             }
         }
+    }
+
+    /**
+     * handles the case which the string isn't in any dictionary and adds it accordingly
+     * @param current - a given string
+     * @param isUpperCase - is the string came from a capital letter function or a lower letter function
+     */
+    private void notInDictionaries(String current, boolean isUpperCase) {
+        int[] termData = new int[4];
+        termData[0] = 1;
+        termData[docPart] = 1;
+        if (max_tf < 1)
+            max_tf = 1;
+        currentTermDictionary.put(current, termData);
+        if (isUpperCase)
+            corpusDictionary.put(current.toUpperCase() ,1);
+        else
+            corpusDictionary.put(current ,1);
     }
 
     /**
@@ -1981,6 +1984,7 @@ public class Parse implements Runnable {
         }
         return true;
     }
+
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
         //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";

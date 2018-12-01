@@ -35,6 +35,20 @@ public class Indexer implements Runnable {
         }
     });
 
+    /**
+     * Used for sorting the dictionary before presenting it to the user
+     */
+    static private PriorityQueue<String> dictionarySort = new PriorityQueue<>(new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            int toCut1 = o1.indexOf(';');
+            int toCut2 = o2.indexOf(';');
+            String term1 = o1.substring(0, toCut1 - 1);
+            String term2 = o2.substring(0, toCut2 - 1);
+            return term1.compareTo(term2);
+        }
+    });
+
     private void indexAll(String postingPath){
         // ------ START: CREATE ALL TEMP POSTING FILES ------
         int tempPostingNum = 1;
@@ -155,7 +169,7 @@ public class Indexer implements Runnable {
     /**
      * stops creating the indexes
      */
-    public static void stop() {
+    static void stop() {
         stop = true;
     }
 
@@ -169,6 +183,20 @@ public class Indexer implements Runnable {
      * @return - a string representing the sorted dictionary
      */
     public static String getDictionaryString() {
-        return "";
+        Set<String> termSet = termDictionary.keySet();
+        for (String term : termSet) {
+            dictionarySort.add(term + " ; " + termDictionary.get(term)[0] + "documents;");
+        }
+        String nextTerm = dictionarySort.poll();
+        StringBuilder dictionary = new StringBuilder();
+        if (nextTerm != null) {
+            dictionary.append(nextTerm);
+            nextTerm = dictionarySort.poll();
+        }
+        while (nextTerm != null) {
+            dictionary.append('\n').append(nextTerm);
+            nextTerm = dictionarySort.poll();
+        }
+        return dictionary.toString();
     }
 }
