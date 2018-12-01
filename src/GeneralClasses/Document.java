@@ -10,9 +10,9 @@ public class Document {
     private String docId;
     private String[] docText;
     private int docTextSize;
-    private String docTitle;
-    private String docDate;
-    private String city;
+    private String docTitle = null;
+    private String docDate = null;
+    private String city = null;
     private ArrayList<String> termList;
     private HashMap<String,int[]> termDictionary;
     private int max_tf;
@@ -50,6 +50,14 @@ public class Document {
             docTextSize++;
         }
     }
+
+    /**
+     * deletes the document's dictionary to clear memory space
+     */
+    public void deleteDictionary() {
+        termDictionary = null;
+    }
+
     /**
      * sets the document's title (if exists)
      * @param docTitle - the document's title

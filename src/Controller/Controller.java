@@ -20,6 +20,7 @@ public class Controller {
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
     public ChoiceBox<String> languageChoiceBox;
+    public static String postingPathText;
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -57,29 +58,54 @@ public class Controller {
             alert.show();
         }
         else {
-            String dirPath = corpusPath.getText();
-            File stopWords = new File(dirPath + "\\stop words");
-            if (stopWords.exists()) {
-                Parse parse = new Parse(dirPath + "\\stop words");
-                ReadFile readFile = new ReadFile(dirPath);
-                Indexer indexer = new Indexer();
-                Thread readFileThread = new Thread(readFile);
-                Thread parseThread = new Thread(parse);
-                Thread indexThread = new Thread(indexer);
-                parseThread.start();
-                readFileThread.start();
-                indexThread.start();
-                try {
-                    readFileThread.join();
-                    parseThread.join();
-                    indexThread.join();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+            if ((new File(postingPath.getText())).exists()) {
+                postingPathText = postingPath.getText();
+                String dirPath = corpusPath.getText();
+                File stopWords = new File(dirPath + "\\stop words");
+                if (stopWords.exists()) {
+                    Parse.stemming = stemmingCheckBox.isSelected();
+                    if (Parse.stemming)
+                        (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
+                    else
+                        (new File(postingPathText + "\\postingFilesWithoutStemming")).mkdir();
+                    Parse parse = new Parse(dirPath + "\\stop words");
+                    ReadFile readFile = new ReadFile(dirPath);
+                    Indexer indexer = new Indexer();
+                    Thread readFileThread = new Thread(readFile);
+                    Thread parseThread = new Thread(parse);
+                    Thread indexThread = new Thread(indexer);
+                    long startTime = System.nanoTime();
+                    parseThread.start();
+                    readFileThread.start();
+                    indexThread.start();
+                    try {
+                        readFileThread.join();
+                        parseThread.join();
+                        indexThread.join();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
+                    finally {
+                        double totalTimeInSeconds = (System.nanoTime() - startTime)*Math.pow(10,-9);
+                        int totalTimeInMinutes = (int)(totalTimeInSeconds / 60);
+                        int remainingSeconds = (int)(totalTimeInSeconds % 60);
+                        String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
+                        String docCount = "Total documents indexed: " + ReadFile.docCount;
+                        String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
+                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                        alert.setHeaderText("Indexing Done!");
+                        alert.setContentText(totalTime + "\n" + docCount + "\n" + termCount);
+                    }
+                } else {
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setContentText("You must choose an existing stop words file path!");
+                    alert.show();
                 }
             }
             else {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setContentText("You must choose an existing stop words file path!");
+                alert.setContentText("You must choose an existing posting files path!");
                 alert.show();
             }
         }
@@ -93,6 +119,14 @@ public class Controller {
         corpusPath.setText("");
         postingPath.setText("");
         stemmingCheckBox.setSelected(true);
+        File dir = new File(postingPathText);
+        for (File dir2 : dir.listFiles()) {
+            for (File f : dir2.listFiles())
+                f.delete();
+            dir2.delete();
+        }
+        Indexer.termDictionary = null;
+        Indexer.documentDictionary = null;
     }
 
     /**
@@ -112,13 +146,5 @@ public class Controller {
         File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
         if (selectedDirectory != null)
             postingPath.setText(selectedDirectory.getAbsolutePath());
-    }
-
-    public void handleStemmingCheck(ActionEvent actionEvent) {
-        if (stemmingCheckBox.isSelected())
-            Parse.stemming = true;
-        else
-            Parse.stemming = false;
-
     }
 }
