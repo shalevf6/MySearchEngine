@@ -13,13 +13,13 @@ import java.util.concurrent.BlockingQueue;
  */
 public class Parse implements Runnable {
 
-    private HashMap<String, Integer> StopWords;
     static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static private boolean stop = false;
     static public HashMap<String, Integer> corpusDictionary = new HashMap<>();
     static public HashMap<String, Integer> corpusCityDictionary = new HashMap<>();
-    public static boolean stemming;
+    static public boolean stemming;
     private HashMap<String, int[]> currentTermDictionary;
+    private HashMap<String, Integer> StopWords;
     private int max_tf;
     private String[] afterSplit;
     private int afterSplitLength;
@@ -45,7 +45,7 @@ public class Parse implements Runnable {
      */
     private void getStopWords(String path) {
         StopWords = new HashMap<>();
-        /*
+        
         File stopWordsFile = new File(path);
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(stopWordsFile));
@@ -53,12 +53,13 @@ public class Parse implements Runnable {
             while (stopWord != null) {
                 stopWord = stopWord.trim();
                 StopWords.put(stopWord, 1);
+                stopWord = bufferedReader.readLine();
             }
             bufferedReader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-*/
+
     }
 
     /**
@@ -77,10 +78,16 @@ public class Parse implements Runnable {
                 boolean turnToTitle = true;
                 boolean turnToDate = true;
                 boolean turnToCity = true;
-
-                Document document = new Document("0");
-                document.addDocText(path);
+                Document document = null;
+                try {
+                    document = docQueue.take();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(document.getDocId()); // TODO: DELETE DOCUMENTATION
                 String[] documents = document.getDocText();
+                if (documents == null)
+                    turnToDocument = false;
                 String documentTitle = document.getDocTitle();
                 if (documentTitle == null)
                     turnToTitle = false;
@@ -90,7 +97,7 @@ public class Parse implements Runnable {
                 String documentCity = document.getCity();
                 if (documentCity == null)
                     turnToCity = false;
-                while (turnToDocument || turnToTitle || turnToDate || turnToCity) {
+                while (turnToDocument || turnToTitle || turnToDate /*|| turnToCity */) {
                     if (!turnToDocument) {
                         documents = new String[1];
                         if (turnToTitle) {
@@ -100,16 +107,17 @@ public class Parse implements Runnable {
                             if (turnToDate) {
                                 documents[0] = documentDate;
                                 docPart = 3;
-                            } else {
-                                if (turnToCity) {
-                                    documents[0] = documentCity;
-                                    docPart = 4;
-                                }
                             }
+//                            else {
+//                                if (turnToCity) {
+//                                    documents[0] = documentCity;
+//                                    docPart = 4;
+//                                }
+//                            }
                         }
                     }
 
-                    for (int i =0;i<100;i++) {
+                    for (String data: documents) {
                         String current;
                         int counter = 0;
                         //splits the string
@@ -122,12 +130,14 @@ public class Parse implements Runnable {
                             afterSplit[countWord] = removeExtraDelimiters(afterSplit[countWord]);
                             countWord++;
                         }
+
                         // goes through every word in the document
                         while (counter <= afterSplitLength - 1) {
                             current = afterSplit[counter];
                             String currentLower = current.toLowerCase();
-                            // checks if the current string is a stop word (and not the word between)
-                            if (current.equals("") || (!(currentLower.equals("between")) && StopWords.containsKey(current.toLowerCase()))) {
+                            // checks if the current string is a stop word (and not the word between) or the word may
+                            if (current.equals("") || (!(currentLower.equals("may")) && !(currentLower.equals("between")) &&
+                                    StopWords.containsKey(currentLower))) {
                                 counter++;
                             } else {
 
@@ -170,10 +180,16 @@ public class Parse implements Runnable {
 
                                     // ------- 'MONTH YEAR' and 'MONTH DD' CHECK -------
                                     if (counter + 1 < afterSplitLength) {
-                                        if (handleMonthYearOrMonthDay(current, counter)) {
+                                        if (handleMonthYearOrMonthDay(currentLower, counter)) {
                                             counter = counter + 2;
                                             continue;
                                         }
+                                    }
+
+                                    // ------- 'may' STOP WORD MISS -------
+                                    if (currentLower.equals("may")) {
+                                        counter++;
+                                        continue;
                                     }
 
                                     // ------- CAPITAL LETTERS CHECK -------
@@ -214,7 +230,7 @@ public class Parse implements Runnable {
                                     // checks if the number is the whole word
                                     // ---case 0:inValid String -------
                                     if (!CheckIfValidString(current)) {
-                                        if (checkNumberEnding(current)) {
+                                        if (checkNumberEnding(current.toLowerCase())) {
                                             String wordNum = current.substring(0, current.length() - 2);
                                             if (isNumeric(wordNum)) {
                                                 handleNormalLetters(wordNum);
@@ -269,7 +285,7 @@ public class Parse implements Runnable {
                                         // ------- NUMBER CHECK -------
 
                                         // ------- 'DD MONTH' and 'DD MONTH YEAR' CHECK
-                                        if (isNumeric(current) || checkNumberEnding(current)) {
+                                        if (isNumeric(current) || checkNumberEnding(current.toLowerCase())) {
                                             int toAdd = handleDayMonthOrDayMonthYear(current, current2, current3);
                                             if (toAdd != 0) {
                                                 counter = counter + toAdd;
@@ -313,7 +329,6 @@ public class Parse implements Runnable {
                                     counter++;
                                 }
                             }
-                            //Indexer.docQueue.add(document);
                         }
                     }
                     if (turnToDocument)
@@ -324,14 +339,20 @@ public class Parse implements Runnable {
                         } else {
                             if (turnToDate) {
                                 turnToDate = false;
-                            } else {
-                                if (turnToCity)
-                                    turnToCity = false;
                             }
+//                            else {
+//                                if (turnToCity)
+//                                    turnToCity = false;
+//                            }
                         }
                     }
                 }
                 document.setTfAndTermDictionary(currentTermDictionary, max_tf);
+                try {
+                    Indexer.docQueue.put(document);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             } else {
                 if (stop) {
                     Indexer.stop();
@@ -795,12 +816,12 @@ public class Parse implements Runnable {
      * @return - 0 if the case was found not to be true, 2 if the 'DD MONTH' case was true, and 3 if the 'DD MONTH YYYY' case was true
      */
     private int handleDayMonthOrDayMonthYear(String current, String current2, String current3) {
-        String monthNumber = getMonthNumber(current2);
+        String monthNumber = getMonthNumber(current2.toLowerCase());
         // check if the next word is a month
         if (!monthNumber.equals("00")) {
             int currentLength = current.length();
             // check if the number ends with an ordinal indicator (st, nd, rd, th) and remove it if so
-            if (checkNumberEnding(current)) {
+            if (checkNumberEnding(current.toLowerCase())) {
                 current = current.substring(0, currentLength - 2);
                 currentLength = currentLength - 2;
             }
@@ -891,7 +912,7 @@ public class Parse implements Runnable {
                 handleAllLetters(getMonthNameForDictionary(monthNumber));
                 return true;
             } else {
-                if (!current2.equals("") && checkNumberEnding(current2)) {
+                if (!current2.equals("") && isNumeric(current2) && checkNumberEnding(current2.toLowerCase())) {
                     current2 = current2.substring(0, current2Length - 2);
                     if (!current2.equals("")) {
                         if (current2Length - 2 == 1) {
@@ -930,11 +951,11 @@ public class Parse implements Runnable {
      */
     private boolean checkNumberEnding(String number) {
         int numberLength = number.length();
-        String numberEnd = number.substring(numberLength - 2);
-        return (numberEnd.equals("th") || numberEnd.equals("Th") || numberEnd.equals("TH") ||
-                numberEnd.equals("st") || numberEnd.equals("St") || numberEnd.equals("ST") ||
-                numberEnd.equals("nd") || numberEnd.equals("Nd") || numberEnd.equals("ND") ||
-                numberEnd.equals("rd") || numberEnd.equals("Rd") || numberEnd.equals("RD"));
+        if (numberLength > 2) {
+            String numberEnd = number.substring(numberLength - 2);
+            return (numberEnd.equals("th") || numberEnd.equals("st") || numberEnd.equals("nd") || numberEnd.equals("rd"));
+        }
+        return false;
     }
 
     /**
@@ -978,40 +999,29 @@ public class Parse implements Runnable {
      * @return - the number that represents the month name in the given string. If it's not a month name, than returns "00"
      */
     private String getMonthNumber(String monthName) {
-        if (monthName.equals("January") || monthName.equals("JANUARY") || monthName.equals("january") || monthName.equals("Jan") || monthName.equals("JAN")
-                || monthName.equals("jan"))
+        if (monthName.equals("january") || monthName.equals("jan"))
             return "01";
-        if (monthName.equals("February") || monthName.equals("FEBRUARY") || monthName.equals("february") || monthName.equals("Feb") || monthName.equals("FEB")
-                || monthName.equals("feb"))
+        if (monthName.equals("february") || monthName.equals("feb"))
             return "02";
-        if (monthName.equals("March") || monthName.equals("MARCH") || monthName.equals("march") || monthName.equals("Mar") || monthName.equals("MAR")
-                || monthName.equals("mar"))
+        if (monthName.equals("march") || monthName.equals("mar"))
             return "03";
-        if (monthName.equals("April") || monthName.equals("APRIL") || monthName.equals("april") || monthName.equals("Apr") || monthName.equals("APR")
-                || monthName.equals("apr"))
+        if (monthName.equals("april") || monthName.equals("apr"))
             return "04";
-        if (monthName.equals("May") || monthName.equals("MAY") || monthName.equals("may"))
+        if (monthName.equals("may"))
             return "05";
-        if (monthName.equals("June") || monthName.equals("JUNE") || monthName.equals("june") || monthName.equals("Jun") || monthName.equals("JUN")
-                || monthName.equals("jun"))
+        if (monthName.equals("june") || monthName.equals("jun"))
             return "06";
-        if (monthName.equals("July") || monthName.equals("JULY") || monthName.equals("july") || monthName.equals("Jul") || monthName.equals("JUL")
-                || monthName.equals("jul"))
+        if (monthName.equals("july") || monthName.equals("jul"))
             return "07";
-        if (monthName.equals("August") || monthName.equals("AUGUST") || monthName.equals("august") || monthName.equals("Aug") || monthName.equals("AUG")
-                || monthName.equals("aug"))
+        if (monthName.equals("august") || monthName.equals("aug"))
             return "08";
-        if (monthName.equals("September") || monthName.equals("SEPTEMBER") || monthName.equals("september") || monthName.equals("Sep") || monthName.equals("SEP")
-                || monthName.equals("sep"))
+        if (monthName.equals("september") || monthName.equals("sep"))
             return "09";
-        if (monthName.equals("October") || monthName.equals("OCTOBER") || monthName.equals("october") || monthName.equals("Oct") || monthName.equals("OCT")
-                || monthName.equals("oct"))
+        if (monthName.equals("october") || monthName.equals("oct"))
             return "10";
-        if (monthName.equals("November") || monthName.equals("NOVEMBER") || monthName.equals("november") || monthName.equals("Nov") || monthName.equals("NOV")
-                || monthName.equals("nov"))
+        if (monthName.equals("november") || monthName.equals("nov"))
             return "11";
-        if (monthName.equals("December") || monthName.equals("DECEMBER") || monthName.equals("december") || monthName.equals("Dec") || monthName.equals("DEC")
-                || monthName.equals("dec"))
+        if (monthName.equals("december") || monthName.equals("dec"))
             return "12";
         return "00";
     }
@@ -1497,11 +1507,13 @@ public class Parse implements Runnable {
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
         }
-        /*
-        if (newTerm)
 
-            corpusDictionary.put(current,corpusDictionary.get(current) + 1);
-            */
+        if (newTerm) {
+            if (corpusDictionary.containsKey(current))
+                corpusDictionary.put(current, corpusDictionary.get(current) + 1);
+            else
+                corpusDictionary.put(current, 1);
+        }
     }
 
     /**
@@ -1963,15 +1975,6 @@ public class Parse implements Runnable {
         return ans;
     }
 
-    /** this function checks if the string need to change in cases of lower case/upper case and change him if needed.
-     * @param current the string that we want to check his variations
-     * @return the string after check the variation of thw string and change if needed.
-     */
-    private String ChangeStringOrNot(String current) {
-        String Toreturn = "";
-        return Toreturn;
-    }
-
     /** this function returns if the string given is a number or not
      * @param str is the string that we want to check
      * @return true if the string given is a number.
@@ -1981,13 +1984,13 @@ public class Parse implements Runnable {
         // TODO: Might change to take less time
         try
         {
-            double d = Double.parseDouble(str);
+            Integer.parseInt(str);
+            return true;
         }
         catch(NumberFormatException nfe)
         {
             return false;
         }
-        return true;
     }
 
     /** this function returns if the string given is a number or not
@@ -2004,8 +2007,6 @@ public class Parse implements Runnable {
         return ans;
     }
 
-    private
-
     /**
      * stops creating the term lists
      */
@@ -2019,23 +2020,19 @@ public class Parse implements Runnable {
     }
 
     /** this function checks if the string given is a valid string(number or word)
-     * @param str
-     * @return true if the string is valid
+     * @param str - a given string
+     * @return true if the string is valid. else - false
      */
     public boolean CheckIfValidString(String str){
-        boolean ans = true;
         if(isNumeric2(str) &&!str.contains("-") &&!str.contains(",") &&!str.contains(".")){
             for (int i = 0; i < str.length(); i++) {
                 char charAt2 = str.charAt(i);
                 if (Character.isLetter(charAt2)) {
-                   ans = false;
-                   return ans;
+                   return false;
                 }
-
             }
         }
-
-        return ans;
+        return true;
     }
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
