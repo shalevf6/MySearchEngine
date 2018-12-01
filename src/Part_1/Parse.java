@@ -12,9 +12,9 @@ import java.util.concurrent.BlockingQueue;
  */
 public class Parse implements Runnable {
 
-    static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static HashMap<String, Integer> corpusDictionary = new HashMap<>();
     static private boolean stop = false;
-    static public HashMap<String, Integer> corpusDictionary = new HashMap<>();
     static public HashMap<String, Integer> corpusCityDictionary = new HashMap<>();
     static public boolean stemming;
     private HashMap<String, int[]> currentTermDictionary;
@@ -61,10 +61,10 @@ public class Parse implements Runnable {
     /**
      * This is the main Parse Function
      */
-    public void parseAll() {
+    private void parseAll() {
         while (true) {
-            if (true) {//delete this
-                if (stemming )
+            if (!docQueue.isEmpty()) {
+                if (stemming)
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 max_tf = 0;
@@ -93,34 +93,24 @@ public class Parse implements Runnable {
                 String documentCity = document.getCity();
                 if (documentCity == null)
                     turnToCity = false;
-                while (turnToDocument || turnToTitle || turnToDate /*|| turnToCity */) {
+                // in order to go through both the document's text and the document title
+                while (turnToDocument || turnToTitle) {
                     if (!turnToDocument) {
                         documents = new String[1];
                         if (turnToTitle) {
                             documents[0] = documentTitle;
                             docPart = 2;
-                        } else {
-                            if (turnToDate) {
-                                documents[0] = documentDate;
-                                docPart = 3;
-                            }
-//                            else {
-//                                if (turnToCity) {
-//                                    documents[0] = documentCity;
-//                                    docPart = 4;
-//                                }
-//                            }
                         }
                     }
-
-                    for (String data: documents) {
+                    for (String data : documents) {
                         String current;
                         int counter = 0;
-                        //splits the string
+                        // splits the text before parsing
                         afterSplit = data.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
                         int countWord = 0;
 
+                        // removes any extra delimiters in the start / end of every word
                         while (countWord < afterSplitLength - 1) {
                             afterSplit[countWord] = removeExtraDelimiters(afterSplit[countWord]);
                             countWord++;
@@ -250,14 +240,13 @@ public class Parse implements Runnable {
                                         }
                                     }
                                     //--------MORE THEN ONE DASH---------//
-                                    if(!HowMuchToChange && current.contains("-")){
+                                    if (!HowMuchToChange && current.contains("-")) {
                                         String[] splitedByDash = current.split("-");
-                                        for (String Dashed: splitedByDash) {
-                                            if(isNumeric2(Dashed) && !CheckIfValidString(Dashed)){
+                                        for (String Dashed : splitedByDash) {
+                                            if (isNumeric2(Dashed) && !CheckIfValidString(Dashed)) {
                                                 Dashed = changeNumToRegularNum(Dashed);
                                                 updateDictionaries(Dashed);
-                                            }
-                                            else {
+                                            } else {
                                                 //------MEANS IT'S A WORD---------//
                                                 //TODO:SHALEV WILL FILL THIS - DONE!!!!
                                                 // checks if the right part is a word
@@ -266,8 +255,7 @@ public class Parse implements Runnable {
                                                     if (!StopWords.containsKey(Dashed.toLowerCase())) {
                                                         handleAllLetters(Dashed);
                                                     }
-                                                }
-                                                else {
+                                                } else {
                                                     // if it's not a letter, maybe there is a delimiter in it
                                                     checkFurtherSplits(Dashed);
                                                 }
@@ -298,6 +286,7 @@ public class Parse implements Runnable {
                                                 continue;
                                             }
                                         }
+
                                         int regularNumCheck = RegularNumCheck(current, counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
                                         if (regularNumCheck != 0) {
                                             counter = counter + regularNumCheck;
@@ -315,14 +304,13 @@ public class Parse implements Runnable {
                                     }
 
                                     //-------CONTAINS SLASH BUT MORE THEN ONE------//
-                                    if(current.contains("/") && notFraction(current)){
+                                    if (current.contains("/") && notFraction(current)) {
                                         String[] splitedBySlash = current.split("/");
-                                        for (String Splited: splitedBySlash) {
-                                            if(isNumeric2(Splited) && !CheckIfValidString(Splited)){
+                                        for (String Splited : splitedBySlash) {
+                                            if (isNumeric2(Splited) && !CheckIfValidString(Splited)) {
                                                 Splited = changeNumToRegularNum(Splited);
                                                 updateDictionaries(Splited);
-                                            }
-                                            else {
+                                            } else {
                                                 //-----MEAN IT'S A WORD----//
                                                 //TODO:SHALEV WILL FILL THIS - DONE!!!!
                                                 // checks if the right part is a word
@@ -331,8 +319,7 @@ public class Parse implements Runnable {
                                                     if (!StopWords.containsKey(Splited.toLowerCase())) {
                                                         handleAllLetters(Splited);
                                                     }
-                                                }
-                                                else {
+                                                } else {
                                                     // if it's not a letter, maybe there is a delimiter in it
                                                     checkFurtherSplits(Splited);
                                                 }
@@ -360,15 +347,38 @@ public class Parse implements Runnable {
                     else {
                         if (turnToTitle) {
                             turnToTitle = false;
-                        } else {
-                            if (turnToDate) {
-                                turnToDate = false;
-                            }
-//                            else {
-//                                if (turnToCity)
-//                                    turnToCity = false;
-//                            }
                         }
+                    }
+                }
+                // adds the date of the document to the dictionary
+                if (turnToDate) {
+                    String[] dateSplit = documentDate.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
+                    int count = 0;
+                    int dateSplitLength = dateSplit.length;
+                    // removes any extra delimiters in the start / end of every word
+                    while (count < dateSplitLength - 1) {
+                        dateSplit[count] = removeExtraDelimiters(dateSplit[count]);
+                        count++;
+                    }
+                    boolean dateExists = false;
+                    if (dateSplitLength == 3) {
+                        String dateSplit1 = dateSplit[0];
+                        String dateSplit2 = dateSplit[1];
+                        String dateSplit3 = dateSplit[2];
+                        if (isNumeric(dateSplit1) && Integer.valueOf(dateSplit1) <= 31) {
+                            String monthNumber = getMonthNumber(dateSplit2.toLowerCase());
+                            if (!monthNumber.equals("00") && isNumeric(dateSplit3)) {
+                                String date = dateSplit3 + "-" + monthNumber + "-" + dateSplit1;
+                                updateDictionaries(date);
+                                handleAllLetters(getMonthNameForDictionary(monthNumber));
+                                updateDictionaries(monthNumber + "-" + dateSplit1);
+                                document.setDocDate(date);
+                                dateExists = true;
+                            }
+                        }
+                    }
+                    if (!dateExists) {
+                        document.setDocDate(null);
                     }
                 }
                 document.setTfAndTermDictionary(currentTermDictionary, max_tf);
@@ -1053,7 +1063,7 @@ public class Parse implements Runnable {
         String[] dashSplit = current.split("-");
         boolean allWords = true;
         int dashSplitLength = dashSplit.length;
-        String remainingDelimiters = "['.,/\\s]+";
+        String remainingDelimiters = "['.$%/\\s]+";
         // if there are 2 or 3 words between the '-' delimiter
         if (dashSplitLength == 2 || dashSplitLength == 3) {
             for (String aDashSplit : dashSplit)
@@ -1336,28 +1346,23 @@ public class Parse implements Runnable {
      */
     private String removeExtraDelimiters(String word) {
         if(!word.equals("")) {
+
             if(word.equals("U.S."))
                 return word;
-            int length = word.length() - 1;
 
-            if (word.charAt(length) == '.' || word.charAt(length) == '/' || word.charAt(length) == '-' || word.charAt(length) == '\'') {
-                word = word.substring(0, length);
-                length = length - 1;
+            int length = word.length();
+
+            // checks if there is a delimiter at the start of the word
+            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%') {
+                return removeExtraDelimiters(word.substring(1));
             }
 
-            if (!word.equals("") && length > 1 && (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'')) {
-                word = word.substring(1);
-                length = length - 1;
-            }
+            // checks if there is a delimiter at the end of the word
+            if (word.charAt(length - 1) == '.' || word.charAt(length - 1) == '/' || word.charAt(length - 1) == '-' || word.charAt(length - 1) == '\'' ||
+                    word.charAt(length - 1) == '$')
+                return removeExtraDelimiters(word.substring(0, length - 1));
 
-            if (!word.equals("") && length > 1 && (word.charAt(length) == '.' || word.charAt(length) == '/' || word.charAt(length) == '-' ||
-                    word.charAt(length) == '\'')) {
-                word = word.substring(0, length);
-                length = length - 1;
-            }
-
-            if (!word.equals("") && length > 1 && (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\''))
-                word = word.substring(1);
+            return word;
         }
         return word;
     }
