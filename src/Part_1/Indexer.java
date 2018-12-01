@@ -163,4 +163,12 @@ public class Indexer implements Runnable {
     public void run() {
         indexAll(Controller.postingPathText);
     }
+
+    /**
+     * turns the dictionary into a sorted string
+     * @return - a string representing the sorted dictionary
+     */
+    public static String getDictionaryString() {
+        return "";
+    }
 }
