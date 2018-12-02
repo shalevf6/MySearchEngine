@@ -286,7 +286,22 @@ public class Parse implements Runnable {
                                                 continue;
                                             }
                                         }
-
+                                        if(current2.toLowerCase().equals("billion")) {
+                                            current = current + "B";
+                                            counter++;
+                                        }
+                                        if(current2.toLowerCase().equals("Trillion")) {
+                                            current = current + "T";
+                                            counter++;
+                                        }
+                                        if(current2.toLowerCase().equals("million")) {
+                                            current = current + "B";
+                                            counter++;
+                                        }
+                                        if(current2.toLowerCase().equals("thousand")) {
+                                            current = current + "K";
+                                            counter++;
+                                        }
                                         int regularNumCheck = RegularNumCheck(current, counter); //  CHECK CURRENT2 = MILLION \ BILLION \ TRILLION \ THOUSAND
                                         if (regularNumCheck != 0) {
                                             counter = counter + regularNumCheck;
@@ -449,6 +464,58 @@ public class Parse implements Runnable {
         String current2;
         String current3;
         String current4;
+        if(current.contains("B")&& !current.contains("\\.")){
+            current = current + ",000,000,000";
+        }
+        if(current.contains("M")&& !current.contains("\\.")){
+            current = current + ",000,000";
+        }
+        if(current.contains("B")&& !current.contains("\\.")){
+            current = current + ",000,000,000";
+        }
+        if(current.contains("K")&& !current.contains("\\.")){
+            current = current + ",000";
+        }
+        if(current.contains("T")&& !current.contains("\\.")){
+            current = current + ",000,000,000,000";
+        }
+        if(current.contains("\\.") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
+            Double temp = 0.0;
+            if(current.contains("K")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000;
+            }
+            if(current.contains("M")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000;
+            }
+            if(current.contains("B")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000000;
+            }
+            if(current.contains("T")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000000*1000;
+            }
+                int temp2 = temp.intValue();
+                current = String.valueOf(temp2);
+                if(temp2 < 1000000) {
+                    temp = temp/1000;
+                    current = String.valueOf(temp);
+                    current = current+"K";
+                }
+                 else if(temp >=1000000000){
+                    temp = temp/1000000000;
+                    current =String.valueOf(temp);
+                    current = current +"B";
+                }
+                else {
+                    temp = temp/1000000;
+                    current= String.valueOf(temp);
+                    current = current + "M";
+                }
+                toReturn++;
+            }
         if (current.contains(",") )
             current = changeNumToRegularNum(current);
         if (counter < afterSplit.length - 1)
@@ -461,31 +528,128 @@ public class Parse implements Runnable {
                 updateDictionaries(current.toLowerCase());
                 return 2;
             }
-            //FIRST:IF CURRENT2= THOUSAND
-            if (current2.toLowerCase().equals("thousand")) {
-                current = current + "K";
-                toReturn++;
-            }//SECOND:IF CURRENT2= MILLION
-            if (current2.toLowerCase().equals("million") || current2.toLowerCase().equals("mill")) {
-                current = current + "M";
-                toReturn++;
-            }//THIRD:IF CURRENT2= BILLION
-            if (current2.toLowerCase().equals("billion")) {
-                current = current + "B";
-                toReturn++;
-            }//FORTH:IF CURRENT2= TRILLION
-            if (current2.toLowerCase().equals("trillion")) {
-                Double temp = Double.parseDouble(current);
-                temp = temp * 1000;
-                int temp2 = temp.intValue();
-                current = String.valueOf(temp2);
-                current = current + "B";
-                toReturn++;
-            }
-            if (current.contains("M")) {
-                current = current.substring(0, current.length() - 1) + " M";
-            }
             updateDictionaries(current);
+            toReturn++;
+        }
+        return toReturn;
+    }
+    private String handleMoreThenOneNumber(String current, int counter) {
+        int toReturn = 0;
+        String current2;
+        String current3;
+        String current4;
+        if(current.contains("B")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
+            current = current + ",000,000,000";
+        }
+        if(current.contains("M")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
+            current = current + ",000,000";
+        }
+        if(current.contains("B")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
+            current = current + ",000,000,000";
+        }
+        if(current.contains("K")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
+            current = current + ",000";
+        }
+        if(current.contains("T")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
+            current = current + ",000,000,000,000";
+        }
+        if(current.contains("\\.") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
+            Double temp = 0.0;
+            if(current.contains("K")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000;
+            }
+            if(current.contains("M")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000;
+            }
+            if(current.contains("B")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000000;
+            }
+            if(current.contains("T")) {
+                temp = Double.parseDouble(current);
+                temp = temp * 1000000000*1000;
+            }
+            int temp2 = temp.intValue();
+            current = String.valueOf(temp2);
+            if(temp2 < 1000000)
+            {
+                temp = temp/1000;
+                current = String.valueOf(temp);
+                current = current+"K";
+            }
+            else if(temp >=1000000000)
+            {
+                temp = temp/1000000000;
+                current =String.valueOf(temp);
+                current = current +"B";
+            }
+            else
+                {
+                temp = temp/1000000;
+                current= String.valueOf(temp);
+                current = current + "M";
+            }
+        }
+        if (current.contains(",") )
+            current = changeNumToRegularNum(current);
+        return current;
+        }
+
+
+
+    private int handleFixedNumbers(String current, String current2) {
+        int toReturn = 0;
+        double ans;
+        if(current.contains("K")){
+            current =current.substring(0,current.length()-1);
+            double dow =Double.parseDouble(current);
+            dow = dow*1000;
+            current =String.valueOf(dow);
+        }
+        if(current.contains("M")){
+            current =current.substring(0,current.length()-1);
+            double dow =Double.parseDouble(current);
+            dow = dow*1000000;
+            current =String.valueOf(dow);
+        }
+        if(current.contains("B")){
+            current =current.substring(0,current.length()-1);
+            double dow =Double.parseDouble(current);
+            dow = dow*1000000000;
+            current =String.valueOf(dow);
+        }
+
+        if (current2.toLowerCase().equals("thousand")) {
+            current = current + "K";
+            current = changeNumToRegularNum(current);
+            toReturn++;
+        }//SECOND:IF CURRENT2= MILLION
+        if (current2.toLowerCase().equals("million") || current2.toLowerCase().equals("mill")) {
+            current = current + "M";
+            current = changeNumToRegularNum(current);
+            toReturn++;
+        }//THIRD:IF CURRENT2= BILLION
+        if (current2.toLowerCase().equals("billion")) {
+            current = current + "B";
+            current = changeNumToRegularNum(current);
+            toReturn++;
+        }//FORTH:IF CURRENT2= TRILLION
+        if (current2.toLowerCase().equals("trillion")) {
+
+            Double temp = Double.parseDouble(current);
+            temp = temp * 1000;
+            int temp2 = temp.intValue();
+            current = String.valueOf(temp2);
+            current = current + "B";
+            current = changeNumToRegularNum(current);
+
             toReturn++;
         }
         return toReturn;
@@ -1049,8 +1213,10 @@ public class Parse implements Runnable {
             String[] ans1 = s.split("/");
             if (ans1.length > 2)
                 return false;
-            if (isNumeric(ans1[0]) && isNumeric(ans1[1]))
-                return true;
+            if (ans1.length==2){
+             if(isNumeric(ans1[0])&&isNumeric(ans1[1]))
+                 return true;
+            }
         }
         return false;
     }
@@ -1129,7 +1295,7 @@ public class Parse implements Runnable {
         String current3;
         String current4;
         // checks if the 2nd word is a NUMBER
-        if (counter + 1 < afterSplitLength && isNumeric2(afterSplit[counter + 1])) {
+        if (counter + 1 < afterSplitLength && isNumeric2(afterSplit[counter + 1]) && haveNoletters(afterSplit[counter +1])) {
             current2 = afterSplit[counter + 1];
             // checks if the 3rd word is "and"
             if (counter + 2 < afterSplitLength && afterSplit[counter + 2].toLowerCase().equals("and")) {
@@ -1156,6 +1322,7 @@ public class Parse implements Runnable {
                         return 5;
                     }
                     String current5Lower = current5.toLowerCase();
+
                     if (current5Lower.equals("thousand")) {
                         current4 = current4 + " K";
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
@@ -1171,12 +1338,18 @@ public class Parse implements Runnable {
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }//FORTH:IF CURRENT2 = TRILLION
+                    if(current4.equals("L4000000000000")){
+                        counter++;
+                        counter--;
+                    }
                     if (current5Lower.equals("trillion")) {
-                        Double temp = Double.parseDouble(current5);
-                        temp = temp * 1000;
+                        current4 =current4 + "T";
+                        current4 =handleMoreThenOneNumber(current4,counter);
+                        Double temp = Double.parseDouble(current4);
+                        temp = temp /1000;
                         int temp2 = temp.intValue();
-                        current4 = String.valueOf(temp2);
-                        current4 = current4 + " B";
+                        current4 = String.format ("%.0f", temp);
+                        current4 = current4 + "B";
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }
@@ -1192,7 +1365,7 @@ public class Parse implements Runnable {
                     current4= "";
                 current3 = "";
                 if(counter+2 < afterSplitLength)
-                    current3 = afterSplit[counter + 4];
+                    current3 = afterSplit[counter + 2];
                 if(!isNumeric2(current3))
                     return 0;
                 if(!notFraction(current3) && isNumeric2(current3))
@@ -1301,6 +1474,18 @@ public class Parse implements Runnable {
             return 0;
         }
         return 0;
+    }
+
+    private boolean haveNoletters(String s) {
+        boolean ans = true;
+        for(int i = 0 ;i< s.length();i++){
+            if(Character.isLetter(s.charAt(i)) && i== s.length()-1)
+                if(s.charAt(i)!='K' ||s.charAt(i)!='B'||s.charAt(i)!='T'||s.charAt(i)!='M')
+                return false;
+            if(Character.isLetter(s.charAt(i)) && i!= s.length()-1)
+                return false;
+        }
+        return ans;
     }
 
     /**
@@ -1586,9 +1771,10 @@ public class Parse implements Runnable {
                 int Count = 0;
                 if (current2Lower.equals("trillion")) {
                     Double temp = Double.parseDouble(current);
-                    temp = temp * 1000000000;
-                    current = String.valueOf(temp);
+                    temp = temp * 1000000;
+                    current = String.format ("%.0f", temp);
                     current = handleDot(current);
+
                     /*
                     String[] arr = current.split("\\.");
                     Count = arr[1].length();
@@ -1619,7 +1805,7 @@ public class Parse implements Runnable {
                         current = arr[0] + arr[1];
                     if (Count == 4)
                         current = current + " M Dollars";
-                    return current;
+                    return current + " M Dollars";
                 }
                 if (current2Lower.equals("million") || current2Lower.equals("m")) {
                     String[] arr = current.split("\\.");
@@ -1694,6 +1880,9 @@ public class Parse implements Runnable {
      * @return the number after the change.
      */
     private String changeNumToRegularNum(String current) {
+        if(current.contains("B")||current.contains("K")||current.contains("M")||current.contains("K")){
+
+        }
         String[] nums = current.split(",");
         String signal = "";
         if (nums[0].contains("$")) {
@@ -1887,28 +2076,40 @@ public class Parse implements Runnable {
             ans = signal + ans;
         if (!ans.equals("") && ans.contains("$"))
             ans = ans;
+        if(nums.length > 4){
+            ans ="";
+            for(int i = 0; i<nums.length;i++){
+                for(int j =0; j<nums[i].length();j++){
+                    if(nums[i].charAt(j)!=',')
+                        ans = ans + nums[i].charAt(j);
+                }
+            }
+        }
         else if (ans.equals(""))
             return current;
         String[] finalS = ans.split("\\.");
         if (finalS.length == 1)
             return ans;
         else {
-            if (finalS[1].contains("B")) {
+            if (finalS[1].contains("B")&&finalS[1].length()>=2) {
                 if (finalS[1].charAt(1) == 'B')
                     return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
                 return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "B";
             }
-            if (finalS[1].contains("M")) {
+            if (finalS[1].contains("M")&&finalS[1].length()>=2) {
                 if (finalS[1].charAt(1) == 'M')
                     return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
                 return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "M";
             }
-            if (finalS[1].contains("K")) {
+            if (finalS[1].contains("K") &&finalS[1].length()>=2) {
                 if (finalS[1].charAt(1) == 'K')
                     return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
                 return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "K";
             }
+            if(finalS[1].length()>=2)
             ans = finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
+            else
+                ans = finalS[0] + "." + finalS[1].charAt(0);
         }
 
         return ans;
@@ -1974,18 +2175,38 @@ public class Parse implements Runnable {
      * @param str - a given string
      * @return true if the string is valid. else - false
      */
-    private boolean CheckIfValidString(String str){
-        if(isNumeric2(str) &&!str.contains("-") &&!str.contains(",") &&!str.contains(".")){
+    private boolean CheckIfValidString(String str) {
+        boolean ans = false;
+        if (isNumeric2(str) && !str.contains("-") && !str.contains(",") && !str.contains("\\.")) {
             for (int i = 0; i < str.length(); i++) {
                 char charAt2 = str.charAt(i);
                 if (Character.isLetter(charAt2)) {
-                   return false;
+                    return false;
                 }
             }
+            for (int i = 0; i < str.length(); i++) {
+                if (str.charAt(i) == '$' && i != 0 || str.charAt(i) == '%' && i != str.length() - 1)
+                    return false;
+            }
+            ans = true;
         }
-        return true;
+        if (isNumeric2(str) && (str.contains("-") || str.contains("\\."))) {
+            for (int i = 0; i < str.length(); i++) {
+                char charAt2 = str.charAt(i);
+                if (Character.isLetter(charAt2)) {
+                    if (i > 0) {
+                        if (str.charAt(i - 1) != '-')
+                            return false;
+                    }
+                    if (i < str.length() - 2)
+                        if (str.charAt(i + 1) != '-')
+                            return false;
+                }
+            }
+            return true;
+        }
+        return ans;
     }
-
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
         //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
@@ -1995,7 +2216,7 @@ public class Parse implements Runnable {
         //String[] AfterSplit = s.split(toDelete);
         //System.out.println(Arrays.toString(AfterSplit));
         System.out.println("Start Parsing");
-        Parse p = new Parse("$100,000,021 $100,000 $210 trillion  2.5 million dollars 2.61 trillion U.S. dollars 10 3/25 dollars 200 12/78 U.S. dollars");
+        Parse p = new Parse("");
 //
         p.parseAll();
 //         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
