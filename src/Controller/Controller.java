@@ -66,17 +66,20 @@ public class Controller {
                     if ((new File(postingPath.getText())).exists()) {
                         postingPathText = postingPath.getText();
                         String dirPath = corpusPath.getText();
-                        File stopWords = new File(dirPath + "\\stop words");
-                        if (stopWords.exists()) {
-                            Parse.stemming = stemmingCheckBox.isSelected();
-                            if (Parse.stemming) {
-                                (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
-                                alreadyIndexedWithStemming = true;
-                            }
-                            else {
-                                (new File(postingPathText + "\\postingFilesWithoutStemming")).mkdir();
-                                alreadyIndexedWithoutStemming = true;
-                            }
+                        File corpusDirectory = new File(dirPath + "\\corpus");
+                        if (!corpusDirectory.exists()) {
+                            showErrorAlert("You must choose an existing corpus folder path!");
+                        } else {
+                            File stopWords = new File(dirPath + "\\corpus\\stop words");
+                            if (stopWords.exists()) {
+                                Parse.stemming = stemmingCheckBox.isSelected();
+                                if (Parse.stemming) {
+                                    (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
+                                    alreadyIndexedWithStemming = true;
+                                } else {
+                                    (new File(postingPathText + "\\postingFilesWithoutStemming")).mkdir();
+                                    alreadyIndexedWithoutStemming = true;
+                                }
                         /*
                         File postingPathFile = new File (ClassLoader.g"\\fxml\\postingPath");
                         try {
@@ -92,50 +95,49 @@ public class Controller {
                             e.printStackTrace();
                         }
                         */
-                            Parse parse = new Parse(dirPath + "\\stop words");
-                            ReadFile readFile = new ReadFile(dirPath);
-                            Indexer indexer = new Indexer();
-                            Thread readFileThread = new Thread(readFile);
-                            Thread parseThread = new Thread(parse);
-                            Thread indexThread = new Thread(indexer);
-                            long startTime = System.nanoTime();
-                            startsIndexing = true;
-                            parseThread.start();
-                            readFileThread.start();
-                            indexThread.start();
-                            try {
-                                readFileThread.join();
-                                parseThread.join();
-                                indexThread.join();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
+                                Parse parse = new Parse(dirPath + "\\corpus\\stop words");
+                                ReadFile readFile = new ReadFile(dirPath, parse);
+                                Indexer indexer = new Indexer();
+                                Thread readFileThread = new Thread(readFile);
+                                Thread indexThread = new Thread(indexer);
+                                long startTime = System.nanoTime();
+                                startsIndexing = true;
+                                readFileThread.start();
+                                indexThread.start();
+                                try {
+                                    readFileThread.join();
+                                    indexThread.join();
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
 
-                            // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
-                            finally {
-                                startsIndexing = false;
-                                if (Parse.stemming)
-                                    alreadyIndexedWithStemming = true;
-                                else
-                                    alreadyIndexedWithoutStemming = true;
-                                double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
-                                int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
-                                int remainingSeconds = (int) (totalTimeInSeconds % 60);
-                                String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
-                                String docCount = "Total documents indexed: " + ReadFile.docCount;
-                                String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
-                                Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
-                                doneIndexing.setHeaderText("Indexing Done!");
-                                doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal document count: " +
-                                        docCount + "\nTotal unique words found: " + termCount);
+                                // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
+                                finally {
+                                    startsIndexing = false;
+                                    if (Parse.stemming)
+                                        alreadyIndexedWithStemming = true;
+                                    else
+                                        alreadyIndexedWithoutStemming = true;
+                                    double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
+                                    int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
+                                    int remainingSeconds = (int) (totalTimeInSeconds % 60);
+                                    String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
+                                    String docCount = "Total documents indexed: " + ReadFile.docCount;
+                                    String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
+                                    Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
+                                    doneIndexing.setHeaderText("Indexing Done!");
+                                    doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal document count: " +
+                                            docCount + "\nTotal unique words found: " + termCount);
+                                }
+                            } else {
+                                showErrorAlert("You must choose an existing stop words file path!");
                             }
-                        } else {
-                            showErrorAlert("You must choose an existing stop words file path!");
                         }
                     } else {
                         showErrorAlert("You must choose an existing posting files path!");
                     }
                 }
+
             }
         }
     }
