@@ -14,61 +14,63 @@ import java.util.concurrent.BlockingQueue;
 public class Indexer implements Runnable {
 
     static private boolean stop = false;
-    static public BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static public HashMap<String, int[]> termDictionary = new HashMap<>();
-    static public HashMap<String, String> tempTermDictionary = new HashMap<>();
     static public HashMap<String, String[]> documentDictionary = new HashMap<>();
     static private boolean isDictionaryStemmed;
     static public int totalUniqueTerms = 0;
+    private static HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
     private BufferedReader[] bufferedReaders;
 
     /**
+     * Used for sorting the entries of a posting line according to normalized tf
+     */
+    private PriorityQueue<String> entriesSort = new PriorityQueue<>((o1, o2) -> {
+        String[] data1 = o1.split(",");
+        String[] data2 = o2.split(",");
+        return data1[1].compareTo(data2[1]);
+    });
+
+    /**
      * Used for sorting the temp posting lines before writing them to the temp posting file
      */
-    private PriorityQueue<String> toPosting = new PriorityQueue<>(new Comparator<String>() {
-        @Override
-        public int compare(String o1, String o2) {
-//            System.out.println("Between " + o1 + " to " + o2); TODO: - DELETE DOCUMENTATION
-            int toCut1 = o1.indexOf(':');
-            int toCut2 = o2.indexOf(':');
-            String term1 = o1.substring(0, toCut1);
-            String term2 = o2.substring(0, toCut2);
-            return term1.compareTo(term2);
-        }
+    private PriorityQueue<String> toPosting = new PriorityQueue<>((o1, o2) -> {
+        int toCut1 = o1.indexOf(':');
+        int toCut2 = o2.indexOf(':');
+        String term1 = o1.substring(0, toCut1);
+        String term2 = o2.substring(0, toCut2);
+        return term1.compareTo(term2);
     });
 
     /**
      * Used for sorting the temp posting lines before writing them to the main posting file
      */
-    private PriorityQueue<String[]> toMainPosting = new PriorityQueue<>(new Comparator<String[]>() {
-        @Override
-        public int compare(String[] o1, String[] o2) {
-//            System.out.println("Between " + o1 + " to " + o2); TODO: - DELETE DOCUMENTATION
-            String o1Line = o1[0];
-            String o2Line = o2[0];
-            int toCut1 = o1Line.indexOf(':');
-            int toCut2 = o2Line.indexOf(':');
-            String term1 = o1Line.substring(0, toCut1);
-            String term2 = o2Line.substring(0, toCut2);
-            return term1.compareTo(term2);
-        }
+    private PriorityQueue<String[]> toMainPosting = new PriorityQueue<>((o1, o2) -> {
+        String o1Line = o1[0];
+        String o2Line = o2[0];
+        int toCut1 = o1Line.indexOf(':');
+        int toCut2 = o2Line.indexOf(':');
+        String term1 = o1Line.substring(0, toCut1);
+        String term2 = o2Line.substring(0, toCut2);
+        return term1.compareTo(term2);
     });
 
     /**
      * Used for sorting the dictionary before presenting it to the user
      */
-    static private PriorityQueue<String> dictionarySort = new PriorityQueue<>(new Comparator<String>() {
-        @Override
-        public int compare(String o1, String o2) {
-            int toCut1 = o1.indexOf(';');
-            int toCut2 = o2.indexOf(';');
-            String term1 = o1.substring(0, toCut1 - 1);
-            String term2 = o2.substring(0, toCut2 - 1);
-            return term1.compareTo(term2);
-        }
+    static private PriorityQueue<String> dictionarySort = new PriorityQueue<>((o1, o2) -> {
+        int toCut1 = o1.indexOf(';');
+        int toCut2 = o2.indexOf(';');
+        String term1 = o1.substring(0, toCut1 - 1);
+        String term2 = o2.substring(0, toCut2 - 1);
+        return term1.compareTo(term2);
     });
 
+    /**
+     * the primary index function
+     * @param postingPath - the path for saving the posting files
+     */
     private void indexAll(String postingPath){
         // ------ START: CREATE ALL TEMP POSTING FILES ------
         int tempPostingNum = 1;
@@ -100,19 +102,21 @@ public class Indexer implements Runnable {
                     doc.deleteDictionary();
                     // ------ START: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     Set<String> termSet = docTermDictionary.keySet();
+                    int max_tf = doc.getMax_tf();
                     for (String term : termSet) {
                         int[] termData = docTermDictionary.get(term);
-                        String dictionaryValue;
+                        String postingValue;
                         // ---- it's THE FIRST posting entry for this term ----
                         if (!tempTermDictionary.containsKey(term)) {
-                            dictionaryValue = term + ":" + docId + "," + termData[0] + "," + termData[1] + termData[2] + termData[3] + ";";
-                            tempTermDictionary.put(term, dictionaryValue);
+                            postingValue = term + ":" + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+                            tempTermDictionary.put(term, postingValue);
                         }
                         // ---- it's NOT THE FIRST posting entry for this term ----
                         else {
-                            dictionaryValue = tempTermDictionary.get(term);
-                            dictionaryValue = dictionaryValue + docId + "," + termData[0] + "," + termData[1] + termData[2] + termData[3] + ";";
-                            tempTermDictionary.put(term, dictionaryValue);
+                            postingValue = tempTermDictionary.get(term);
+                            postingValue = postingValue + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+                            postingValue = sortByTf(postingValue);
+                            tempTermDictionary.put(term, postingValue);
                         }
                     }
                     // ------ END: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
@@ -148,6 +152,7 @@ public class Indexer implements Runnable {
                     // for not writing a new line at the end of the temp posting file
                     if (postingLine != null)
                         bufferedWriter.write(postingLine);
+                    postingLine = toPosting.poll();
                     while (postingLine != null) {
                         bufferedWriter.write('\n' + postingLine);
                         postingLine = toPosting.poll();
@@ -174,7 +179,7 @@ public class Indexer implements Runnable {
         Parse.corpusDictionary = null;
         Set<String> termSet = corpusDictionary.keySet();
         for (String term : termSet) {
-            int[] termData = new int[2];
+            int[] termData = new int[3];
             termData[0] = corpusDictionary.get(term);
             termDictionary.put(term, termData);
         }
@@ -197,6 +202,26 @@ public class Indexer implements Runnable {
     }
 
     /**
+     * sorts the posting line entries by the normalized tf value
+     * @param dictionaryValue - the posting line before sorting
+     * @return - the posting line after sorting
+     */
+    private String sortByTf(String dictionaryValue) {
+        StringBuilder stringBuilder = new StringBuilder();
+        String[] splitByTerm = dictionaryValue.split(":");
+        String[] splitByEntries = splitByTerm[1].split(";");
+        stringBuilder.append(splitByTerm[0]);
+        // enters all the entries into the priority queue for sorting
+        for (String entry : splitByEntries) {
+            entriesSort.add(entry);
+        }
+        // gets the sorted entries out of the priority queue
+        while (!entriesSort.isEmpty())
+            stringBuilder.append(entriesSort.poll());
+        return stringBuilder.toString();
+    }
+
+    /**
      * merges all the temp Posting Files into one
      * @param postingPath - the path for the location of all the temp posting files
      */
@@ -212,7 +237,7 @@ public class Indexer implements Runnable {
         String[][] postingLines = new String[totalTempPostingFiles][2];
 
         // create a buffered reader for each of the sorted temp posting files
-        while (counter <= totalTempPostingFiles) {
+        while (counter < totalTempPostingFiles) {
             try {
                 bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + counter))));
                 counter++;
@@ -250,14 +275,18 @@ public class Indexer implements Runnable {
                 term = term.toUpperCase();
             }
 
-            int postingPointer = 1;
+            // sorts the posting line's entries by normalized tf
+            postingLineToAdd = sortByTf(postingLineToAdd);
+            // initiates the bytes counter for the posting pointer
+            int postingPointer = 0;
             // write first line separately so the main posting file won't end with a \n (new line)
             bw.write(postingLineToAdd);
 
             // update the posting pointer in the dictionary to refer to the line in the posting file
             int[] termData = termDictionary.get(term);
             termData[1] = postingPointer;
-            postingPointer++;
+            // updated the bytes counter for the posting pointer
+            postingPointer = postingLineToAdd.getBytes().length;
 
             // keep writing more posting lines
             while (!toMainPosting.isEmpty()) {
@@ -277,7 +306,7 @@ public class Indexer implements Runnable {
                 // update the posting pointer in the dictionary to refer to the line in the posting file
                 termData = termDictionary.get(term);
                 termData[1] = postingPointer;
-                postingPointer++;
+                postingPointer = postingPointer + postingPointer;
             }
 
             // closing all Buffered Readers
@@ -318,6 +347,7 @@ public class Indexer implements Runnable {
 
             // checks if the 2 terms are the same
             if (term1.compareTo(term2) == 0) {
+                // removes the posting line with the same term from the queue and adds a new line instead
                 getAndAddToQueue();
                 // merges all the posting details for the term from both of the posting lines
                 postingLineToAdd[0] =  postingLineToAdd[0].substring(0, line1.length()) + line2.substring(toCut2 + 1);

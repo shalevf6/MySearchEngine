@@ -4,18 +4,17 @@ import GeneralClasses.Document;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * this class parses through the documents and creates a term list and a dictionary for every document
  */
-public class Parse implements Runnable {
+public class Parse {
 
-    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static Queue<Document> docQueue = new LinkedList<>();
     static HashMap<String, Integer> corpusDictionary = new HashMap<>();
-    static private boolean stop = false;
-    static public HashMap<String, Integer> corpusCityDictionary = new HashMap<>();
+    static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
     static public boolean stemming;
     private HashMap<String, int[]> currentTermDictionary;
     private HashMap<String, Integer> StopWords;
@@ -61,7 +60,7 @@ public class Parse implements Runnable {
     /**
      * This is the main Parse Function
      */
-    private void parseAll() {
+    protected void parseAll() {
         while (true) {
             if (!docQueue.isEmpty()) {
                 if (stemming)
@@ -75,11 +74,7 @@ public class Parse implements Runnable {
                 boolean turnToDate = true;
                 boolean turnToCity = true;
                 Document document = null;
-                try {
-                    document = docQueue.take();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                document = docQueue.poll();
                 System.out.println(document.getDocId()); // TODO: DELETE DOCUMENTATION
                 String[] documents = document.getDocText();
                 if (documents == null)
@@ -91,8 +86,9 @@ public class Parse implements Runnable {
                 if (documentDate == null)
                     turnToDate = false;
                 String documentCity = document.getCity();
-                if (documentCity == null)
+                if (documentCity == null) {
                     turnToCity = false;
+                }
                 // in order to go through both the document's text and the document title
                 while (turnToDocument || turnToTitle) {
                     if (!turnToDocument) {
@@ -388,10 +384,8 @@ public class Parse implements Runnable {
                     e.printStackTrace();
                 }
             } else {
-                if (stop) {
-                    Indexer.stop();
-                    break;
-                }
+                Indexer.stop();
+                break;
             }
         }
     }
@@ -1956,18 +1950,6 @@ public class Parse implements Runnable {
             ans = true;
         }
         return ans;
-    }
-
-    /**
-     * stops creating the term lists
-     */
-    static void stop() {
-        stop = true;
-    }
-
-    @Override
-    public void run() {
-        parseAll();
     }
 
     /** this function checks if the string given is a valid string(number or word)

@@ -2,6 +2,8 @@ package Part_1;
 
 import javafx.scene.control.Alert;
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * This class reads all the corpus's files and parses through them
@@ -12,17 +14,19 @@ public class ReadFile implements Runnable {
     private String dirPath;
     private StringBuilder allDocumentLines;
     public static int docCount = 0; // TODO: maybe erase docCount
+    private Parse parse;
 
     /**
      * A constructor for the ReadFile class
      * @param dirPath - the directory path in which the corpus is found
      */
-    public ReadFile(String dirPath) {
+    public ReadFile(String dirPath, Parse parse) {
         this.dirPath = dirPath;
+        this.parse = parse;
     }
 
     /**
-     * Reads and parses through all the corpuse's files
+     * Reads and parses through all the corpus's files
      */
     private void readThroughFiles() {
         // get to the corpus directory
@@ -56,7 +60,7 @@ public class ReadFile implements Runnable {
             System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
             System.out.println("Number of documents: " + docCount); // TODO: erase tracking
             // inform the parse class it shouldn't wait for any more documents to parse through
-            Parse.stop();
+            parse.parseAll();
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -71,6 +75,7 @@ public class ReadFile implements Runnable {
      * @param docStart - a given document's start index
      */
     private void parseThroughDoc(int docStart) {
+
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
             docCount++;
@@ -120,16 +125,18 @@ public class ReadFile implements Runnable {
             if (!docDate.equals(""))
                 newDoc.setDocDate(docDate);
 
-            // gets the document's city (if there is one)s
+            // gets the document's city (if there is one)
             if (docString.contains("<F P=104>")) {
                 int cityStart = docString.indexOf("<F P=104>");
-                int cityEnd = docString.indexOf("</F>",cityStart);
+                int cityEnd = docString.indexOf("</F>", cityStart);
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
-                for (String city : docCityArr) {
-                    if (!city.equals("")) {
-                        docCity = city.toUpperCase();
-                        newDoc.setCity(docCity);
-                        break;
+                if (docCityArr.length != 0) {
+                    String city = docCityArr[0];
+                    if (!city.equals("") && isOnlyLetters(city)) {
+                        String cityUpper = city.toUpperCase();
+                        newDoc.setCity(cityUpper);
+                        if (!Parse.corpusCityDictionary.containsKey(cityUpper))
+                            addToCityDictionary(cityUpper);
                     }
                 }
             }
@@ -151,15 +158,74 @@ public class ReadFile implements Runnable {
             }
 
             // add the document to the static Document Queue in the Parse class
-            try {
-                Parse.docQueue.put(newDoc);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Parse.docQueue.add(newDoc);
 
             // gets the next document's start index
             docStart = allDocumentLines.indexOf("<DOC>", docEnd);
         }
+    }
+
+    /**
+     * adds the city's details to the city dictionary
+     * @param city - a given string of a city
+     */
+    private void addToCityDictionary(String city) {
+        URL url;
+        try {
+            url = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city);
+
+            //make connection
+            URLConnection urlc = url.openConnection();
+
+            //use post mode
+            urlc.setDoOutput(true);
+            urlc.setAllowUserInteraction(false);
+
+            //get result
+            BufferedReader br = new BufferedReader(new InputStreamReader(urlc.getInputStream()));
+            String l = br.readLine();
+            if (l != null) {
+                int countryStartIndex = l.indexOf("geobytescountry") + 18;
+                int countryFinishIndex = l.indexOf("\"",countryStartIndex);
+                String country = "";
+                if (countryFinishIndex - countryStartIndex != 0)
+                    country = l.substring(countryStartIndex, countryFinishIndex);
+                int coinStartIndex = l.indexOf("geobytescurrencycode") + 23;
+                int coinFinishIndex = l.indexOf("\"",coinStartIndex);
+                String coin = "";
+                if (coinFinishIndex - coinStartIndex != 0)
+                    coin = l.substring(coinStartIndex, coinFinishIndex);
+                int populationStartIndex = l.indexOf("geobytespopulation") + 21;
+                int populationFinishIndex = l.indexOf("\"",populationStartIndex);
+                String population = "";
+                if (populationFinishIndex - populationStartIndex != 0)
+                    population = l.substring(populationStartIndex, populationFinishIndex);
+                String[] cityData = new String[4];
+                cityData[0] = country;
+                cityData[1] = coin;
+                cityData[2] = population;
+                Parse.corpusCityDictionary.put(city, cityData);
+            }
+            br.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * checks if a given word is composed only of letters or not
+     * taken from https://stackoverflow.com/questions/5238491/check-if-string-contains-only-letters
+     * @param current - a given word
+     * @return - true if its only letters, else false
+     */
+    private boolean isOnlyLetters(String current) {
+        char[] chars = current.toCharArray();
+        for (char c : chars) {
+            if(!Character.isLetter(c)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -168,24 +234,26 @@ public class ReadFile implements Runnable {
     }
 
     public static void main(String[] args) {
-        String path = "C:\\Users\\Shalev\\Desktop";
-        ReadFile readFile = new ReadFile(path);
-        long startTime = System.nanoTime();
-        readFile.readThroughFiles();
         System.out.println();
-        Parse parse = new Parse(path + "\\stop words");
-        Thread readFileThread = new Thread(readFile);
-        Thread parseThread = new Thread(parse);
-        parseThread.start();
-        readFileThread.start();
-        try {
-            readFileThread.join();
-            parseThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        finally {
-            System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
-        }
+//        String path = "C:\\Users\\Shalev\\Desktop";
+//        ReadFile readFile = new ReadFile(path);
+//        readFile.readThroughFiles();
+//        long startTime = System.nanoTime();
+//        readFile.readThroughFiles();
+//        System.out.println();
+//        Parse parse = new Parse(path + "\\stop words");
+//        Thread readFileThread = new Thread(readFile);
+//        Thread parseThread = new Thread(parse);
+//        parseThread.start();
+//        readFileThread.start();
+//        try {
+//            readFileThread.join();
+//            parseThread.join();
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
+//        finally {
+//            System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
+//        }
     }
 }
