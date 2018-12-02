@@ -104,19 +104,21 @@ public class Indexer implements Runnable {
                     Set<String> termSet = docTermDictionary.keySet();
                     int max_tf = doc.getMax_tf();
                     for (String term : termSet) {
-                        int[] termData = docTermDictionary.get(term);
-                        String postingValue;
-                        // ---- it's THE FIRST posting entry for this term ----
-                        if (!tempTermDictionary.containsKey(term)) {
-                            postingValue = term + ":" + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
-                            tempTermDictionary.put(term, postingValue);
-                        }
-                        // ---- it's NOT THE FIRST posting entry for this term ----
-                        else {
-                            postingValue = tempTermDictionary.get(term);
-                            postingValue = postingValue + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
-                            postingValue = sortByTf(postingValue);
-                            tempTermDictionary.put(term, postingValue);
+                        if (!term.equals("")) {
+                            int[] termData = docTermDictionary.get(term);
+                            String postingValue;
+                            // ---- it's THE FIRST posting entry for this term ----
+                            if (!tempTermDictionary.containsKey(term)) {
+                                postingValue = term + ":" + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+                                tempTermDictionary.put(term, postingValue);
+                            }
+                            // ---- it's NOT THE FIRST posting entry for this term ----
+                            else {
+                                postingValue = tempTermDictionary.get(term);
+                                postingValue = postingValue + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+//                                postingValue = sortByTf(postingValue);
+                                tempTermDictionary.put(term, postingValue);
+                            }
                         }
                     }
                     // ------ END: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
@@ -190,12 +192,12 @@ public class Indexer implements Runnable {
         totalTempPostingFiles = tempPostingNum;
         if (Parse.stemming) {
             isDictionaryStemmed = true;
-            mergePostingFiles(postingPath + "\\postingFilesWithStemming\\tempPosting");
+            mergePostingFiles(postingPath + "\\postingFilesWithStemming");
             writeDictionaryToFile(postingPath + "\\postingFilesWithStemming\\termDictionary", termDictionary);
         }
         else {
             isDictionaryStemmed = false;
-            mergePostingFiles(postingPath + "\\postingFilesWithoutStemming\\tempPosting");
+            mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
             writeDictionaryToFile(postingPath + "\\postingFilesWithoutStemming\\termDictionary", termDictionary);
         }
         // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES ------
@@ -210,14 +212,14 @@ public class Indexer implements Runnable {
         StringBuilder stringBuilder = new StringBuilder();
         String[] splitByTerm = dictionaryValue.split(":");
         String[] splitByEntries = splitByTerm[1].split(";");
-        stringBuilder.append(splitByTerm[0]);
+        stringBuilder.append(splitByTerm[0] + ":");
         // enters all the entries into the priority queue for sorting
         for (String entry : splitByEntries) {
             entriesSort.add(entry);
         }
         // gets the sorted entries out of the priority queue
         while (!entriesSort.isEmpty())
-            stringBuilder.append(entriesSort.poll());
+            stringBuilder.append(entriesSort.poll() + ";");
         return stringBuilder.toString();
     }
 
@@ -239,7 +241,7 @@ public class Indexer implements Runnable {
         // create a buffered reader for each of the sorted temp posting files
         while (counter < totalTempPostingFiles) {
             try {
-                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + counter))));
+                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPosting" + counter))));
                 counter++;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -276,7 +278,7 @@ public class Indexer implements Runnable {
             }
 
             // sorts the posting line's entries by normalized tf
-            postingLineToAdd = sortByTf(postingLineToAdd);
+//            postingLineToAdd = sortByTf(postingLineToAdd);
             // initiates the bytes counter for the posting pointer
             int postingPointer = 0;
             // write first line separately so the main posting file won't end with a \n (new line)

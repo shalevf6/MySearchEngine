@@ -4,17 +4,18 @@ import GeneralClasses.Document;
 
 import java.io.*;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * this class parses through the documents and creates a term list and a dictionary for every document
  */
-public class Parse {
+public class Parse implements Runnable {
 
-    static Queue<Document> docQueue = new LinkedList<>();
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static HashMap<String, Integer> corpusDictionary = new HashMap<>();
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
+    static private boolean stop = false;
     static public boolean stemming;
     private HashMap<String, int[]> currentTermDictionary;
     private HashMap<String, Integer> StopWords;
@@ -60,7 +61,7 @@ public class Parse {
     /**
      * This is the main Parse Function
      */
-    protected void parseAll() {
+    private void parseAll() {
         while (true) {
             if (!docQueue.isEmpty()) {
                 if (stemming)
@@ -74,8 +75,12 @@ public class Parse {
                 boolean turnToDate = true;
                 boolean turnToCity = true;
                 Document document = null;
-                document = docQueue.poll();
-                System.out.println(document.getDocId()); // TODO: DELETE DOCUMENTATION
+                try {
+                    document = docQueue.take();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(document.getDocId());
                 String[] documents = document.getDocText();
                 if (documents == null)
                     turnToDocument = false;
@@ -399,8 +404,10 @@ public class Parse {
                     e.printStackTrace();
                 }
             } else {
-                Indexer.stop();
-                break;
+                if (stop) {
+                    Indexer.stop();
+                    break;
+                }
             }
         }
     }
@@ -2189,6 +2196,19 @@ public class Parse {
         }
         return ans;
     }
+
+    /**
+     * stops parsing through documents
+     */
+    static void stop() {
+        stop = true;
+    }
+
+    @Override
+    public void run() {
+        parseAll();
+    }
+
     public static void main(String[] args) {
         //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
         //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";

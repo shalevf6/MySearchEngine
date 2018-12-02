@@ -1,6 +1,7 @@
 package Part_1;
 
 import javafx.scene.control.Alert;
+
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
@@ -14,19 +15,17 @@ public class ReadFile implements Runnable {
     private String dirPath;
     private StringBuilder allDocumentLines;
     public static int docCount = 0; // TODO: maybe erase docCount
-    private Parse parse;
 
     /**
      * A constructor for the ReadFile class
      * @param dirPath - the directory path in which the corpus is found
      */
-    public ReadFile(String dirPath, Parse parse) {
+    public ReadFile(String dirPath) {
         this.dirPath = dirPath;
-        this.parse = parse;
     }
 
     /**
-     * Reads and parses through all the corpus's files
+     * Reads and parses through all the corpuse's files
      */
     private void readThroughFiles() {
         // get to the corpus directory
@@ -60,7 +59,7 @@ public class ReadFile implements Runnable {
             System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
             System.out.println("Number of documents: " + docCount); // TODO: erase tracking
             // inform the parse class it shouldn't wait for any more documents to parse through
-            parse.parseAll();
+            Parse.stop();
         }
         else {
             Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -75,7 +74,6 @@ public class ReadFile implements Runnable {
      * @param docStart - a given document's start index
      */
     private void parseThroughDoc(int docStart) {
-
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
             docCount++;
@@ -135,8 +133,9 @@ public class ReadFile implements Runnable {
                     if (!city.equals("") && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         newDoc.setCity(cityUpper);
-                        if (!Parse.corpusCityDictionary.containsKey(cityUpper))
+                        if (!Parse.corpusCityDictionary.containsKey(cityUpper)) {
                             addToCityDictionary(cityUpper);
+                        }
                     }
                 }
             }
@@ -158,7 +157,11 @@ public class ReadFile implements Runnable {
             }
 
             // add the document to the static Document Queue in the Parse class
-            Parse.docQueue.add(newDoc);
+            try {
+                Parse.docQueue.put(newDoc);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             // gets the next document's start index
             docStart = allDocumentLines.indexOf("<DOC>", docEnd);
@@ -204,6 +207,7 @@ public class ReadFile implements Runnable {
                 cityData[0] = country;
                 cityData[1] = coin;
                 cityData[2] = population;
+
                 Parse.corpusCityDictionary.put(city, cityData);
             }
             br.close();
@@ -234,26 +238,24 @@ public class ReadFile implements Runnable {
     }
 
     public static void main(String[] args) {
+        String path = "C:\\Users\\Shalev\\Desktop";
+        ReadFile readFile = new ReadFile(path);
+        long startTime = System.nanoTime();
+        readFile.readThroughFiles();
         System.out.println();
-//        String path = "C:\\Users\\Shalev\\Desktop";
-//        ReadFile readFile = new ReadFile(path);
-//        readFile.readThroughFiles();
-//        long startTime = System.nanoTime();
-//        readFile.readThroughFiles();
-//        System.out.println();
-//        Parse parse = new Parse(path + "\\stop words");
-//        Thread readFileThread = new Thread(readFile);
-//        Thread parseThread = new Thread(parse);
-//        parseThread.start();
-//        readFileThread.start();
-//        try {
-//            readFileThread.join();
-//            parseThread.join();
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//        finally {
-//            System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
-//        }
+        Parse parse = new Parse(path + "\\stop words");
+        Thread readFileThread = new Thread(readFile);
+        Thread parseThread = new Thread(parse);
+        parseThread.start();
+        readFileThread.start();
+        try {
+            readFileThread.join();
+            parseThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        finally {
+            System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
+        }
     }
 }

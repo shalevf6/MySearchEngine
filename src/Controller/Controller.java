@@ -14,6 +14,7 @@ import javafx.scene.control.CheckBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import sun.awt.Mutex;
 
 import java.io.*;
 
@@ -96,16 +97,19 @@ public class Controller {
                         }
                         */
                                 Parse parse = new Parse(dirPath + "\\corpus\\stop words");
-                                ReadFile readFile = new ReadFile(dirPath, parse);
+                                ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
                                 Thread readFileThread = new Thread(readFile);
+                                Thread parseThread = new Thread(parse);
                                 Thread indexThread = new Thread(indexer);
                                 long startTime = System.nanoTime();
                                 startsIndexing = true;
+                                parseThread.start();
                                 readFileThread.start();
                                 indexThread.start();
                                 try {
                                     readFileThread.join();
+                                    parseThread.join();
                                     indexThread.join();
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
