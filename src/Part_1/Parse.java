@@ -1706,6 +1706,7 @@ public class Parse implements Runnable {
             // word is in document dictionary
             if (currentTermDictionary.containsKey(current)) {
                 existsInDocumentDictionaryCase(current);
+                existsInCorpusDictionary(current, currentUpper);
             }
             // word is not in document dictionary
             else {
