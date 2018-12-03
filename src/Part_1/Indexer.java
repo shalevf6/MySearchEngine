@@ -14,13 +14,13 @@ import java.util.concurrent.BlockingQueue;
 public class Indexer implements Runnable {
 
     static private boolean stop = false;
-    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
-    static HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
-    static public HashMap<String, int[]> termDictionary = new HashMap<>();
-    static public HashMap<String, String[]> documentDictionary = new HashMap<>();
     static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
-    static private boolean isDictionaryStemmed;
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
+    private static HashMap<String, int[]> termDictionary = new HashMap<>();
+    private static HashMap<String, String[]> documentDictionary = new HashMap<>();
+    public static boolean isDictionaryStemmed;
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
     private BufferedReader[] bufferedReaders;
@@ -79,7 +79,7 @@ public class Indexer implements Runnable {
         while (true) {
             if (!docQueue.isEmpty()) {
                 int counter = 10000;
-                while (counter > 0 && !stop) {
+                while (counter > 0 && !docQueue.isEmpty()) {
                     // ------ START: ADD ALL DOCUMENT DETAILS TO DOCUMENT DICTIONARY ------
                     Document doc = null;
                     try {
@@ -561,12 +561,14 @@ public class Indexer implements Runnable {
      * @param stemming - is the dictionary looked for is stemmed or not
      * @return - the looked for dictionary
      */
-    public static HashMap<String, int[]>                                                                                                                       getTermDictionary(boolean stemming) {
+    public static HashMap<String, int[]> getTermDictionary(boolean stemming) {
         if (stemming) {
             if (isDictionaryStemmed)
                 return termDictionary;
             else {
                 termDictionary = readDictionaryFromFile(Controller.postingPathText + "\\postingFilesWithStemming\\termDictionary");
+                totalUniqueTerms = termDictionary.size();
+                isDictionaryStemmed = true;
                 return termDictionary;
             }
         }
@@ -574,6 +576,8 @@ public class Indexer implements Runnable {
             return termDictionary;
         else {
             termDictionary = readDictionaryFromFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\termDictionary");
+            totalUniqueTerms = termDictionary.size();
+            isDictionaryStemmed = false;
             return termDictionary;
         }
     }
@@ -629,7 +633,7 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * reads a dictionary's string from a file
+     * reads a dictionary's sorted string (to show) from a file
      * @return - the dictionary's string
      */
     public static String readDictionaryForShowFromFile(String path) {
@@ -658,10 +662,27 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * resets the static stop variable
+     * resets all the static variables
      */
-    public static void resetStop() {
+    public static void resetAll() {
         stop = false;
+        corpusCityDictionary = new HashMap<>();
+        termDictionary = new HashMap<>();
+        documentDictionary = new HashMap<>();
+        indexedCities = false;
+        totalUniqueTerms = 0;
+        isDictionaryStemmed = false;
+    }
+
+    /**
+     * resets parts of the static variables in order to index again, with / without stemming
+     */
+    static void resetPartially() {
+        stop = false;
+        termDictionary = new HashMap<>();
+        documentDictionary = new HashMap<>();
+        indexedCities = false;
+        totalUniqueTerms = 0;
     }
 
     @Override
