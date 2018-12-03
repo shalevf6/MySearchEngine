@@ -1703,12 +1703,9 @@ public class Parse implements Runnable {
             notInDictionaries(current, true);
         else {
             short[] termData;
-            int[] corpusTermData;
             // word is in document dictionary
             if (currentTermDictionary.containsKey(current)) {
                 existsInDocumentDictionaryCase(current);
-                corpusTermData = corpusDictionary.get(current);
-                corpusTermData[1] = corpusTermData[1] + 1;
             }
             // word is not in document dictionary
             else {
@@ -1718,21 +1715,31 @@ public class Parse implements Runnable {
                 if (max_tf < 1)
                     max_tf = 1;
                 currentTermDictionary.put(current, termData);
-                // word is in corpus dictionary in capital letters
-                if (corpusDictionary.containsKey(currentUpper)) {
-                    corpusTermData = corpusDictionary.get(currentUpper);
-                    corpusTermData[0] = corpusTermData[0] + 1;
-                    corpusTermData[1] = corpusTermData[1] + 1;
-                    corpusDictionary.put(currentUpper, corpusTermData);
-                }
-                    // word is in corpus dictionary in lower case
-                else {
-                    corpusTermData = corpusDictionary.get(current);
-                    corpusTermData[0] = corpusTermData[0] + 1;
-                    corpusTermData[0] = corpusTermData[1] + 1;
-                    corpusDictionary.put(current, corpusTermData);
-                }
+                existsInCorpusDictionary(current, currentUpper);
             }
+        }
+    }
+
+    /**
+     * adds the given string to the corpus dictionary, depends on how it was saved before (capital or lower letters)
+     * @param current - the string in lower case letters
+     * @param currentUpper - the string in capital letters
+     */
+    private void existsInCorpusDictionary(String current, String currentUpper) {
+        int[] corpusTermData;
+        // word is in corpus dictionary in capital letters
+        if (corpusDictionary.containsKey(currentUpper)) {
+            corpusTermData = corpusDictionary.get(currentUpper);
+            corpusTermData[0] = corpusTermData[0] + 1;
+            corpusTermData[1] = corpusTermData[1] + 1;
+            corpusDictionary.put(currentUpper, corpusTermData);
+        }
+        // word is in corpus dictionary in lower case
+        else {
+            corpusTermData = corpusDictionary.get(current);
+            corpusTermData[0] = corpusTermData[0] + 1;
+            corpusTermData[0] = corpusTermData[1] + 1;
+            corpusDictionary.put(current, corpusTermData);
         }
     }
 
