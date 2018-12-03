@@ -14,7 +14,7 @@ public class Document {
     private String docDate = null;
     private String city = null;
     private ArrayList<String> termList;
-    private HashMap<String,int[]> termDictionary;
+    private HashMap<String,short[]> termDictionary;
     private int max_tf;
     private int uniqueWords;
 
@@ -87,7 +87,7 @@ public class Document {
      * @param termDictionary - the document's term dictionary
      * @param max_tf - ther document's max_tf
      */
-    public void setTfAndTermDictionary(HashMap<String,int[]> termDictionary, int max_tf) {
+    public void setTfAndTermDictionary(HashMap<String,short[]> termDictionary, int max_tf) {
         this.termDictionary = termDictionary;
         uniqueWords = termDictionary.keySet().size();
         this.max_tf = max_tf;
@@ -145,7 +145,7 @@ public class Document {
      * gets the document's term dictionary
      * @return - the document's term dictionary
      */
-    public HashMap<String,int[]> getTermDictionary() {
+    public HashMap<String,short[]> getTermDictionary() {
         return termDictionary;
     }
 

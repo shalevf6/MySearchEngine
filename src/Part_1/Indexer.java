@@ -15,11 +15,14 @@ public class Indexer implements Runnable {
 
     static private boolean stop = false;
     static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
     static public HashMap<String, int[]> termDictionary = new HashMap<>();
     static public HashMap<String, String[]> documentDictionary = new HashMap<>();
-    static private boolean isDictionaryStemmed;
+    static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
-    private static HashMap<String, String> tempTermDictionary = new HashMap<>();
+    static private boolean isDictionaryStemmed;
+    private HashMap<String, Integer> tempTotalTFTermDictionary = new HashMap<>();
+    private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
     private BufferedReader[] bufferedReaders;
 
@@ -97,25 +100,27 @@ public class Indexer implements Runnable {
                     String docId = doc.getDocId();
                     documentDictionary.put(docId, docData);
                     // ------ FINISH: ADD ALL DOCUMENT DETAILS TO DOCUMENT DICTIONARY ------
-                    HashMap<String, int[]> docTermDictionary = doc.getTermDictionary();
+                    HashMap<String, short[]> docTermDictionary = doc.getTermDictionary();
                     // SAVE MEMORY - change docDictionary reference in Document class to null
                     doc.deleteDictionary();
                     // ------ START: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     Set<String> termSet = docTermDictionary.keySet();
-                    int max_tf = doc.getMax_tf();
+                    double max_tf = doc.getMax_tf();
                     for (String term : termSet) {
                         if (!term.equals("")) {
-                            int[] termData = docTermDictionary.get(term);
+                            short[] termData = docTermDictionary.get(term);
                             String postingValue;
+                            double normalizedTf = termData[0];
+                            normalizedTf = normalizedTf / max_tf;
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
-                                postingValue = term + ":" + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+                                postingValue = term + ":" + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
                                 tempTermDictionary.put(term, postingValue);
                             }
                             // ---- it's NOT THE FIRST posting entry for this term ----
                             else {
                                 postingValue = tempTermDictionary.get(term);
-                                postingValue = postingValue + docId + "," + (termData[0] / max_tf) + "," + termData[1] + termData[2] + termData[3] + ";";
+                                postingValue = postingValue + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
 //                                postingValue = sortByTf(postingValue);
                                 tempTermDictionary.put(term, postingValue);
                             }
@@ -146,19 +151,44 @@ public class Indexer implements Runnable {
                         tempPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\tempPosting" + tempPostingNum);
                         tempPostingFile.createNewFile();
                     }
+                    File tempPostingCityFile;
+                    boolean firstEntry = true;
+                    BufferedWriter cityBufferedWriter = null;
+                    // --- IN ORDER TO NOT CREATE THE CITIES' POSTING FILES MORE THAN ONCE ---
+                    if (!indexedCities) {
+                        tempPostingCityFile = new File(postingPath + "\\postingForCities\\tempPostingCity" + tempPostingNum);
+                        cityBufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tempPostingCityFile)));
+                    }
                     tempPostingNum++;
-                    FileOutputStream fileOutputStream = new FileOutputStream(tempPostingFile.getAbsolutePath());
+                    FileOutputStream fileOutputStream = new FileOutputStream(tempPostingFile);
                     OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
                     BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
                     String postingLine = toPosting.poll();
                     // for not writing a new line at the end of the temp posting file
-                    if (postingLine != null)
+                    if (postingLine != null) {
                         bufferedWriter.write(postingLine);
+                        // for not writing a new line at the end of the temp city posting file
+                        if (!indexedCities && corpusCityDictionary.containsKey(postingLine.split(":")[0])) {
+                            cityBufferedWriter.write(postingLine);
+                            firstEntry = false;
+                        }
+                    }
                     postingLine = toPosting.poll();
                     while (postingLine != null) {
                         bufferedWriter.write('\n' + postingLine);
+                        // for not writing the cities' posting files twice
+                        if (!indexedCities && corpusCityDictionary.containsKey(postingLine.split(":")[0])) {
+                            if (!firstEntry)
+                                cityBufferedWriter.write('\n' + postingLine);
+                            else {
+                                cityBufferedWriter.write(postingLine);
+                                firstEntry = false;
+                            }
+                        }
                         postingLine = toPosting.poll();
                     }
+                    if (!indexedCities)
+                        cityBufferedWriter.close();
                     bufferedWriter.close();
                     outputStreamWriter.close();
                     fileOutputStream.close();
@@ -177,12 +207,14 @@ public class Indexer implements Runnable {
         }
 
         // ------ START: COPY ALL THE TERMS AND DF VALUES FROM THE CORPUS DICTIONARY (FROM PARSE) TO THE TERM DICTIONARY ------
-        HashMap<String, Integer> corpusDictionary = Parse.corpusDictionary;
-        Parse.corpusDictionary = null;
+        HashMap<String, int[]> corpusDictionary = Parse.corpusDictionary;
+        Parse.corpusDictionary = new HashMap<>();
         Set<String> termSet = corpusDictionary.keySet();
         for (String term : termSet) {
             int[] termData = new int[3];
-            termData[0] = corpusDictionary.get(term);
+            int[] corpusTermData = corpusDictionary.get(term);
+            termData[0] = corpusTermData[0];
+            termData[1] = corpusTermData[1];
             termDictionary.put(term, termData);
         }
         totalUniqueTerms = termDictionary.keySet().size();
@@ -193,12 +225,22 @@ public class Indexer implements Runnable {
         if (Parse.stemming) {
             isDictionaryStemmed = true;
             mergePostingFiles(postingPath + "\\postingFilesWithStemming");
+            if (!indexedCities) {
+                mergeCityPostingFiles(postingPath + "\\postingForCities");
+                indexedCities = true;
+            }
             writeDictionaryToFile(postingPath + "\\postingFilesWithStemming\\termDictionary", termDictionary);
+            writeDictionaryForShowToFile(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
         }
         else {
             isDictionaryStemmed = false;
             mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
+            if (!indexedCities) {
+                mergeCityPostingFiles(postingPath + "\\postingForCities");
+                indexedCities = true;
+            }
             writeDictionaryToFile(postingPath + "\\postingFilesWithoutStemming\\termDictionary", termDictionary);
+            writeDictionaryForShowToFile(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow", false);
         }
         // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES ------
     }
@@ -248,17 +290,8 @@ public class Indexer implements Runnable {
             }
         }
 
-        // read a line from each of the sorted temp posting files
-        counter = 0;
-        for (BufferedReader br : bufferedReaders) {
-            try {
-                postingLines[counter][0] = br.readLine();
-                postingLines[counter][1] = Integer.toString(counter);
-                toMainPosting.add(postingLines[counter]);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        // reads a line from each of the sorted temp posting files
+        readFirstLines(bufferedReaders, postingLines);
 
         BufferedWriter bw;
         try {
@@ -279,16 +312,19 @@ public class Indexer implements Runnable {
 
             // sorts the posting line's entries by normalized tf
 //            postingLineToAdd = sortByTf(postingLineToAdd);
-            // initiates the bytes counter for the posting pointer
-            int postingPointer = 0;
+
             // write first line separately so the main posting file won't end with a \n (new line)
             bw.write(postingLineToAdd);
 
-            // update the posting pointer in the dictionary to refer to the line in the posting file
+            // initiates the bytes counter for the posting pointer
+            int postingPointer = 0;
+
+            // updates the posting pointer in the dictionary to refer to the line in the posting file
             int[] termData = termDictionary.get(term);
-            termData[1] = postingPointer;
-            // updated the bytes counter for the posting pointer
-            postingPointer = postingLineToAdd.getBytes().length;
+            termData[2] = postingPointer;
+
+            // updates the bytes counter for the posting pointer
+            postingPointer = postingPointer + postingLineToAdd.getBytes().length;
 
             // keep writing more posting lines
             while (!toMainPosting.isEmpty()) {
@@ -299,15 +335,18 @@ public class Indexer implements Runnable {
                 // checks if the term should be in capital letters
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
-                if (!termDictionary.containsKey(term))
+                if (!termDictionary.containsKey(term)) {
                     postingLineToAdd = term.toUpperCase() + postingLineToAdd.substring(toCut + 1);
+                }
 
                 // writes the posting line
                 bw.write('\n' + postingLineToAdd);
 
-                // update the posting pointer in the dictionary to refer to the line in the posting file
+                // updates the posting pointer in the dictionary to refer to the line in the posting file
                 termData = termDictionary.get(term);
                 termData[1] = postingPointer;
+
+                // updates the bytes counter for the posting pointer
                 postingPointer = postingPointer + postingPointer;
             }
 
@@ -327,6 +366,118 @@ public class Indexer implements Runnable {
             bufferedReaders = null;
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * merges all the temp city Posting Files into one
+     * @param postingPath - the path for the location of all the temp city posting files
+     */
+    private void mergeCityPostingFiles(String postingPath) {
+        File mainCityPostingFile = new File(postingPath + "\\mainCityPosting");
+        try {
+            mainCityPostingFile.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int counter = 1;
+        bufferedReaders = new BufferedReader[totalTempPostingFiles];
+        String[][] postingLines = new String[totalTempPostingFiles][2];
+
+        // create a buffered reader for each of the sorted temp posting files
+        while (counter < totalTempPostingFiles) {
+            try {
+                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPostingCity" + counter))));
+                counter++;
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // reads a line from each of the sorted temp posting files
+        readFirstLines(bufferedReaders, postingLines);
+
+        BufferedWriter bw;
+        try {
+
+            // creating a Buffered Writer for the main posting file
+            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(mainCityPostingFile)));
+
+            // check and merge all duplicate posting lines that are of the same term
+            String postingLineToAdd = checkAndMergePostingLines();
+
+            // sorts the posting line's entries by normalized tf
+//            postingLineToAdd = sortByTf(postingLineToAdd);
+
+            // initiates the bytes counter for the posting pointer
+            int postingPointer = 0;
+
+            // write first line separately so the main posting file won't end with a \n (new line)
+            bw.write(postingLineToAdd);
+
+            // updates the posting pointer in the dictionary to refer to the line in the posting file
+            int toCut = postingLineToAdd.indexOf(':');
+            String term = postingLineToAdd.substring(0, toCut);
+            String[] termData = corpusCityDictionary.get(term);
+            termData[3] = String.valueOf(postingPointer);
+            // updated the bytes counter for the posting pointer
+            postingPointer = postingLineToAdd.getBytes().length;
+
+            // keep writing more posting lines
+            while (!toMainPosting.isEmpty()) {
+
+                // checks and merges all duplicate posting lines that are of the same term
+                postingLineToAdd = checkAndMergePostingLines();
+
+                // writes the posting line
+                bw.write('\n' + postingLineToAdd);
+
+                // updates the posting pointer in the dictionary to refer to the line in the posting file
+                toCut = postingLineToAdd.indexOf(':');
+                term = postingLineToAdd.substring(0, toCut);
+                termData = corpusCityDictionary.get(term);
+                termData[3] = String.valueOf(postingPointer);
+
+                // updated the bytes counter for the posting pointer
+                postingPointer = postingPointer + postingLineToAdd.getBytes().length;
+            }
+
+            // closing all Buffered Readers
+            for (BufferedReader br : bufferedReaders) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // closes the Buffered Writer
+            bw.close();
+
+            // clearing memory space by removing the Buffered Reader array reference
+            bufferedReaders = null;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * reads the first posting lines from each of the temp posting files into a given postingLines array
+     * @param bufferedReaders - a buffered readers array for reading posting lines from each of the temp posting files
+     * @param postingLines - a string array to insert input of the posting lines from the temp posting files
+     */
+    private void readFirstLines(BufferedReader[] bufferedReaders, String[][] postingLines) {
+        // read a line from each of the sorted temp posting files
+        int counter = 0;
+        for (BufferedReader br : bufferedReaders) {
+            try {
+                postingLines[counter][0] = br.readLine();
+                postingLines[counter][1] = Integer.toString(counter);
+                toMainPosting.add(postingLines[counter]);
+                counter++;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -387,7 +538,7 @@ public class Indexer implements Runnable {
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
-            dictionarySort.add(term + " ; " + currDictionary.get(term)[0] + "documents;");
+            dictionarySort.add(term + " ; " + currDictionary.get(term)[1] + " total appearances;");
         }
 
         // starting to build the dictionary sorted string with the first entry
@@ -411,7 +562,7 @@ public class Indexer implements Runnable {
      * @param stemming - is the dictionary looked for is stemmed or not
      * @return - the looked for dictionary
      */
-    public static HashMap<String, int[]> getTermDictionary(boolean stemming) {
+    public static HashMap<String, int[]>                                                                                                                       getTermDictionary(boolean stemming) {
         if (stemming) {
             if (isDictionaryStemmed)
                 return termDictionary;
@@ -439,6 +590,25 @@ public class Indexer implements Runnable {
             dictionary.createNewFile();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionary));
             objectOutputStream.writeObject(toWrite);
+            objectOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * write the dictionary's string to a file
+     * @param path - the path which the dictionary's string should be written to
+     * @param stemming - is the dictionary stemmed or not
+     */
+    private void writeDictionaryForShowToFile(String path, boolean stemming) {
+        File dictionaryForShow = new File(path);
+        try {
+            dictionaryForShow.createNewFile();
+            // creating a Buffered Writer for writing the dictionary's string
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dictionaryForShow)));
+            bw.write(getDictionaryString(stemming));
+            bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -460,10 +630,39 @@ public class Indexer implements Runnable {
     }
 
     /**
+     * reads a dictionary's string from a file
+     * @return - the dictionary's string
+     */
+    public static String readDictionaryForShowFromFile(String path) {
+        File dictionary = new File(path);
+        try {
+            // creating a Buffered Writer for writing the dictionary's string
+            BufferedReader bw = new BufferedReader(new InputStreamReader(new FileInputStream(dictionary)));
+            StringBuilder dictionaryString = new StringBuilder();
+            String line;
+            while ((line = bw.readLine()) != null) {
+                dictionaryString.append(line);
+            }
+            bw.close();
+            return dictionaryString.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
      * stops creating the indexes
      */
     static void stop() {
         stop = true;
+    }
+
+    /**
+     * resets the static stop variable
+     */
+    public static void resetStop() {
+        stop = false;
     }
 
     @Override

@@ -14,8 +14,6 @@ import javafx.scene.control.CheckBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import sun.awt.Mutex;
-
 import java.io.*;
 
 /**
@@ -81,21 +79,22 @@ public class Controller {
                                     (new File(postingPathText + "\\postingFilesWithoutStemming")).mkdir();
                                     alreadyIndexedWithoutStemming = true;
                                 }
-                        /*
-                        File postingPathFile = new File (ClassLoader.g"\\fxml\\postingPath");
-                        try {
-                            postingPathFile.createNewFile();
-                            FileOutputStream fileOutputStream = new FileOutputStream(postingPathFile.getAbsolutePath());
-                            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-                            BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-                            bufferedWriter.write(postingPathText);
-                            bufferedWriter.close();
-                            outputStreamWriter.close();
-                            fileOutputStream.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        */
+                                (new File(postingPathText + "\\postingForCities")).mkdir();
+                                /*
+                                File postingPathFile = new File (ClassLoader.g"\\fxml\\postingPath");
+                                try {
+                                    postingPathFile.createNewFile();
+                                    FileOutputStream fileOutputStream = new FileOutputStream(postingPathFile.getAbsolutePath());
+                                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+                                    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
+                                    bufferedWriter.write(postingPathText);
+                                    bufferedWriter.close();
+                                    outputStreamWriter.close();
+                                    fileOutputStream.close();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                */
                                 Parse parse = new Parse(dirPath + "\\corpus\\stop words");
                                 ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
@@ -193,7 +192,12 @@ public class Controller {
                 stage.setTitle("The Corpus's Dictionary");
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
-                fxmlLoader.setController(new DictionaryController(Indexer.getDictionaryString(stemming)));
+                if (stemming)
+                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowFromFile(postingPathText +
+                            "\\postingFilesWithStemming\\termDictionaryForShow")));
+                else
+                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowFromFile(postingPathText +
+                            "\\postingFilesWithoutStemming\\termDictionaryForShow")));
                 Scene scene = new Scene(root, 600, 400);
                 stage.setScene(scene);
                 stage.initModality(Modality.APPLICATION_MODAL);
@@ -203,6 +207,8 @@ public class Controller {
                 e.printStackTrace();
             }
         }
+        else
+            showErrorAlert("no dictionary to show!");
     }
 
     /**
@@ -210,7 +216,7 @@ public class Controller {
      * @param actionEvent - unused
      */
     public void onDictionaryLoad(ActionEvent actionEvent) {
-        if (!startsIndexing) {
+        if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             boolean stemming = stemmingCheckBox.isSelected();
             if ((stemming && !alreadyIndexedWithStemming) || (!stemming && !alreadyIndexedWithoutStemming))
                 showErrorAlert("Requested dictionary has yet to be created. You must first run indexing!");
