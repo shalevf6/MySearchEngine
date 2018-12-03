@@ -21,7 +21,6 @@ public class Indexer implements Runnable {
     static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
     static private boolean isDictionaryStemmed;
-    private HashMap<String, Integer> tempTotalTFTermDictionary = new HashMap<>();
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
     private BufferedReader[] bufferedReaders;
