@@ -294,8 +294,8 @@ public class Parse implements Runnable {
                                             current = current + "T";
                                             counter++;
                                         }
-                                        if (current2.toLowerCase().equals("million")) {
-                                            current = current + "B";
+                                        if(current2.toLowerCase().equals("million")) {
+                                            current = current + "M";
                                             counter++;
                                         }
                                         if (current2.toLowerCase().equals("thousand")) {
@@ -467,19 +467,25 @@ public class Parse implements Runnable {
         String current2;
         String current3;
         String current4;
+
         if(current.contains("B")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
         if(current.contains("M")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
             current = current + ",000,000";
         }
         if(current.contains("B")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
         if(current.contains("K")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
             current = current + ",000";
         }
         if(current.contains("T")&& !current.contains("\\.")){
+            current =current.substring(0,current.length()-1);
             current = current + ",000,000,000,000";
         }
         if(current.contains("\\.") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
@@ -679,6 +685,7 @@ public class Parse implements Runnable {
                 // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
                 if (dollar) {
                     current = change_to_price(current, current2, current3, current4);
+                    //current =handleDot(current);
                     updateDictionaries(current);
                     String current2Lower = current2.toLowerCase();
                     if (current2Lower.equals("dollars"))
@@ -745,6 +752,10 @@ public class Parse implements Runnable {
                 current = DashSplit[1];
                 if (current.contains(","))
                     current = changeNumToRegularNum(current);
+                else{
+                    //current =handleZero(current);
+                    //tempCurrent =handleZero(current);
+                }
                 if (isNumeric2(current)) {
 
                     //--------NUMBER-NUMBER FRACTION----//
@@ -797,11 +808,14 @@ public class Parse implements Runnable {
             if ((isNumeric2(DashSplit[0]) || isNumeric2(DashSplit[1]))) {
                 String tempCurrent = DashSplit[0];
                 current = DashSplit[1];
-                if (isNumeric2(tempCurrent))
+                if (isNumeric2(tempCurrent)) {
                     changeNumToRegularNum(tempCurrent);
-                if (isNumeric2(current))
+                    //tempCurrent = handleZero(tempCurrent);
+                }
+                if (isNumeric2(current)) {
                     changeNumToRegularNum(current);
-
+                    //current = handleZero(current);
+                }
                 //1-----NUMBER-WORD----------1//
                 if (isNumeric2(tempCurrent)) {
                     tempCurrent = changeNumToRegularNum(tempCurrent); // TODO : check it doesn't enter this if and adds tf for nothing
@@ -899,11 +913,16 @@ public class Parse implements Runnable {
             String Temp2Current2 = DashSplit[1];
             if (isNumeric2(current)) {
                 current = changeNumToRegularNum(current);
+                //current = handleZero(current);
             }
-            if (isNumeric2(Temp2Current2))
+            if (isNumeric2(Temp2Current2)) {
                 Temp2Current2 = changeNumToRegularNum(Temp2Current2);
-            if (isNumeric2(TempCurrent2))
+                //Temp2Current2 = handleZero(Temp2Current2);
+            }
+            if (isNumeric2(TempCurrent2)) {
                 TempCurrent2 = changeNumToRegularNum(TempCurrent2);
+                //TempCurrent2 = handleZero(TempCurrent2);
+            }
 
             //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
 
@@ -976,6 +995,24 @@ public class Parse implements Runnable {
             }
         }
         return ToAdd2Counter;
+    }
+
+    /**this function changes a string given uf it's contains zero at the beginning and ther's no dots or "," for example 0023---->23
+     * @param current
+     * @return the number after changing without zeros in the beginning
+     */
+    private String handleZero(String current) {
+        if(current.contains("\\.")|| current.contains(","))
+            return current;
+        else {
+            for(int i = 0 ; i < current.length(); i++){
+                if(current.charAt(i)=='0')
+                    current =current.substring(1);
+                else
+                    return current;
+            }
+        }
+        return current;
     }
 
     private boolean HandleDashwithNums(String current) {
@@ -1307,10 +1344,10 @@ public class Parse implements Runnable {
                 if (counter + 3 < afterSplitLength && isNumeric2(afterSplit[counter + 3])) {
                     current4 = afterSplit[counter + 3];
                     //Done!
-                    if(notFraction(current2)) {
+                    if(!notFraction(current2)) {
                         current2 = changeNumToRegularNum(current2);
                     }
-                    if(notFraction(current4)) {
+                    if(!notFraction(current4)) {
                         current4 = changeNumToRegularNum(current4);
                     }
                     String current3Lower = current3.toLowerCase();
@@ -1812,6 +1849,8 @@ public class Parse implements Runnable {
                 }
             */
             current = ChangeToPriceNum(current);
+            current =handleDot(current);
+             current = handleZero(current);
             return current + " Dollars";
         }
         //---Case not mentioned: PRICE FRACTION Dollars -----
@@ -1872,7 +1911,7 @@ public class Parse implements Runnable {
                     if (Count == 1)
                         current = arr[0] + arr[1] + "00";
                     if (Count == 2)
-                        current2 = arr[0] + arr[1] + "0";
+                        current = arr[0] + arr[1] + "0";
                     if (Count == 3)
                         current = arr[0] + arr[1];
                     if (Count == 4)
@@ -1881,6 +1920,7 @@ public class Parse implements Runnable {
                 }
                 if (current2Lower.equals("million") || current2Lower.equals("m")) {
                     String[] arr = current.split("\\.");
+                    current =handleDot(current);
                     current = current + " M Dollars";
                     return current;
                 }
@@ -1888,6 +1928,7 @@ public class Parse implements Runnable {
         }
         // --- Cases 1.3,2.2: $PRICE ---
         if (!current2Lower.equals("dollars") && !current3.toLowerCase().equals("dollars") && !current4.toLowerCase().equals("dollars")) {
+            current =handleDot(current);
             return ChangeToPriceNum(current) + " Dollars";
         }
         return ans;
@@ -2164,6 +2205,8 @@ public class Parse implements Runnable {
             return ans;
         else {
             if (finalS[1].contains("B")&&finalS[1].length()>=2) {
+                if (finalS[1].charAt(1) == 'B' &&finalS[1].charAt(0)=='0')
+                    return finalS[0]  + finalS[1].charAt(1);
                 if (finalS[1].charAt(1) == 'B')
                     return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1);
                 return finalS[0] + "." + finalS[1].charAt(0) + finalS[1].charAt(1) + "B";
