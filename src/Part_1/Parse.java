@@ -2335,10 +2335,20 @@ public class Parse implements Runnable {
     }
 
     /**
-     * resets the static stop variable
+     * resets all the static variables
      */
-    static void resetStop() {
+    public static void resetAll() {
         stop = false;
+        corpusDictionary = new HashMap<>();
+        stemming = false;
+    }
+
+    /**
+     * resets all the static variables
+     */
+    public static void resetPartially() {
+        stop = false;
+        corpusDictionary = new HashMap<>();
     }
 
     @Override

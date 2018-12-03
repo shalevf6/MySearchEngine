@@ -174,10 +174,10 @@ public class Controller {
                     f.delete();
                 dir2.delete();
             }
-            Indexer.termDictionary = new HashMap<>();
-            Indexer.documentDictionary = new HashMap<>();
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
+            Parse.resetAll();
+            Indexer.resetAll();
         }
     }
 
@@ -193,7 +193,7 @@ public class Controller {
                 stage.setTitle("The Corpus's Dictionary");
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
-                if (stemming)
+                if (Indexer.isDictionaryStemmed)
                     fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowFromFile(postingPathText +
                             "\\postingFilesWithStemming\\termDictionaryForShow")));
                 else
@@ -219,9 +219,28 @@ public class Controller {
     public void onDictionaryLoad(ActionEvent actionEvent) {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             boolean stemming = stemmingCheckBox.isSelected();
-            if ((stemming && !alreadyIndexedWithStemming) || (!stemming && !alreadyIndexedWithoutStemming))
-                showErrorAlert("Requested dictionary has yet to be created. You must first run indexing!");
+            if ((stemming && alreadyIndexedWithStemming) || (!stemming && alreadyIndexedWithoutStemming))
+                showErrorAlert("Already loaded this option!");
             else {
+                if (stemming) {
+                    // to know if i need to load also the city dictionary
+                    if (alreadyIndexedWithoutStemming) {
+
+                    }
+                    else {
+
+                    }
+                }
+                else {
+                    // to know if i need to load also the city dictionary
+                    if (alreadyIndexedWithStemming) {
+
+                    }
+                    else {
+
+                    }
+
+                }
                 Indexer.getTermDictionary(stemming);
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setContentText("Dictionary Loaded Successfully!");

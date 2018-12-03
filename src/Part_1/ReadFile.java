@@ -38,8 +38,8 @@ public class ReadFile implements Runnable {
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
                 // if this is the second indexing run (stemming / not stemming), makes sure the stop variables are false.
-                Parse.resetStop();
-                Indexer.resetStop();
+                Parse.resetPartially();
+                Indexer.resetPartially();
                 for (File f : subDirs) {
                     // get to the file inside the corpus's sub-directory
                     File[] tempFiles = f.listFiles();
