@@ -1775,6 +1775,8 @@ public class Parse implements Runnable {
             if (max_tf < tf + 1)
                 max_tf = (short) (tf + 1);
             newTerm = false;
+            corpusTermData = corpusDictionary.get(current);
+            corpusTermData[1] = corpusTermData[1] + 1;
         }
         else {
             termData = new short[4];
@@ -1783,8 +1785,6 @@ public class Parse implements Runnable {
             if (max_tf < 1)
                 max_tf = 1;
             currentTermDictionary.put(current, termData);
-            corpusTermData = corpusDictionary.get(current);
-            corpusTermData[1] = corpusTermData[1] + 1;
         }
         if (newTerm) {
             if (corpusDictionary.containsKey(current)) {
