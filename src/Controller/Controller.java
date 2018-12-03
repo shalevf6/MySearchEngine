@@ -15,6 +15,7 @@ import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
+import java.util.HashMap;
 
 /**
  * This class controlls all the GUI elements from the main.fxml file
@@ -173,8 +174,8 @@ public class Controller {
                     f.delete();
                 dir2.delete();
             }
-            Indexer.termDictionary = null;
-            Indexer.documentDictionary = null;
+            Indexer.termDictionary = new HashMap<>();
+            Indexer.documentDictionary = new HashMap<>();
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
         }
