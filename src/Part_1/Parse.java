@@ -1775,16 +1775,22 @@ public class Parse implements Runnable {
         boolean newTerm = true;
         short[] termData;
         int[] corpusTermData;
+        String currentUpper = current.toUpperCase();
         if (currentTermDictionary.containsKey(current)) {
-            termData = currentTermDictionary.get(current);
-            short tf = termData[0];
-            termData[0] = (short) (tf + 1);
-            termData[docPart] = 1;
-            if (max_tf < tf + 1)
-                max_tf = (short) (tf + 1);
-            newTerm = false;
-            corpusTermData = corpusDictionary.get(current);
-            corpusTermData[1] = corpusTermData[1] + 1;
+            // checks if exists in corpus dictionary in upper case letters
+            if (corpusDictionary.containsKey(currentUpper))
+                handleCapitalLetters(current.toLowerCase());
+            else {
+                termData = currentTermDictionary.get(current);
+                short tf = termData[0];
+                termData[0] = (short) (tf + 1);
+                termData[docPart] = 1;
+                if (max_tf < tf + 1)
+                    max_tf = (short) (tf + 1);
+                newTerm = false;
+                corpusTermData = corpusDictionary.get(current);
+                corpusTermData[1] = corpusTermData[1] + 1;
+            }
         }
         else {
             termData = new short[4];
@@ -1795,17 +1801,21 @@ public class Parse implements Runnable {
             currentTermDictionary.put(current, termData);
         }
         if (newTerm) {
-            if (corpusDictionary.containsKey(current)) {
-                corpusTermData = corpusDictionary.get(current);
-                corpusTermData[0] = corpusTermData[0] + 1;
-                corpusTermData[1] = corpusTermData[1] + 1;
-                corpusDictionary.put(current, corpusTermData);
-            }
+            // checks if exists in corpus dictionary in upper case letters
+            if (corpusDictionary.containsKey(currentUpper))
+                handleCapitalLetters(current.toLowerCase());
             else {
-                corpusTermData = new int[2];
-                corpusTermData[0] = 1;
-                corpusTermData[1] = 1;
-                corpusDictionary.put(current, corpusTermData);
+                if (corpusDictionary.containsKey(current)) {
+                    corpusTermData = corpusDictionary.get(current);
+                    corpusTermData[0] = corpusTermData[0] + 1;
+                    corpusTermData[1] = corpusTermData[1] + 1;
+                    corpusDictionary.put(current, corpusTermData);
+                } else {
+                    corpusTermData = new int[2];
+                    corpusTermData[0] = 1;
+                    corpusTermData[1] = 1;
+                    corpusDictionary.put(current, corpusTermData);
+                }
             }
         }
     }
