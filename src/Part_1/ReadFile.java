@@ -25,15 +25,21 @@ public class ReadFile implements Runnable {
     }
 
     /**
-     * Reads and parses through all the corpuse's files
+     * Reads and parses through all the corpus's files
      */
     private void readThroughFiles() {
         // get to the corpus directory
         File dir = new File(dirPath + "\\corpus");
         if (dir.exists()) {
+            // go once through the corpus to get all the city's in the tag <F P=104>
+            if (!Indexer.indexedCities)
+                getCityDictionary(dir);
             // get to all the corpus's sub-directories
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
+                // if this is the second indexing run (stemming / not stemming), makes sure the stop variables are false.
+                Parse.resetStop();
+                Indexer.resetStop();
                 for (File f : subDirs) {
                     // get to the file inside the corpus's sub-directory
                     File[] tempFiles = f.listFiles();
@@ -65,6 +71,75 @@ public class ReadFile implements Runnable {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setContentText("You must choose an existing corpus folder path!");
             alert.show();
+        }
+    }
+
+    /**
+     * go once through all the corpus in order to get information about all the cities in
+     * the tag <F P=104></F>
+     */
+    private void getCityDictionary(File dir) {
+        // get to all the corpus's sub-directories
+        File[] subDirs = dir.listFiles();
+        if (subDirs != null) {
+            for (File f : subDirs) {
+                // get to the file inside the corpus's sub-directory
+                File[] tempFiles = f.listFiles();
+                if (tempFiles != null) {
+                    try {
+                        // parse through the file and separate all the documents that are in it
+                        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(tempFiles[0])));
+                        String line;
+                        allDocumentLines = new StringBuilder();
+                        while ((line = bufferedReader.readLine()) != null) {
+                            allDocumentLines.append(line);
+                        }
+                        bufferedReader.close();
+                        int docStart = allDocumentLines.indexOf("<DOC>");
+                        parseThroughDocsForCities(docStart);
+                    }
+                    catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * parses through the documents to locate the tag <F P=104></F> if exists
+     * @param docStart - the firs document's start indexs
+     */
+    private void parseThroughDocsForCities(int docStart) {
+        // checks if there are any more document's to fetch from the file
+        while (docStart != -1) {
+
+            int docEnd = allDocumentLines.indexOf("</DOC>", docStart);
+            String docString = allDocumentLines.substring(docStart + 5,docEnd);
+
+            // gets the document's city (if there is one)
+            if (docString.contains("<F P=104>")) {
+                int cityStart = docString.indexOf("<F P=104>");
+                int cityEnd = docString.indexOf("</F>", cityStart);
+                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
+                if (docCityArr.length != 0) {
+                    String city = docCityArr[0];
+                    if (!city.equals("") && isOnlyLetters(city)) {
+                        String cityUpper = city.toUpperCase();
+                        // checks if we already added this city to the dictionary
+                        if (!Indexer.corpusCityDictionary.containsKey(cityUpper)) {
+                            addToCityDictionary(cityUpper);
+                        }
+                        else {
+                            int[] corpusTermData = Parse.corpusDictionary.get(cityUpper);
+                            corpusTermData[0] = corpusTermData[0] + 1;
+                            corpusTermData[1] = corpusTermData[1] + 1;
+                        }
+                    }
+                }
+            }
+            // gets the next document's start index
+            docStart = allDocumentLines.indexOf("<DOC>", docEnd);
         }
     }
 
@@ -133,9 +208,6 @@ public class ReadFile implements Runnable {
                     if (!city.equals("") && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         newDoc.setCity(cityUpper);
-                        if (!Parse.corpusCityDictionary.containsKey(cityUpper)) {
-                            addToCityDictionary(cityUpper);
-                        }
                     }
                 }
             }
@@ -208,7 +280,11 @@ public class ReadFile implements Runnable {
                 cityData[1] = coin;
                 cityData[2] = population;
 
-                Parse.corpusCityDictionary.put(city, cityData);
+                Indexer.corpusCityDictionary.put(city, cityData);
+                int[] corpusTermData = new int[2];
+                corpusTermData[0] = 1;
+                corpusTermData[1] = 1;
+                Parse.corpusDictionary.put(city, corpusTermData);
             }
             br.close();
         } catch (IOException e) {
