@@ -13,7 +13,6 @@ public class Document {
     private String docTitle = null;
     private String docDate = null;
     private String city = null;
-    private ArrayList<String> termList;
     private HashMap<String,short[]> termDictionary;
     private int max_tf;
     private int uniqueWords;
@@ -59,6 +58,13 @@ public class Document {
     }
 
     /**
+     * deletes the document's actual text string to clear memory space
+     */
+    public void deleteDocumentText(){
+        docText = null;
+    }
+
+    /**
      * sets the document's title (if exists)
      * @param docTitle - the document's title
      */
@@ -72,14 +78,6 @@ public class Document {
      */
     public void setDocDate(String docDate) {
         this.docDate = docDate;
-    }
-
-    /**
-     * sets the document's term list
-     * @param termList - the document's term list
-     */
-    public void setTermList(ArrayList<String> termList) {
-        this.termList = termList;
     }
 
     /**
@@ -131,14 +129,6 @@ public class Document {
      */
     public String getDocDate() {
         return docDate;
-    }
-
-    /**
-     * gets the document's term list
-     * @return - the document's term list
-     */
-    public ArrayList<String> getTermList() {
-        return termList;
     }
 
     /**

@@ -30,6 +30,7 @@ public class Controller {
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;
     private boolean alreadyIndexedWithoutStemming = false;
+    private TextField tempPostingPath;
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -194,10 +195,10 @@ public class Controller {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
                 if (Indexer.isDictionaryStemmed)
-                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowFromFile(postingPathText +
+                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowToMemory(postingPathText +
                             "\\postingFilesWithStemming\\termDictionaryForShow")));
                 else
-                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowFromFile(postingPathText +
+                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowToMemory(postingPathText +
                             "\\postingFilesWithoutStemming\\termDictionaryForShow")));
                 Scene scene = new Scene(root, 600, 400);
                 stage.setScene(scene);
@@ -217,35 +218,77 @@ public class Controller {
      * @param actionEvent - unused
      */
     public void onDictionaryLoad(ActionEvent actionEvent) {
-        if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
+        if (!startsIndexing && (!alreadyIndexedAll())) {
             boolean stemming = stemmingCheckBox.isSelected();
+            chooseAndSaveDirectoryPath(tempPostingPath);
             if ((stemming && alreadyIndexedWithStemming) || (!stemming && alreadyIndexedWithoutStemming))
-                showErrorAlert("Already loaded this option!");
+                showErrorAlert("Already loaded / indexed this option!");
             else {
+                boolean loadCityDictionary = true;
                 if (stemming) {
                     // to know if i need to load also the city dictionary
                     if (alreadyIndexedWithoutStemming) {
-
-                    }
-                    else {
-
-                    }
-                }
-                else {
+                        boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), true);
+                        loadCityDictionary = false;
+                        if (!checksOut)
+                            return;
+                    } else
+                        postingPathText = tempPostingPath.getText();
+                    alreadyIndexedWithStemming = true;
+                } else {
                     // to know if i need to load also the city dictionary
                     if (alreadyIndexedWithStemming) {
-
-                    }
-                    else {
-
-                    }
-
+                        boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
+                        loadCityDictionary = false;
+                        if (checksOut)
+                            return;
+                    } else
+                        postingPathText = tempPostingPath.getText();
+                    alreadyIndexedWithoutStemming = true;
                 }
-                Indexer.getTermDictionary(stemming);
+                if (loadCityDictionary) {
+                    Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
+                }
+                Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setContentText("Dictionary Loaded Successfully!");
             }
         }
+    }
+
+    /**
+     * checks if the load of the dictionaries has the same corpus details as the last load
+     * @param path - the posting files path
+     * @param stemming - is the dictionary loaded is stemmed or not
+     * @return - true if everything is in order. else - false
+     */
+    private boolean checkIfTheSameAndLoaded(String path, boolean stemming) {
+        if (!path.equals(postingPathText)) {
+            showErrorAlert("Path not the same!\n Hit reset in order to load a new dictionary!");
+            return false;
+        }
+        if (Indexer.corpusCityDictionary.size() == 0) {
+            showErrorAlert("City dictionary doesn't exist from last load / indexing!\n Hit reset in order to load a new dictionary!");
+            return false;
+        }
+        File documentDictionary;
+        if (stemming)
+            documentDictionary = new File (postingPathText + "\\postingFilesWithStemming\\documentDictionary");
+        else
+            documentDictionary = new File (postingPathText + "\\postingFilesWithoutStemming\\documentDictionary");
+        ObjectInputStream objectInputStream = null;
+        HashMap<String,int[]> documentDictionaryObject = null;
+        try {
+            objectInputStream = new ObjectInputStream(new FileInputStream(documentDictionary));
+            documentDictionaryObject = (HashMap<String, int[]>) objectInputStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        if (documentDictionaryObject.size() != ReadFile.docCount) {
+            showErrorAlert("Document dictionary doesn't have the same document amount from last load / indexing!\n Hit reset in order to load a new dictionary!");
+            return false;
+        }
+        return true;
     }
 
     /**

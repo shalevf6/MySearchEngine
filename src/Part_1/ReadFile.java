@@ -136,7 +136,7 @@ public class ReadFile implements Runnable {
                             addToCityDictionary(cityUpper);
                         }
                         else {
-                            int[] corpusTermData = Parse.corpusDictionary.get(cityUpper);
+                            int[] corpusTermData = Indexer.termDictionary.get(cityUpper);
                             corpusTermData[0] = corpusTermData[0] + 1;
                             corpusTermData[1] = corpusTermData[1] + 1;
                         }
@@ -291,10 +291,10 @@ public class ReadFile implements Runnable {
                 cityData[2] = population;
 
                 Indexer.corpusCityDictionary.put(city, cityData);
-                int[] corpusTermData = new int[2];
+                int[] corpusTermData = new int[3];
                 corpusTermData[0] = 1;
                 corpusTermData[1] = 1;
-                Parse.corpusDictionary.put(city, corpusTermData);
+                Indexer.termDictionary.put(city, corpusTermData);
             }
             br.close();
         } catch (IOException e) {
