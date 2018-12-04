@@ -1596,6 +1596,7 @@ public class Parse implements Runnable {
             currentTermDictionary.put(city, cityData);
             int[] corpusTermData = corpusDictionary.get(city);
             corpusTermData[1] = corpusTermData[1] + 1;
+            corpusTermData[0] = corpusTermData[0] + 1;
         }
     }
 
