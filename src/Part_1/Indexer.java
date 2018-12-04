@@ -17,9 +17,9 @@ public class Indexer implements Runnable {
     static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
     static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
-    static HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
-    private static HashMap<String, int[]> termDictionary = new HashMap<>();
-    private static HashMap<String, String[]> documentDictionary = new HashMap<>();
+    static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
+    static public HashMap<String, int[]> termDictionary = new HashMap<>();
+    static public HashMap<String, String[]> documentDictionary = new HashMap<>();
     public static boolean isDictionaryStemmed;
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
@@ -205,43 +205,53 @@ public class Indexer implements Runnable {
             }
         }
 
-        // ------ START: COPY ALL THE TERMS AND DF VALUES FROM THE CORPUS DICTIONARY (FROM PARSE) TO THE TERM DICTIONARY ------
-        HashMap<String, int[]> corpusDictionary = Parse.corpusDictionary;
-        Parse.corpusDictionary = new HashMap<>();
-        Set<String> termSet = corpusDictionary.keySet();
-        for (String term : termSet) {
-            int[] termData = new int[3];
-            int[] corpusTermData = corpusDictionary.get(term);
-            termData[0] = corpusTermData[0];
-            termData[1] = corpusTermData[1];
-            termDictionary.put(term, termData);
-        }
-        totalUniqueTerms = termDictionary.keySet().size();
-        // ------ END: ADD DF VALUES FOR ALL THE TERMS FROM THE CORPUS DICTIONARY FROM PARSE ------
+        // ------ START: UPDATE THE TOTAL UNIQUE TERMS FOR THE CORPUS FROM THE TERM DICTIONARY ------
+        totalUniqueTerms = termDictionary.size();
+        // ------ END: UPDATE THE TOTAL UNIQUE TERMS FOR THE CORPUS FROM THE TERM DICTIONARY ------
 
-        // ------ START: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARY TO A FILE ------
+        // ------ START: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARIES TO FILES ------
         totalTempPostingFiles = tempPostingNum;
         if (Parse.stemming) {
             isDictionaryStemmed = true;
             mergePostingFiles(postingPath + "\\postingFilesWithStemming");
-            if (!indexedCities) {
-                mergeCityPostingFiles(postingPath + "\\postingForCities");
-                indexedCities = true;
-            }
-            writeDictionaryToFile(postingPath + "\\postingFilesWithStemming\\termDictionary", termDictionary);
-            writeDictionaryForShowToFile(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
+
+            writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\termDictionary", 1);
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
+            writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
         }
         else {
             isDictionaryStemmed = false;
             mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
-            if (!indexedCities) {
-                mergeCityPostingFiles(postingPath + "\\postingForCities");
-                indexedCities = true;
-            }
-            writeDictionaryToFile(postingPath + "\\postingFilesWithoutStemming\\termDictionary", termDictionary);
-            writeDictionaryForShowToFile(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow", false);
+            writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionary", 1);
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow", false);
+            writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\documentDictionary", 2);
         }
-        // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES ------
+        if (!indexedCities) {
+            mergeCityPostingFiles(postingPath + "\\postingForCities");
+            writeDictionaryToDisk(postingPath + "\\postingForCities\\cityDictionary", 3);
+            indexedCities = true;
+        }
+        deleteAllTempFiles(postingPath);
+        // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARIES TO FILES ------
+    }
+
+    /**
+     * deletes all the temp files from the posting path
+     * @param postingPath - the posting path which the files are saved in
+     */
+    private void deleteAllTempFiles(String postingPath) {
+        File mainDir = new File(postingPath);
+        File[] dirs = mainDir.listFiles();
+        if (dirs != null && dirs.length > 0) {
+            for (File dir : dirs) {
+                File[] files = dir.listFiles();
+                for (int i = 0; i < files.length; i++) {
+                    if (files[0].getName().contains("temp"))
+                        files[0].delete();
+                }
+            }
+
+        }
     }
 
     /**
@@ -532,12 +542,11 @@ public class Indexer implements Runnable {
      * @return - a string representing the sorted dictionary
      */
     public static String getDictionaryString(boolean stemming) {
-        HashMap<String, int[]> currDictionary = getTermDictionary(stemming);
-        Set<String> termSet = currDictionary.keySet();
+        Set<String> termSet = termDictionary.keySet();
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
-            dictionarySort.add(term + " ; " + currDictionary.get(term)[1] + " total appearances;");
+            dictionarySort.add(term + " ; " + termDictionary.get(term)[1] + " total appearances;");
         }
 
         // starting to build the dictionary sorted string with the first entry
@@ -559,40 +568,37 @@ public class Indexer implements Runnable {
     /**
      * gets a requested dictionary. If it's not on the main memory, pulls it from the appropriate file
      * @param stemming - is the dictionary looked for is stemmed or not
-     * @return - the looked for dictionary
      */
-    public static HashMap<String, int[]> getTermDictionary(boolean stemming) {
+    private static void setTermDictionary(boolean stemming) {
         if (stemming) {
-            if (isDictionaryStemmed)
-                return termDictionary;
-            else {
-                termDictionary = readDictionaryFromFile(Controller.postingPathText + "\\postingFilesWithStemming\\termDictionary");
+            if (!isDictionaryStemmed) {
+                readDictionaryToMemory(Controller.postingPathText + "\\postingFilesWithStemming\\termDictionary", 1);
                 totalUniqueTerms = termDictionary.size();
                 isDictionaryStemmed = true;
-                return termDictionary;
             }
-        }
-        if (!isDictionaryStemmed)
-            return termDictionary;
-        else {
-            termDictionary = readDictionaryFromFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\termDictionary");
+        } else if (isDictionaryStemmed) {
+            readDictionaryToMemory(Controller.postingPathText + "\\postingFilesWithoutStemming\\termDictionary", 1);
             totalUniqueTerms = termDictionary.size();
             isDictionaryStemmed = false;
-            return termDictionary;
         }
     }
 
     /**
-     * writes a given dictionary into a file
+     * writes a certain dictionary (term / document / city) into a file in the disk
      * @param path - the path in which the file will be created
-     * @param toWrite - the dictionary to write
+     * @param whatToWrite - to know which dictionary to write to a file in the disk
      */
-    private void writeDictionaryToFile(String path, HashMap<String,int[]> toWrite) {
+    private void writeDictionaryToDisk(String path, int whatToWrite) {
         File dictionary = new File(path);
         try {
             dictionary.createNewFile();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionary));
-            objectOutputStream.writeObject(toWrite);
+            if (whatToWrite == 1)
+            objectOutputStream.writeObject(termDictionary);
+            if (whatToWrite == 2)
+                objectOutputStream.writeObject(documentDictionary);
+            if (whatToWrite == 3)
+                objectOutputStream.writeObject(corpusCityDictionary);
             objectOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -600,11 +606,11 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * write the dictionary's string to a file
+     * write the dictionary's string to a file in the disk
      * @param path - the path which the dictionary's string should be written to
      * @param stemming - is the dictionary stemmed or not
      */
-    private void writeDictionaryForShowToFile(String path, boolean stemming) {
+    private void writeTermDictionaryForShowToDisk(String path, boolean stemming) {
         File dictionaryForShow = new File(path);
         try {
             dictionaryForShow.createNewFile();
@@ -618,25 +624,10 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * reads a dictionary from a file
-     * @return - the dictionary
-     */
-    private static HashMap<String,int[]> readDictionaryFromFile(String path) {
-        File dictionary = new File(path);
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary.getAbsolutePath()));
-            return (HashMap<String,int[]>)objectInputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * reads a dictionary's sorted string (to show) from a file
+     * reads a dictionary's sorted string (to show) from a file in the disk to the main memory
      * @return - the dictionary's string
      */
-    public static String readDictionaryForShowFromFile(String path) {
+    public static String readDictionaryForShowToMemory(String path) {
         File dictionary = new File(path);
         try {
             // creating a Buffered Writer for writing the dictionary's string
@@ -652,6 +643,42 @@ public class Indexer implements Runnable {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * reads a dictionary from a file in the disk (term / document / city) to the main memory
+     * @param whatToRead - indicates to what dictionary to insert the object we read
+     */
+    public static void readDictionaryToMemory(String path, int whatToRead) {
+        File dictionary = new File(path);
+        try {
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
+            if (whatToRead == 1)
+                termDictionary = (HashMap<String,int[]>)objectInputStream.readObject();
+            if (whatToRead == 2)
+                documentDictionary = (HashMap<String,String[]>)objectInputStream.readObject();
+            if (whatToRead == 3)
+                corpusCityDictionary = (HashMap<String,String[]>)objectInputStream.readObject();
+            objectInputStream.close();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * loads the term dictionary and the document dictionary from the disk to the main memory
+     * @param tempPostingPath - the temp posting path
+     * @param stemming - is the dictionaries are stemmed or not
+     */
+    public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) {
+        // read the term dictionary to the memory
+        setTermDictionary(stemming);
+        // reads the document dictionary to the memory
+        if (stemming)
+            readDictionaryToMemory(tempPostingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
+        else
+            readDictionaryToMemory(tempPostingPath + "\\postingFilesWithoutStemming\\documentDictionary", 2);
+        ReadFile.docCount = documentDictionary.size();
     }
 
     /**
