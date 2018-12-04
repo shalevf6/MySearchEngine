@@ -30,7 +30,7 @@ public class Controller {
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;
     private boolean alreadyIndexedWithoutStemming = false;
-    private TextField tempPostingPath;
+    private TextField tempPostingPath = new TextField();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -117,23 +117,21 @@ public class Controller {
                                 }
 
                                 // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
-                                finally {
-                                    startsIndexing = false;
-                                    if (Parse.stemming)
-                                        alreadyIndexedWithStemming = true;
-                                    else
-                                        alreadyIndexedWithoutStemming = true;
-                                    double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
-                                    int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
-                                    int remainingSeconds = (int) (totalTimeInSeconds % 60);
-                                    String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
-                                    String docCount = "Total documents indexed: " + ReadFile.docCount;
-                                    String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
-                                    Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
-                                    doneIndexing.setHeaderText("Indexing Done!");
-                                    doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal document count: " +
-                                            docCount + "\nTotal unique words found: " + termCount);
-                                }
+                                startsIndexing = false;
+                                if (Parse.stemming)
+                                    alreadyIndexedWithStemming = true;
+                                else
+                                    alreadyIndexedWithoutStemming = true;
+                                double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
+                                int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
+                                int remainingSeconds = (int) (totalTimeInSeconds % 60);
+                                String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
+                                String docCount = "Total documents indexed: " + ReadFile.docCount;
+                                String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
+                                Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
+                                doneIndexing.setHeaderText("Indexing Done!");
+                                doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal document count: " +
+                                        docCount + "\nTotal unique words found: " + termCount);
                             } else {
                                 showErrorAlert("You must choose an existing stop words file path!");
                             }
@@ -189,7 +187,6 @@ public class Controller {
     public void onDictionaryShow(ActionEvent actionEvent) {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             try {
-                boolean stemming = stemmingCheckBox.isSelected();
                 Stage stage = new Stage();
                 stage.setTitle("The Corpus's Dictionary");
                 FXMLLoader fxmlLoader = new FXMLLoader();
@@ -249,9 +246,14 @@ public class Controller {
                 if (loadCityDictionary) {
                     Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
                 }
-                Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setContentText("Dictionary Loaded Successfully!");
+                try {
+                    Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setContentText("Dictionary Loaded Successfully!");
+                }
+                catch (Exception e) {
+                    showErrorAlert("Not all dictionary files found in path! Try again");
+                }
             }
         }
     }
@@ -281,6 +283,7 @@ public class Controller {
         try {
             objectInputStream = new ObjectInputStream(new FileInputStream(documentDictionary));
             documentDictionaryObject = (HashMap<String, int[]>) objectInputStream.readObject();
+            objectInputStream.close();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -298,7 +301,7 @@ public class Controller {
     private void chooseAndSaveDirectoryPath(TextField path) {
         DirectoryChooser directoryChooser = new DirectoryChooser();
         directoryChooser.setTitle("Choose a path");
-        File selectedDirectory = directoryChooser.showDialog(path.getScene().getWindow());
+        File selectedDirectory = directoryChooser.showDialog(postingPath.getScene().getWindow());
         if (selectedDirectory != null)
             path.setText(selectedDirectory.getAbsolutePath());
     }
@@ -315,5 +318,9 @@ public class Controller {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setContentText(error);
         alert.show();
+    }
+
+    public static void main(String[] args) {
+
     }
 }

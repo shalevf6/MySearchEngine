@@ -155,8 +155,10 @@ public class Parse implements Runnable {
                                     // ------- 'WORD/WORD' CHECK -------
                                     if (current.contains("/")) {
                                         String[] orSplit = current.split("/");
-                                        for (String orSplitFurther : orSplit) {
-                                            checkFurtherSplits(orSplitFurther);
+                                        for (int i = 0; i < orSplit.length; i ++) {
+                                            orSplit[i] = removeExtraDelimiters(orSplit[i]);
+                                            if (!StopWords.containsKey(orSplit[i].toLowerCase()))
+                                                checkFurtherSplits(orSplit[i]);
                                         }
                                         counter++;
                                         continue;
@@ -239,13 +241,14 @@ public class Parse implements Runnable {
                                     //--------MORE THEN ONE DASH---------//
                                     if (!HowMuchToChange && current.contains("-")) {
                                         String[] splitedByDash = current.split("-");
+                                        for (int i = 0; i < splitedByDash.length; i++)
+                                            splitedByDash[i] = removeExtraDelimiters(splitedByDash[i]);
                                         for (String Dashed : splitedByDash) {
                                             if (isNumeric2(Dashed) && !CheckIfValidString(Dashed)) {
                                                 Dashed = changeNumToRegularNum(Dashed);
                                                 updateDictionaries(Dashed);
                                             } else {
                                                 //------MEANS IT'S A WORD---------//
-                                                //TODO:SHALEV WILL FILL THIS - DONE!!!!
                                                 // checks if the right part is a word
                                                 if (isOnlyLetters(Dashed)) {
                                                     // checks if it's not a stop word to add it alone to the dictionary
@@ -318,22 +321,22 @@ public class Parse implements Runnable {
                                     //-------CONTAINS SLASH BUT MORE THEN ONE------//
                                     if (current.contains("/") && notFraction(current)) {
                                         String[] splitedBySlash = current.split("/");
-                                        for (String Splited : splitedBySlash) {
-                                            if (isNumeric2(Splited) && !CheckIfValidString(Splited)) {
-                                                Splited = changeNumToRegularNum(Splited);
-                                                updateDictionaries(Splited);
+                                        for (int i = 0; i <splitedBySlash.length; i ++) {
+                                            splitedBySlash[i] = removeExtraDelimiters(splitedBySlash[i]);
+                                            if (isNumeric2(splitedBySlash[i]) && !CheckIfValidString(splitedBySlash[i])) {
+                                                splitedBySlash[i] = changeNumToRegularNum(splitedBySlash[i]);
+                                                updateDictionaries(splitedBySlash[i]);
                                             } else {
                                                 //-----MEAN IT'S A WORD----//
-                                                //TODO:SHALEV WILL FILL THIS - DONE!!!!
-                                                // checks if the right part is a word
-                                                if (isOnlyLetters(Splited)) {
+                                                // checks if it's a word
+                                                if (isOnlyLetters(splitedBySlash[i])) {
                                                     // checks if it's not a stop word to add it alone to the dictionary
-                                                    if (!StopWords.containsKey(Splited.toLowerCase())) {
-                                                        handleAllLetters(Splited);
+                                                    if (!StopWords.containsKey(splitedBySlash[i].toLowerCase())) {
+                                                        handleAllLetters(splitedBySlash[i]);
                                                     }
                                                 } else {
                                                     // if it's not a letter, maybe there is a delimiter in it
-                                                    checkFurtherSplits(Splited);
+                                                    checkFurtherSplits(splitedBySlash[i]);
                                                 }
                                             }
                                         }
@@ -344,9 +347,10 @@ public class Parse implements Runnable {
                                     dollar = false;
 
                                     // means its a different/empty case
-                                    String[] moreWords = current.split("[.'%$]+");
-                                    for (String anotherWord : moreWords) {
-                                        if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                    String[] moreWords = current.split("[.'\\-/%$]+");
+                                    for (int i = 0; i < moreWords.length; i++) {
+                                        moreWords[i] = removeExtraDelimiters(moreWords[i]);
+                                        if (!moreWords[i].equals("") && !StopWords.containsKey(moreWords[i]))
                                             updateDictionaries(current.toLowerCase());
                                     }
                                     counter++;
@@ -745,6 +749,8 @@ public class Parse implements Runnable {
         //------current has Dash-------//
         if (current.contains("-")) {
             String[] DashSplit = current.split("-");
+            for (int i = 0; i < DashSplit.length; i++)
+                DashSplit[i] = removeExtraDelimiters(DashSplit[i]);
             //-----TWO NUMBERS------//
             if (isNumeric2(DashSplit[0]) && isNumeric2(DashSplit[1])) {
                 String tempCurrent = DashSplit[0];
@@ -908,6 +914,8 @@ public class Parse implements Runnable {
         boolean HoeMuchToChange2 = HandleDashwithNums(current2);
         if (current2.contains("-") && HoeMuchToChange2) {
             String[] DashSplit = current2.split("-");
+            for (int i = 0; i < DashSplit.length; i++)
+                DashSplit[i] = removeExtraDelimiters(DashSplit[i]);
             String TempCurrent2 = DashSplit[0];
             String Temp2Current2 = DashSplit[1];
             if (isNumeric2(current)) {
@@ -1271,19 +1279,23 @@ public class Parse implements Runnable {
         String remainingDelimiters = "['.$%/\\s]+";
         // if there are 2 or 3 words between the '-' delimiter
         if (dashSplitLength == 2 || dashSplitLength == 3) {
-            for (String aDashSplit : dashSplit)
-                if (!StopWords.containsKey(aDashSplit)) {
+            for (int i = 0; i < dashSplitLength; i++) {
+                dashSplit[i] = removeExtraDelimiters(dashSplit[i]);
+                if (!StopWords.containsKey(dashSplit[i])) {
                     // if there is a delimiter in the word
-                    if (!isOnlyLetters(aDashSplit)) {
+                    if (!isOnlyLetters(dashSplit[i])) {
                         allWords = false;
-                        String[] moreWords = aDashSplit.split(remainingDelimiters);
-                        for (String moreWord : moreWords)
-                            if (!moreWord.equals(""))
-                                handleAllLetters(moreWord);
+                        String[] moreWords = dashSplit[i].split(remainingDelimiters);
+                        for (int j = 0; j < moreWords.length; j++) {
+                            moreWords[j] = removeExtraDelimiters(moreWords[j]);
+                            if (!moreWords[j].equals(""))
+                                handleAllLetters(moreWords[j]);
+                        }
                         // if there is no delimiter in the word
-                    } else if (!aDashSplit.equals(""))
-                        handleAllLetters(aDashSplit);
+                    } else if (!dashSplit[i].equals(""))
+                        handleAllLetters(dashSplit[i]);
                 }
+            }
             // if all the words between the '-' delimiter are letters
             if (allWords) {
                 updateDictionaries(current.toLowerCase());
@@ -2243,25 +2255,7 @@ public class Parse implements Runnable {
             else
                 ans = finalS[0] + "." + finalS[1].charAt(0);
         }
-
         return ans;
-    }
-
-    /** This function used when the string is a price string and the price is higher then one million, and change the string price
-     * according to the directions.
-     * @param current is the string that we need to be changed.
-     * @return the string changed according to the rules given.
-     */
-    private String changeMillForPrice(String current) {
-        String Toreturn = "" ;
-        if(current.contains("$")) {
-            if(current.endsWith("$"))
-                current = current.substring(0,current.length()-1);
-            else{
-                current = current.substring(1);
-            }
-        }
-        return Toreturn;
     }
 
     /** this function returns if the string given is a number or not
@@ -2353,32 +2347,5 @@ public class Parse implements Runnable {
     @Override
     public void run() {
         parseAll();
-    }
-
-    public static void main(String[] args) {
-        //String sTry = "of ]an [unidentified poll made in May 1993. The approval/disapproval \n" +
-        //      "   ratings, in\\percent, \"for_ten ;Macedonian politicians were:";
-        //Scanner sc = new Scanner(System.in);
-        //String s = sc.nextLine();
-        //String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
-        //String[] AfterSplit = s.split(toDelete);
-        //System.out.println(Arrays.toString(AfterSplit));
-        System.out.println("Start Parsing");
-        Parse p = new Parse("");
-//
-        p.parseAll();
-//         String sTry = "of, an,unidentified poll. made.in May .1993 ,The /approval disapproval/ for/the things";
-//        Scanner sc = new Scanner(System.in);
-//        String s = sc.nextLine();
-//         String remainingDelimiters = "[.,/\\s]+";
-//        String splitBy = "(?!\\.[U\\.S\\.])(?!\\.[0-9])(?!,[0-9])[?!:\\.,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
-//        String splitBy = "(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+";
-//        String toSplit1 = "of an, 10,000,234 blah,bla unidentified poll U.S. 23 25 also 2.4440,made.in May' .1993 The approval disapproval for the things";
-//        String toSplit = "U.S";
-//        String[] afterSplit = toSplit1.split(splitBy);
-//        System.out.println(Arrays.toString(afterSplit));
-//         String toDelete = "[?!:+{*}|<=>\"\\s;()_&\\\\\\[\\]]+";
-//         String[] AfterSplit = sTry.split(remainingDelimiters);
-//         System.out.println(Arrays.toString(AfterSplit));
     }
 }
