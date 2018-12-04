@@ -16,10 +16,10 @@ public class Indexer implements Runnable {
     static private boolean stop = false;
     static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
-    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
-    static public HashMap<String, int[]> termDictionary = new HashMap<>();
-    static public HashMap<String, String[]> documentDictionary = new HashMap<>();
+    static private HashMap<String, String[]> documentDictionary = new HashMap<>();
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static HashMap<String, int[]> termDictionary = new HashMap<>();
     public static boolean isDictionaryStemmed;
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
@@ -66,8 +66,8 @@ public class Indexer implements Runnable {
     static private PriorityQueue<String> dictionarySort = new PriorityQueue<>((o1, o2) -> {
         int toCut1 = o1.indexOf(';');
         int toCut2 = o2.indexOf(';');
-        String term1 = o1.substring(0, toCut1 - 1);
-        String term2 = o2.substring(0, toCut2 - 1);
+        String term1 = o1.substring(0, toCut1);
+        String term2 = o2.substring(0, toCut2);
         return term1.compareTo(term2);
     });
 
@@ -111,8 +111,12 @@ public class Indexer implements Runnable {
                         if (!term.equals("")) {
                             short[] termData = docTermDictionary.get(term);
                             String postingValue;
-                            double normalizedTf = termData[0];
-                            normalizedTf = normalizedTf / max_tf;
+                            double tf = termData[0];
+                            tf = tf / max_tf;
+                            // in order for the normalized tf value not to be too high
+                            String normalizedTf = String.valueOf(tf);
+                            if (normalizedTf.length() >= 8)
+                                normalizedTf = normalizedTf.substring(0, 9);
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
                                 postingValue = term + ":" + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
@@ -248,11 +252,10 @@ public class Indexer implements Runnable {
             for (File dir : dirs) {
                 File[] files = dir.listFiles();
                 for (int i = 0; i < files.length; i++) {
-                    if (files[0].getName().contains("temp"))
-                        files[0].delete();
+                    if (files[i].getName().contains("temp"))
+                        files[i].delete();
                 }
             }
-
         }
     }
 
@@ -551,20 +554,30 @@ public class Indexer implements Runnable {
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
-            dictionarySort.add(term + " ; " + termDictionary.get(term)[1] + " total appearances;");
+            dictionarySort.add(term + " ; " + termDictionary.get(term)[1]);
         }
 
         // starting to build the dictionary sorted string with the first entry
         String nextTerm = dictionarySort.poll();
+        String line;
+
         StringBuilder dictionary = new StringBuilder();
         if (nextTerm != null) {
-            dictionary.append(nextTerm);
+            String[] split = nextTerm.split(";");
+            split[0] = split[0].trim();
+            split[1] = split[1].trim();
+            line = "The term \"" + split[0] + "\" has " + split[1] + " total appearances";
+            dictionary.append(line);
             nextTerm = dictionarySort.poll();
         }
 
         // continue building the dictionary sorted string
         while (nextTerm != null) {
-            dictionary.append('\n').append(nextTerm);
+            String[] split = nextTerm.split(";");
+            split[0] = split[0].trim();
+            split[1] = split[1].trim();
+            line = "The term \"" + split[0] + "\" has " + split[1] + " total appearances";
+            dictionary.append('\n').append(line);
             nextTerm = dictionarySort.poll();
         }
         return dictionary.toString();
