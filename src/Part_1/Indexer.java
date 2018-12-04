@@ -2,6 +2,8 @@ package Part_1;
 
 import Controller.Controller;
 import GeneralClasses.Document;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 import java.io.*;
 import java.util.*;
@@ -363,7 +365,7 @@ public class Indexer implements Runnable {
 
                 // updates the posting pointer in the dictionary to refer to the line in the posting file
                 termData = termDictionary.get(term);
-                termData[1] = postingPointer;
+                termData[2] = postingPointer;
 
                 // updates the bytes counter for the posting pointer
                 postingPointer = postingPointer + postingPointer;
@@ -552,16 +554,13 @@ public class Indexer implements Runnable {
      * turns the dictionary into a sorted string
      * @return - a string representing the sorted dictionary
      */
-    public static List<String> getDictionaryString() {
+    private static List<String> getDictionaryString() {
         Set<String> termSet = termDictionary.keySet();
 
-        List<String> linesForListView = new LinkedList<>();
+        ObservableList<String> linesForListView = FXCollections.observableArrayList();
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
-            int[] termData = termDictionary.get(term); // TODO: ERASE THIS
-            if (termData[1] == 0) // TODO: ERASE THIS
-                System.out.println("HEYYYY"); // TODO: ERASE THIS
             dictionarySort.add(term + " ; " + termDictionary.get(term)[1]);
         }
 
@@ -585,7 +584,7 @@ public class Indexer implements Runnable {
      * gets a requested dictionary. If it's not on the main memory, pulls it from the appropriate file
      * @param stemming - is the dictionary looked for is stemmed or not
      */
-    private static void setTermDictionary(boolean stemming) {
+    private static void setTermDictionary(boolean stemming) throws IOException, ClassNotFoundException {
         if (stemming) {
             if (!isDictionaryStemmed) {
                 readDictionaryToMemory(Controller.postingPathText + "\\postingFilesWithStemming\\termDictionary", 1);
@@ -644,12 +643,12 @@ public class Indexer implements Runnable {
      * reads a dictionary's sorted string list from a file in the disk to the main memory
      * @return - the dictionary's sorted string list
      */
-    public static List<String> readDictionaryForShowToMemory(String path) {
+    public static ObservableList<String> readDictionaryForShowToMemory(String path) {
         File dictionary = new File(path);
         try {
             // creating an object input stream for reading the dictionary's sorted string list
             ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
-            List<String> dictionaryForShow = (List<String>)(objectInputStream.readObject());
+            ObservableList<String> dictionaryForShow = (ObservableList<String>)(objectInputStream.readObject());
             return dictionaryForShow;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
@@ -661,20 +660,16 @@ public class Indexer implements Runnable {
      * reads a dictionary from a file in the disk (term / document / city) to the main memory
      * @param whatToRead - indicates to what dictionary to insert the object we read
      */
-    public static void readDictionaryToMemory(String path, int whatToRead) {
+    public static void readDictionaryToMemory(String path, int whatToRead) throws IOException, ClassNotFoundException {
         File dictionary = new File(path);
-        try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
-            if (whatToRead == 1)
-                termDictionary = (HashMap<String,int[]>)objectInputStream.readObject();
-            if (whatToRead == 2)
-                documentDictionary = (HashMap<String,String[]>)objectInputStream.readObject();
-            if (whatToRead == 3)
-                corpusCityDictionary = (HashMap<String,String[]>)objectInputStream.readObject();
-            objectInputStream.close();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
+        if (whatToRead == 1)
+            termDictionary = (HashMap<String, int[]>) objectInputStream.readObject();
+        if (whatToRead == 2)
+            documentDictionary = (HashMap<String, String[]>) objectInputStream.readObject();
+        if (whatToRead == 3)
+            corpusCityDictionary = (HashMap<String, String[]>) objectInputStream.readObject();
+        objectInputStream.close();
     }
 
     /**
@@ -682,7 +677,7 @@ public class Indexer implements Runnable {
      * @param tempPostingPath - the temp posting path
      * @param stemming - is the dictionaries are stemmed or not
      */
-    public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) {
+    public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) throws IOException, ClassNotFoundException {
         // read the term dictionary to the memory
         setTermDictionary(stemming);
         // reads the document dictionary to the memory

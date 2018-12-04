@@ -23,9 +23,11 @@ public class Parse implements Runnable {
     private short max_tf;
     private boolean dollar;
     private int docPart;
+    private int firstPartCounter;
 
     /**
      * a constructor for the Parse class
+     *
      * @param path - the path to the stop words file
      */
     public Parse(String path) {
@@ -34,6 +36,7 @@ public class Parse implements Runnable {
 
     /**
      * This function generates the stop words Dictionary to Array List.
+     *
      * @param path is the location of the Dictionary
      */
     private void getStopWords(String path) {
@@ -105,6 +108,11 @@ public class Parse implements Runnable {
                         // splits the text before parsing
                         afterSplit = data.split("(?!,[0-9])[?!:,#`@^~&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
+                        if (turnToDocument) {
+                            firstPartCounter = afterSplitLength / 10;
+                            firstPartCounter++;
+                        } else
+                            firstPartCounter = 0;
                         int countWord = 0;
 
                         // removes any extra delimiters in the start / end of every word
@@ -115,6 +123,7 @@ public class Parse implements Runnable {
 
                         // goes through every word in the document
                         while (counter <= afterSplitLength - 1) {
+                            firstPartCounter--;
                             current = afterSplit[counter];
                             String currentLower = current.toLowerCase();
                             // checks if the current string is a stop word (and not the word between) or the word may
@@ -283,7 +292,7 @@ public class Parse implements Runnable {
                                             current = current + "T";
                                             counter++;
                                         }
-                                        if(current2.toLowerCase().equals("million")) {
+                                        if (current2.toLowerCase().equals("million")) {
                                             current = current + "M";
                                             counter++;
                                         }
@@ -354,9 +363,38 @@ public class Parse implements Runnable {
                             String monthNumber = getMonthNumber(dateSplit2.toLowerCase());
                             if (!monthNumber.equals("00") && isNumeric(dateSplit3)) {
                                 String date = dateSplit3 + "-" + monthNumber + "-" + dateSplit1;
-                                updateDictionaries(date);
-                                handleAllLetters(getMonthNameForDictionary(monthNumber));
-                                updateDictionaries(monthNumber + "-" + dateSplit1);
+                                updateDictionariesOutsideText(date);
+                                String monthName = getMonthNameForDictionary(monthNumber);
+                                if (Indexer.termDictionary.containsKey(monthName)) {
+                                    int[] corpusTermData = Indexer.termDictionary.get(monthName);
+                                    if (currentTermDictionary.containsKey(monthName.toLowerCase())) {
+                                        short[] termData = currentTermDictionary.get(monthName.toLowerCase());
+                                        termData[0] = (short) (termData[0] + 1);
+                                        if (max_tf < termData[0])
+                                            max_tf = termData[0];
+                                    }
+                                    else {
+                                        short[] termData = new short[4];
+                                        termData[0] = 1;
+                                        if (max_tf < 1)
+                                            max_tf = 1;
+                                        currentTermDictionary.put(monthName.toLowerCase(), termData);
+                                        corpusTermData[0] = corpusTermData[0] + 1;
+                                    }
+                                    corpusTermData[1] = corpusTermData[1] + 1;
+                                }
+                                else {
+                                    int[] corpusTermData = new int[3];
+                                    corpusTermData[0] = 1;
+                                    corpusTermData[1] = 1;
+                                    short[] termData = new short[4];
+                                    termData[0] = 1;
+                                    if (max_tf < 1)
+                                        max_tf = 1;
+                                    currentTermDictionary.put(monthName.toLowerCase(), termData);
+                                    Indexer.termDictionary.put(monthName, corpusTermData);
+                                }
+                                updateDictionariesOutsideText(monthNumber + "-" + dateSplit1);
                                 document.setDocDate(date);
                                 dateExists = true;
                             }
@@ -380,6 +418,45 @@ public class Parse implements Runnable {
                     Indexer.stop();
                     break;
                 }
+            }
+        }
+    }
+
+    /**
+     * adds a new (or existing) term that were found outside the text tage to the corpus and document dictionaries
+     * @param current - the current term to be added to the dictionaries
+     */
+    private void updateDictionariesOutsideText(String current) {
+        if (!current.equals("")) {
+            short[] termData;
+            int[] corpusTermData;
+            if (Indexer.termDictionary.containsKey(current)) {
+                corpusTermData = Indexer.termDictionary.get(current);
+                if (currentTermDictionary.containsKey(current)) {
+                    termData = currentTermDictionary.get(current);
+                    short tf = termData[0];
+                    termData[0] = (short) (tf + 1);
+                    if (max_tf < tf + 1)
+                        max_tf = (short) (tf + 1);
+                } else {
+                    termData = new short[4];
+                    termData[0] = 1;
+                    if (max_tf < 1)
+                        max_tf = 1;
+                    currentTermDictionary.put(current, termData);
+                    corpusTermData[0] = corpusTermData[0] + 1;
+                }
+                corpusTermData[1] = corpusTermData[1] + 1;
+            } else {
+                termData = new short[4];
+                termData[0] = 1;
+                if (max_tf < 1)
+                    max_tf = 1;
+                currentTermDictionary.put(current, termData);
+                corpusTermData = new int[3];
+                corpusTermData[0] = 1;
+                corpusTermData[1] = 1;
+                Indexer.termDictionary.put(current, corpusTermData);
             }
         }
     }
@@ -440,6 +517,8 @@ public class Parse implements Runnable {
                 if (max_tf < 1)
                     max_tf = 1;
                 termData[docPart] = 1;
+                if (firstPartCounter > 0)
+                    termData[3] = 1;
                 currentTermDictionary.put(current, termData);
                 // enter the new term to the corpus's dictionary
                 if (!Indexer.termDictionary.containsKey(current))
@@ -467,6 +546,8 @@ public class Parse implements Runnable {
         termData[docPart] = 1;
         if (max_tf < tf + 1)
             max_tf = (short) (tf + 1);
+        if (firstPartCounter > 0)
+            termData[3] = 1;
     }
 
     private int RegularNumCheck(String current, int counter) {
@@ -1604,6 +1685,8 @@ public class Parse implements Runnable {
             cityData[docPart] = 1;
             if (max_tf < tf + 1)
                 max_tf = (short) (tf + 1);
+            if (firstPartCounter > 0)
+                cityData[3] = 1;
             int[] corpusTermData = Indexer.termDictionary.get(city);
             corpusTermData[1] = corpusTermData[1] + 1;
         }
@@ -1614,6 +1697,8 @@ public class Parse implements Runnable {
             cityData[docPart] = 1;
             if (max_tf < 1)
                 max_tf = 1;
+            if (firstPartCounter > 0)
+                cityData[3] = 1;
             currentTermDictionary.put(city, cityData);
             int[] corpusTermData = Indexer.termDictionary.get(city);
             corpusTermData[1] = corpusTermData[1] + 1;
@@ -1672,6 +1757,8 @@ public class Parse implements Runnable {
                     termData[0] = (short) (tf + 1);
                     if (max_tf < tf + 1)
                         max_tf = (short) (tf + 1);
+                    if (firstPartCounter > 0)
+                        termData[3] = 1;
                     int[] corpusTermData = Indexer.termDictionary.get(current);
                     corpusTermData[1] = corpusTermData[1] + 1;
                 }
@@ -1682,6 +1769,8 @@ public class Parse implements Runnable {
                     termData[docPart] = 1;
                     if (max_tf < 1)
                         max_tf = 1;
+                    if (firstPartCounter > 0)
+                        termData[3] = 1;
                     currentTermDictionary.put(current, termData);
                     int[] corpusTermData = Indexer.termDictionary.get(current);
                     corpusTermData[0] = corpusTermData[0] + 1;
@@ -1700,6 +1789,8 @@ public class Parse implements Runnable {
                         termData[docPart] = 1;
                         if (max_tf < 1)
                             max_tf = 1;
+                        if (firstPartCounter > 0)
+                            termData[3] = 1;
                         currentTermDictionary.put(current, termData);
                     }
                     // word is in document dictionary
@@ -1737,6 +1828,8 @@ public class Parse implements Runnable {
                 termData[docPart] = 1;
                 if (max_tf < 1)
                     max_tf = 1;
+                if (firstPartCounter > 0)
+                    termData[3] = 1;
                 currentTermDictionary.put(current, termData);
                 existsInCorpusDictionary(current, currentUpper, true);
             }
@@ -1783,6 +1876,8 @@ public class Parse implements Runnable {
         termData[docPart] = 1;
         if (max_tf < 1)
             max_tf = 1;
+        if (firstPartCounter > 0)
+            termData[3] = 1;
         currentTermDictionary.put(current, termData);
         if (isUpperCase) {
             Indexer.termDictionary.put(current.toUpperCase(), corpusTermData);
@@ -1813,6 +1908,8 @@ public class Parse implements Runnable {
                     termData[docPart] = 1;
                     if (max_tf < tf + 1)
                         max_tf = (short) (tf + 1);
+                    if (firstPartCounter > 0)
+                        termData[3] = 1;
                     newTerm = false;
                     corpusTermData = Indexer.termDictionary.get(current);
                     corpusTermData[1] = corpusTermData[1] + 1;
@@ -1823,6 +1920,8 @@ public class Parse implements Runnable {
                 termData[docPart] = 1;
                 if (max_tf < 1)
                     max_tf = 1;
+                if (firstPartCounter > 0)
+                    termData[3] = 1;
                 currentTermDictionary.put(current, termData);
             }
             if (newTerm) {

@@ -1,10 +1,12 @@
 package Controller;
 
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import java.util.List;
+import java.util.Observable;
 
 /**
  * this class represents the dictionary view window
@@ -13,7 +15,7 @@ public class DictionaryController {
 
     public Button closeButton;
     public ListView<String> listView;
-    public static List<String> dictionaryList;
+    public static ObservableList<String> dictionaryList;
 
     /**
      * sets the dictionary to be viewed
@@ -24,8 +26,7 @@ public class DictionaryController {
         listView.setLayoutY(71.0);
         listView.setPrefHeight(262.0);
         listView.setPrefWidth(418.0);
-        listView.setEditable(false);
-        listView.getItems().setAll(dictionaryList);
+        listView.setItems(dictionaryList);
         dictionaryList = null;
     }
 
@@ -33,7 +34,7 @@ public class DictionaryController {
      * sets the dictionary to be viewed
      * @param listToShow - the sorted string list which represents the dictionary
      */
-    public static void setDictionary(List<String> listToShow) {
+    public static void setDictionary(ObservableList<String> listToShow) {
         dictionaryList = listToShow;
     }
 
