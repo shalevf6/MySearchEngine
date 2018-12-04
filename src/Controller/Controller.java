@@ -223,38 +223,36 @@ public class Controller {
             if ((stemming && alreadyIndexedWithStemming) || (!stemming && alreadyIndexedWithoutStemming))
                 showErrorAlert("Already loaded / indexed this option!");
             else {
-                boolean loadCityDictionary = true;
-                if (stemming) {
-                    // to know if i need to load also the city dictionary
-                    if (alreadyIndexedWithoutStemming) {
-                        boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), true);
-                        loadCityDictionary = false;
-                        if (!checksOut)
-                            return;
-                    } else
-                        postingPathText = tempPostingPath.getText();
-                    alreadyIndexedWithStemming = true;
-                } else {
-                    // to know if i need to load also the city dictionary
-                    if (alreadyIndexedWithStemming) {
-                        boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
-                        loadCityDictionary = false;
-                        if (checksOut)
-                            return;
-                    } else
-                        postingPathText = tempPostingPath.getText();
-                    alreadyIndexedWithoutStemming = true;
-                }
-                if (loadCityDictionary) {
-                    Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
-                }
                 try {
+                    boolean loadCityDictionary = true;
+                    if (stemming) {
+                        // to know if i need to load also the city dictionary
+                        if (alreadyIndexedWithoutStemming) {
+                            boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), true);
+                            loadCityDictionary = false;
+                            if (!checksOut)
+                                return;
+                        } else
+                            postingPathText = tempPostingPath.getText();
+                        alreadyIndexedWithStemming = true;
+                    } else {
+                        // to know if i need to load also the city dictionary
+                        if (alreadyIndexedWithStemming) {
+                            boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
+                            loadCityDictionary = false;
+                            if (checksOut)
+                                return;
+                        } else
+                            postingPathText = tempPostingPath.getText();
+                        alreadyIndexedWithoutStemming = true;
+                    }
+                    if (loadCityDictionary)
+                        Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
                     Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("Dictionary Loaded Successfully!");
                     alert.show();
-                }
-                catch (Exception e) {
+                } catch (IOException | ClassNotFoundException e) {
                     showErrorAlert("Not all dictionary files found in path! Try again");
                 }
             }
