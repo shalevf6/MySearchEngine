@@ -14,7 +14,6 @@ public class ReadFile implements Runnable {
 
     private String dirPath;
     private StringBuilder allDocumentLines;
-    public static int docCount = 0; // TODO: maybe erase docCount
 
     /**
      * A construct  or for the ReadFile class
@@ -62,8 +61,6 @@ public class ReadFile implements Runnable {
                     }
                 }
             }
-            System.out.println("Number of document files: " + subDirs.length); // TODO: erase tracking
-            System.out.println("Number of documents: " + docCount); // TODO: erase tracking
             // inform the parse class it shouldn't wait for any more documents to parse through
             Parse.stop();
         }
@@ -156,7 +153,6 @@ public class ReadFile implements Runnable {
     private void parseThroughDoc(int docStart) {
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
-            docCount++;
             String docString = "";
             String docNumber = "";
             String docText = "";
@@ -209,14 +205,14 @@ public class ReadFile implements Runnable {
                 int cityEnd = docString.indexOf("</F>", cityStart);
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
                 if (docCityArr.length != 0) {
-                    String city = docCityArr[0];
+                    docCity = docCityArr[0];
                     int counter = 0;
-                    while (city.equals("") && counter + 1<docCityArr.length){
+                    while (docCity.equals("") && counter + 1 < docCityArr.length){
                         counter++;
-                        city =docCityArr[counter];
+                        docCity = docCityArr[counter];
                     }
-                    if (!city.equals("") && isOnlyLetters(city)) {
-                        String cityUpper = city.toUpperCase();
+                    if (!docCity.equals("") && isOnlyLetters(docCity)) {
+                        String cityUpper = docCity.toUpperCase();
                         newDoc.setCity(cityUpper);
                     }
                 }
@@ -321,27 +317,5 @@ public class ReadFile implements Runnable {
     @Override
     public void run() {
         readThroughFiles();
-    }
-
-    public static void main(String[] args) {
-        String path = "C:\\Users\\Shalev\\Desktop";
-        ReadFile readFile = new ReadFile(path);
-        long startTime = System.nanoTime();
-        readFile.readThroughFiles();
-        System.out.println();
-        Parse parse = new Parse(path + "\\stop words");
-        Thread readFileThread = new Thread(readFile);
-        Thread parseThread = new Thread(parse);
-        parseThread.start();
-        readFileThread.start();
-        try {
-            readFileThread.join();
-            parseThread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        finally {
-            System.out.println("Time to read all files: " + (System.nanoTime() - startTime)*Math.pow(10,-9));
-        }
     }
 }

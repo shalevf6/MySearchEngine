@@ -14,7 +14,7 @@ public class Parse implements Runnable {
 
     static public boolean stemming;
     static private boolean stop = false;
-    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(3000);
     private HashMap<String, short[]> currentTermDictionary;
     private HashMap<String, Integer> StopWords;
     private String[] afterSplit;
@@ -103,7 +103,7 @@ public class Parse implements Runnable {
                         String current;
                         int counter = 0;
                         // splits the text before parsing
-                        afterSplit = data.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
+                        afterSplit = data.split("(?!,[0-9])[?!:,#`@^~&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
                         int countWord = 0;
 
@@ -132,6 +132,10 @@ public class Parse implements Runnable {
                                         continue;
                                     }
 
+                                    // ------- ENDS WITH 'S CHECK -------
+                                    if (current.endsWith("'s"))
+                                        current = current.substring(0, current.length() - 2);
+
                                     // ------- 'BETWEEN NUMBER AND NUMBER' CHECK -------
                                     // checks if the 1st word is "between"
                                     if (currentLower.equals("between")) {
@@ -155,8 +159,10 @@ public class Parse implements Runnable {
                                     // ------- 'WORD/WORD' CHECK -------
                                     if (current.contains("/")) {
                                         String[] orSplit = current.split("/");
-                                        for (int i = 0; i < orSplit.length; i ++) {
+                                        for (int i = 0; i < orSplit.length; i++) {
                                             orSplit[i] = removeExtraDelimiters(orSplit[i]);
+                                            if (orSplit[i].endsWith("'s") && !orSplit[i].equals(""))
+                                                orSplit[i] = orSplit[i].substring(0, orSplit[i].length() - 2);
                                             if (!StopWords.containsKey(orSplit[i].toLowerCase()))
                                                 checkFurtherSplits(orSplit[i]);
                                         }
@@ -195,8 +201,10 @@ public class Parse implements Runnable {
 
                                     // means its a different/empty letter case
                                     String[] moreWords = current.split("[.'%$]+");
-                                    for (String anotherWord : moreWords) {
-                                        if (!anotherWord.equals("") && !StopWords.containsKey(anotherWord))
+                                    for (int i = 0; i < moreWords.length; i++) {
+                                        if (moreWords[i].endsWith("'s") && !moreWords[i].equals(""))
+                                            moreWords[i] = moreWords[i].substring(0, moreWords[i].length() - 2);
+                                        if (!moreWords[i].equals("") && !StopWords.containsKey(moreWords[i]))
                                             updateDictionaries(current.toLowerCase());
                                     }
                                     counter++;
@@ -241,26 +249,7 @@ public class Parse implements Runnable {
                                     //--------MORE THEN ONE DASH---------//
                                     if (!HowMuchToChange && current.contains("-")) {
                                         String[] splitedByDash = current.split("-");
-                                        for (int i = 0; i < splitedByDash.length; i++)
-                                            splitedByDash[i] = removeExtraDelimiters(splitedByDash[i]);
-                                        for (String Dashed : splitedByDash) {
-                                            if (isNumeric2(Dashed) && !CheckIfValidString(Dashed)) {
-                                                Dashed = changeNumToRegularNum(Dashed);
-                                                updateDictionaries(Dashed);
-                                            } else {
-                                                //------MEANS IT'S A WORD---------//
-                                                // checks if the right part is a word
-                                                if (isOnlyLetters(Dashed)) {
-                                                    // checks if it's not a stop word to add it alone to the dictionary
-                                                    if (!StopWords.containsKey(Dashed.toLowerCase())) {
-                                                        handleAllLetters(Dashed);
-                                                    }
-                                                } else {
-                                                    // if it's not a letter, maybe there is a delimiter in it
-                                                    checkFurtherSplits(Dashed);
-                                                }
-                                            }
-                                        }
+                                        handleSplitedCase(splitedByDash);
                                         counter++;
                                         continue;
                                     }
@@ -306,7 +295,6 @@ public class Parse implements Runnable {
                                         if (regularNumCheck != 0) {
                                             counter = counter + regularNumCheck;
                                             continue;
-
                                         }
                                     }
 
@@ -321,25 +309,7 @@ public class Parse implements Runnable {
                                     //-------CONTAINS SLASH BUT MORE THEN ONE------//
                                     if (current.contains("/") && notFraction(current)) {
                                         String[] splitedBySlash = current.split("/");
-                                        for (int i = 0; i <splitedBySlash.length; i ++) {
-                                            splitedBySlash[i] = removeExtraDelimiters(splitedBySlash[i]);
-                                            if (isNumeric2(splitedBySlash[i]) && !CheckIfValidString(splitedBySlash[i])) {
-                                                splitedBySlash[i] = changeNumToRegularNum(splitedBySlash[i]);
-                                                updateDictionaries(splitedBySlash[i]);
-                                            } else {
-                                                //-----MEAN IT'S A WORD----//
-                                                // checks if it's a word
-                                                if (isOnlyLetters(splitedBySlash[i])) {
-                                                    // checks if it's not a stop word to add it alone to the dictionary
-                                                    if (!StopWords.containsKey(splitedBySlash[i].toLowerCase())) {
-                                                        handleAllLetters(splitedBySlash[i]);
-                                                    }
-                                                } else {
-                                                    // if it's not a letter, maybe there is a delimiter in it
-                                                    checkFurtherSplits(splitedBySlash[i]);
-                                                }
-                                            }
-                                        }
+                                        handleSplitedCase(splitedBySlash);
                                         counter++;
                                         continue;
                                     }
@@ -350,6 +320,8 @@ public class Parse implements Runnable {
                                     String[] moreWords = current.split("[.'\\-/%$]+");
                                     for (int i = 0; i < moreWords.length; i++) {
                                         moreWords[i] = removeExtraDelimiters(moreWords[i]);
+                                        if (!moreWords[i].equals("") && moreWords[i].endsWith("'s"))
+                                            moreWords[i] = moreWords[i].substring(0, moreWords.length - 2);
                                         if (!moreWords[i].equals("") && !StopWords.containsKey(moreWords[i]))
                                             updateDictionaries(current.toLowerCase());
                                     }
@@ -413,6 +385,36 @@ public class Parse implements Runnable {
     }
 
     /**
+     * handles the case after we split a string that had '-' or '/' in it
+     * @param splitedArray - a given splited string array
+     */
+    private void handleSplitedCase(String[] splitedArray) {
+        for (int i = 0; i < splitedArray.length; i++) {
+            splitedArray[i] = removeExtraDelimiters(splitedArray[i]);
+            if (splitedArray[i].endsWith("'s") && !splitedArray[i].equals(""))
+                splitedArray[i] = splitedArray[i].substring(0, splitedArray[i].length() - 2);
+            if (!splitedArray[i].equals("")) {
+                if (isNumeric2(splitedArray[i]) && !CheckIfValidString(splitedArray[i])) {
+                    splitedArray[i] = changeNumToRegularNum(splitedArray[i]);
+                    updateDictionaries(splitedArray[i]);
+                } else {
+                    //------MEANS IT'S A WORD---------//
+                    // checks if the right part is a word
+                    if (isOnlyLetters(splitedArray[i])) {
+                        // checks if it's not a stop word to add it alone to the dictionary
+                        if (!StopWords.containsKey(splitedArray[i].toLowerCase())) {
+                            handleAllLetters(splitedArray[i]);
+                        }
+                    } else {
+                        // if it's not a letter, maybe there is a delimiter in it
+                        checkFurtherSplits(splitedArray[i]);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * checks if a given string is an initials string (like U.S.)
      * @param current - a given string
      * @return - true if there only capital letters between the dots. else - false
@@ -421,7 +423,7 @@ public class Parse implements Runnable {
         String[] initialsSplit = current.split("\\.");
         if (initialsSplit.length >= 2) {
             for (String initialChar : initialsSplit) {
-                if (!isOnlyLetters(initialChar) || !initialChar.equals(initialChar.toUpperCase()))
+                if (!isOnlyLetters(initialChar) || initialChar.length() != 1 || !initialChar.equals(initialChar.toUpperCase()))
                     return false;
             }
             short[] termData;
@@ -435,6 +437,8 @@ public class Parse implements Runnable {
             else {
                 termData = new short[4];
                 termData[0] = 1;
+                if (max_tf < 1)
+                    max_tf = 1;
                 termData[docPart] = 1;
                 currentTermDictionary.put(current, termData);
                 // enter the new term to the corpus's dictionary
@@ -1260,9 +1264,9 @@ public class Parse implements Runnable {
             String[] ans1 = s.split("/");
             if (ans1.length > 2)
                 return false;
-            if (ans1.length==2){
-             if(isNumeric(ans1[0])&&isNumeric(ans1[1]))
-                 return true;
+            if (ans1.length == 2) {
+                if (isNumeric(ans1[0]) && isNumeric(ans1[1]))
+                    return true;
             }
         }
         return false;
@@ -1281,6 +1285,8 @@ public class Parse implements Runnable {
         if (dashSplitLength == 2 || dashSplitLength == 3) {
             for (int i = 0; i < dashSplitLength; i++) {
                 dashSplit[i] = removeExtraDelimiters(dashSplit[i]);
+                if (dashSplit[i].endsWith("'s") && !dashSplit[i].equals(""))
+                    dashSplit[i] = dashSplit[i].substring(0, dashSplit[i].length() - 2);
                 if (!StopWords.containsKey(dashSplit[i])) {
                     // if there is a delimiter in the word
                     if (!isOnlyLetters(dashSplit[i])) {
@@ -1303,8 +1309,10 @@ public class Parse implements Runnable {
         }
         // if there are more than 3 words between the '-' delimiter
         else {
-            for (String dashSplitFurther : dashSplit) {
-                checkFurtherSplits(dashSplitFurther);
+            for (int i = 0; i < dashSplitLength; i++) {
+                if (dashSplit[i].endsWith("'s") && !dashSplit[i].equals(""))
+                    dashSplit[i] = dashSplit[i].substring(0, dashSplit[i].length() - 2);
+                checkFurtherSplits(dashSplit[i]);
             }
         }
     }
@@ -1720,7 +1728,7 @@ public class Parse implements Runnable {
             // word is in document dictionary
             if (currentTermDictionary.containsKey(current)) {
                 existsInDocumentDictionaryCase(current);
-                existsInCorpusDictionary(current, currentUpper);
+                existsInCorpusDictionary(current, currentUpper, false);
             }
             // word is not in document dictionary
             else {
@@ -1730,7 +1738,7 @@ public class Parse implements Runnable {
                 if (max_tf < 1)
                     max_tf = 1;
                 currentTermDictionary.put(current, termData);
-                existsInCorpusDictionary(current, currentUpper);
+                existsInCorpusDictionary(current, currentUpper, true);
             }
         }
     }
@@ -1739,21 +1747,24 @@ public class Parse implements Runnable {
      * adds the given string to the corpus dictionary, depends on how it was saved before (capital or lower letters)
      * @param current - the string in lower case letters
      * @param currentUpper - the string in capital letters
+     * @param upDf - to know if the df of the term in the term dictionary needs to change or not
      */
-    private void existsInCorpusDictionary(String current, String currentUpper) {
+    private void existsInCorpusDictionary(String current, String currentUpper, boolean upDf) {
         int[] corpusTermData;
         // word is in corpus dictionary in capital letters
         if (Indexer.termDictionary.containsKey(currentUpper)) {
             corpusTermData = Indexer.termDictionary.get(currentUpper);
-            corpusTermData[0] = corpusTermData[0] + 1;
+            if (upDf)
+                corpusTermData[0] = corpusTermData[0] + 1;
             corpusTermData[1] = corpusTermData[1] + 1;
             Indexer.termDictionary.put(currentUpper, corpusTermData);
         }
         // word is in corpus dictionary in lower case
         else {
             corpusTermData = Indexer.termDictionary.get(current);
-            corpusTermData[0] = corpusTermData[0] + 1;
-            corpusTermData[0] = corpusTermData[1] + 1;
+            if (upDf)
+                corpusTermData[0] = corpusTermData[0] + 1;
+            corpusTermData[1] = corpusTermData[1] + 1;
             Indexer.termDictionary.put(current, corpusTermData);
         }
     }
@@ -1786,48 +1797,49 @@ public class Parse implements Runnable {
      * @param current - the current term to be added to the dictionaries
      */
     private void updateDictionaries(String current) {
-        boolean newTerm = true;
-        short[] termData;
-        int[] corpusTermData;
-        String currentUpper = current.toUpperCase();
-        if (currentTermDictionary.containsKey(current)) {
-            // checks if exists in corpus dictionary in upper case letters
-            if (Indexer.termDictionary.containsKey(currentUpper))
-                handleCapitalLetters(current.toLowerCase());
-            else {
-                termData = currentTermDictionary.get(current);
-                short tf = termData[0];
-                termData[0] = (short) (tf + 1);
-                termData[docPart] = 1;
-                if (max_tf < tf + 1)
-                    max_tf = (short) (tf + 1);
-                newTerm = false;
-                corpusTermData = Indexer.termDictionary.get(current);
-                corpusTermData[1] = corpusTermData[1] + 1;
-            }
-        }
-        else {
-            termData = new short[4];
-            termData[0] = 1;
-            termData[docPart] = 1;
-            if (max_tf < 1)
-                max_tf = 1;
-            currentTermDictionary.put(current, termData);
-        }
-        if (newTerm) {
-            // checks if exists in corpus dictionary in upper case letters
-            if (Indexer.termDictionary.containsKey(currentUpper))
-                handleCapitalLetters(current.toLowerCase());
-            else {
-                if (Indexer.termDictionary.containsKey(current)) {
+        if (!current.equals("")) {
+            boolean newTerm = true;
+            short[] termData;
+            int[] corpusTermData;
+            String currentUpper = current.toUpperCase();
+            if (currentTermDictionary.containsKey(current)) {
+                // checks if exists in corpus dictionary in upper case letters
+                if (Indexer.termDictionary.containsKey(currentUpper))
+                    handleCapitalLetters(current.toLowerCase());
+                else {
+                    termData = currentTermDictionary.get(current);
+                    short tf = termData[0];
+                    termData[0] = (short) (tf + 1);
+                    termData[docPart] = 1;
+                    if (max_tf < tf + 1)
+                        max_tf = (short) (tf + 1);
+                    newTerm = false;
                     corpusTermData = Indexer.termDictionary.get(current);
-                    corpusTermData[0] = corpusTermData[0] + 1;
                     corpusTermData[1] = corpusTermData[1] + 1;
-                } else {
-                    corpusTermData = new int[3];
-                    corpusTermData[0] = 1;
-                    corpusTermData[1] = 1;
-                    Indexer.termDictionary.put(current, corpusTermData);
+                }
+            } else {
+                termData = new short[4];
+                termData[0] = 1;
+                termData[docPart] = 1;
+                if (max_tf < 1)
+                    max_tf = 1;
+                currentTermDictionary.put(current, termData);
+            }
+            if (newTerm) {
+                // checks if exists in corpus dictionary in upper case letters
+                if (Indexer.termDictionary.containsKey(currentUpper))
+                    handleCapitalLetters(current.toLowerCase());
+                else {
+                    if (Indexer.termDictionary.containsKey(current)) {
+                        corpusTermData = Indexer.termDictionary.get(current);
+                        corpusTermData[0] = corpusTermData[0] + 1;
+                        corpusTermData[1] = corpusTermData[1] + 1;
+                    } else {
+                        corpusTermData = new int[3];
+                        corpusTermData[0] = 1;
+                        corpusTermData[1] = 1;
+                        Indexer.termDictionary.put(current, corpusTermData);
+                    }
                 }
             }
         }

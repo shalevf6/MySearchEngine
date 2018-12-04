@@ -2,8 +2,9 @@ package Controller;
 
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ListView;
 import javafx.stage.Stage;
+import java.util.List;
 
 /**
  * this class represents the dictionary view window
@@ -11,16 +12,29 @@ import javafx.stage.Stage;
 public class DictionaryController {
 
     public Button closeButton;
-    public TextArea textArea;
+    public ListView<String> listView;
+    public static List<String> dictionaryList;
 
     /**
      * sets the dictionary to be viewed
-     * @param textToShow - the string which represents the dictionary
      */
-    DictionaryController(String textToShow) {
-        textArea.setText(textToShow);
-        textArea.setWrapText(true);
-        textArea.setEditable(false);
+    public DictionaryController() {
+        listView = new ListView<>();
+        listView.setLayoutX(82.0);
+        listView.setLayoutY(71.0);
+        listView.setPrefHeight(262.0);
+        listView.setPrefWidth(418.0);
+        listView.setEditable(false);
+        listView.getItems().setAll(dictionaryList);
+        dictionaryList = null;
+    }
+
+    /**
+     * sets the dictionary to be viewed
+     * @param listToShow - the sorted string list which represents the dictionary
+     */
+    public static void setDictionary(List<String> listToShow) {
+        dictionaryList = listToShow;
     }
 
     /**

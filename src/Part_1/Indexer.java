@@ -16,9 +16,10 @@ public class Indexer implements Runnable {
     static private boolean stop = false;
     static boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
+    static public int totalDocuments = 0;
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
     static private HashMap<String, String[]> documentDictionary = new HashMap<>();
-    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(1000);
+    static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(3000);
     static HashMap<String, int[]> termDictionary = new HashMap<>();
     public static boolean isDictionaryStemmed;
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
@@ -115,8 +116,8 @@ public class Indexer implements Runnable {
                             tf = tf / max_tf;
                             // in order for the normalized tf value not to be too high
                             String normalizedTf = String.valueOf(tf);
-                            if (normalizedTf.length() >= 8)
-                                normalizedTf = normalizedTf.substring(0, 9);
+                            if (normalizedTf.length() >= 9)
+                                normalizedTf = normalizedTf.substring(0, 8);
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
                                 postingValue = term + ":" + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
@@ -222,14 +223,14 @@ public class Indexer implements Runnable {
             mergePostingFiles(postingPath + "\\postingFilesWithStemming");
 
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\termDictionary", 1);
-            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow");
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
         }
         else {
             isDictionaryStemmed = false;
             mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
             writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionary", 1);
-            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow", false);
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow");
             writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\documentDictionary", 2);
         }
         if (!indexedCities) {
@@ -325,7 +326,7 @@ public class Indexer implements Runnable {
             }
 
             // sorts the posting line's entries by normalized tf
-//            postingLineToAdd = sortByTf(postingLineToAdd);
+            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // write first line separately so the main posting file won't end with a \n (new line)
             bw.write(postingLineToAdd);
@@ -353,6 +354,9 @@ public class Indexer implements Runnable {
                     postingLineToAdd = term.toUpperCase()+ ":" + postingLineToAdd.substring(toCut + 1);
                     term = term.toUpperCase();
                 }
+
+                // sorts the posting line's entries by normalized tf
+                postingLineToAdd = sortByTf(postingLineToAdd);
 
                 // writes the posting line
                 bw.write('\n' + postingLineToAdd);
@@ -422,7 +426,7 @@ public class Indexer implements Runnable {
             String postingLineToAdd = checkAndMergePostingLines();
 
             // sorts the posting line's entries by normalized tf
-//            postingLineToAdd = sortByTf(postingLineToAdd);
+            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // initiates the bytes counter for the posting pointer
             int postingPointer = 0;
@@ -535,7 +539,7 @@ public class Indexer implements Runnable {
         String[] postingLine = toMainPosting.poll();
         int brNum = Integer.valueOf(postingLine[1]);
         try {
-            String line =bufferedReaders[brNum].readLine();
+            String line = bufferedReaders[brNum].readLine();
             if(line!= null)
             toMainPosting.add(new String[] {line, postingLine[1]});
         } catch (IOException e) {
@@ -546,14 +550,18 @@ public class Indexer implements Runnable {
 
     /**
      * turns the dictionary into a sorted string
-     * @param stemming - to see if the dictionary we need to return is stemmed or not
      * @return - a string representing the sorted dictionary
      */
-    public static String getDictionaryString(boolean stemming) {
+    public static List<String> getDictionaryString() {
         Set<String> termSet = termDictionary.keySet();
+
+        List<String> linesForListView = new LinkedList<>();
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
+            int[] termData = termDictionary.get(term); // TODO: ERASE THIS
+            if (termData[1] == 0) // TODO: ERASE THIS
+                System.out.println("HEYYYY"); // TODO: ERASE THIS
             dictionarySort.add(term + " ; " + termDictionary.get(term)[1]);
         }
 
@@ -561,26 +569,16 @@ public class Indexer implements Runnable {
         String nextTerm = dictionarySort.poll();
         String line;
 
-        StringBuilder dictionary = new StringBuilder();
-        if (nextTerm != null) {
-            String[] split = nextTerm.split(";");
-            split[0] = split[0].trim();
-            split[1] = split[1].trim();
-            line = "The term \"" + split[0] + "\" has " + split[1] + " total appearances";
-            dictionary.append(line);
-            nextTerm = dictionarySort.poll();
-        }
-
         // continue building the dictionary sorted string
         while (nextTerm != null) {
             String[] split = nextTerm.split(";");
             split[0] = split[0].trim();
             split[1] = split[1].trim();
             line = "The term \"" + split[0] + "\" has " + split[1] + " total appearances";
-            dictionary.append('\n').append(line);
+            linesForListView.add(line);
             nextTerm = dictionarySort.poll();
         }
-        return dictionary.toString();
+        return linesForListView;
     }
 
     /**
@@ -613,8 +611,10 @@ public class Indexer implements Runnable {
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionary));
             if (whatToWrite == 1)
             objectOutputStream.writeObject(termDictionary);
-            if (whatToWrite == 2)
+            if (whatToWrite == 2) {
                 objectOutputStream.writeObject(documentDictionary);
+                totalDocuments = documentDictionary.size();
+            }
             if (whatToWrite == 3)
                 objectOutputStream.writeObject(corpusCityDictionary);
             objectOutputStream.close();
@@ -626,38 +626,32 @@ public class Indexer implements Runnable {
     /**
      * write the dictionary's string to a file in the disk
      * @param path - the path which the dictionary's string should be written to
-     * @param stemming - is the dictionary stemmed or not
      */
-    private void writeTermDictionaryForShowToDisk(String path, boolean stemming) {
+    private void writeTermDictionaryForShowToDisk(String path) {
         File dictionaryForShow = new File(path);
         try {
             dictionaryForShow.createNewFile();
-            // creating a Buffered Writer for writing the dictionary's string
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(dictionaryForShow)));
-            bw.write(getDictionaryString(stemming));
-            bw.close();
+            // creating a Buffered Writer for writing the dictionary sorted string list
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionaryForShow));
+            objectOutputStream.writeObject(getDictionaryString());
+            objectOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * reads a dictionary's sorted string (to show) from a file in the disk to the main memory
-     * @return - the dictionary's string
+     * reads a dictionary's sorted string list from a file in the disk to the main memory
+     * @return - the dictionary's sorted string list
      */
-    public static String readDictionaryForShowToMemory(String path) {
+    public static List<String> readDictionaryForShowToMemory(String path) {
         File dictionary = new File(path);
         try {
-            // creating a Buffered Writer for writing the dictionary's string
-            BufferedReader bw = new BufferedReader(new InputStreamReader(new FileInputStream(dictionary)));
-            StringBuilder dictionaryString = new StringBuilder();
-            String line;
-            while ((line = bw.readLine()) != null) {
-                dictionaryString.append(line);
-            }
-            bw.close();
-            return dictionaryString.toString();
-        } catch (IOException e) {
+            // creating an object input stream for reading the dictionary's sorted string list
+            ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
+            List<String> dictionaryForShow = (List<String>)(objectInputStream.readObject());
+            return dictionaryForShow;
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         return null;
@@ -696,7 +690,7 @@ public class Indexer implements Runnable {
             readDictionaryToMemory(tempPostingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
         else
             readDictionaryToMemory(tempPostingPath + "\\postingFilesWithoutStemming\\documentDictionary", 2);
-        ReadFile.docCount = documentDictionary.size();
+        totalDocuments = documentDictionary.size();
     }
 
     /**
@@ -716,6 +710,7 @@ public class Indexer implements Runnable {
         documentDictionary = new HashMap<>();
         indexedCities = false;
         totalUniqueTerms = 0;
+        totalDocuments = 0;
         isDictionaryStemmed = false;
     }
 
