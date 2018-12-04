@@ -17,7 +17,7 @@ public class ReadFile implements Runnable {
     public static int docCount = 0; // TODO: maybe erase docCount
 
     /**
-     * A constructor for the ReadFile class
+     * A construct  or for the ReadFile class
      * @param dirPath - the directory path in which the corpus is found
      */
     public ReadFile(String dirPath) {
@@ -31,6 +31,8 @@ public class ReadFile implements Runnable {
         // get to the corpus directory
         File dir = new File(dirPath + "\\corpus");
         if (dir.exists()) {
+            Parse.resetPartially();
+            Indexer.resetPartially();
             // go once through the corpus to get all the city's in the tag <F P=104>
             if (!Indexer.indexedCities)
                 getCityDictionary(dir);
@@ -38,8 +40,6 @@ public class ReadFile implements Runnable {
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
                 // if this is the second indexing run (stemming / not stemming), makes sure the stop variables are false.
-                Parse.resetPartially();
-                Indexer.resetPartially();
                 for (File f : subDirs) {
                     // get to the file inside the corpus's sub-directory
                     File[] tempFiles = f.listFiles();
@@ -124,6 +124,11 @@ public class ReadFile implements Runnable {
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
                 if (docCityArr.length != 0) {
                     String city = docCityArr[0];
+                    int counter = 0;
+                    while (city.equals("") && counter + 1<docCityArr.length){
+                        counter++;
+                        city =docCityArr[counter];
+                    }
                     if (!city.equals("") && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         // checks if we already added this city to the dictionary
@@ -205,6 +210,11 @@ public class ReadFile implements Runnable {
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
                 if (docCityArr.length != 0) {
                     String city = docCityArr[0];
+                    int counter = 0;
+                    while (city.equals("") && counter + 1<docCityArr.length){
+                        counter++;
+                        city =docCityArr[counter];
+                    }
                     if (!city.equals("") && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         newDoc.setCity(cityUpper);

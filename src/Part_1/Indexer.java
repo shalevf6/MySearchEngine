@@ -51,6 +51,8 @@ public class Indexer implements Runnable {
     private PriorityQueue<String[]> toMainPosting = new PriorityQueue<>((o1, o2) -> {
         String o1Line = o1[0];
         String o2Line = o2[0];
+        if(o1Line==null)
+            System.out.println("idan");
         int toCut1 = o1Line.indexOf(':');
         int toCut2 = o2Line.indexOf(':');
         String term1 = o1Line.substring(0, toCut1);
@@ -79,7 +81,7 @@ public class Indexer implements Runnable {
         while (true) {
             if (!docQueue.isEmpty()) {
                 int counter = 10000;
-                while (counter > 0 && !docQueue.isEmpty()) {
+                while (counter > 0  && !stop || !docQueue.isEmpty() && stop) {
                     // ------ START: ADD ALL DOCUMENT DETAILS TO DOCUMENT DICTIONARY ------
                     Document doc = null;
                     try {
@@ -213,6 +215,8 @@ public class Indexer implements Runnable {
             int[] termData = new int[3];
             int[] corpusTermData = corpusDictionary.get(term);
             termData[0] = corpusTermData[0];
+            if(term.equals("$1.5-2b"))
+                System.out.println("idan ");
             termData[1] = corpusTermData[1];
             termDictionary.put(term, termData);
         }
@@ -220,7 +224,7 @@ public class Indexer implements Runnable {
         // ------ END: ADD DF VALUES FOR ALL THE TERMS FROM THE CORPUS DICTIONARY FROM PARSE ------
 
         // ------ START: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARY TO A FILE ------
-        totalTempPostingFiles = tempPostingNum;
+        totalTempPostingFiles = tempPostingNum - 1;
         if (Parse.stemming) {
             isDictionaryStemmed = true;
             mergePostingFiles(postingPath + "\\postingFilesWithStemming");
@@ -280,7 +284,7 @@ public class Indexer implements Runnable {
         String[][] postingLines = new String[totalTempPostingFiles][2];
 
         // create a buffered reader for each of the sorted temp posting files
-        while (counter < totalTempPostingFiles) {
+        while (counter - 1 < totalTempPostingFiles) {
             try {
                 bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPosting" + counter))));
                 counter++;
@@ -305,7 +309,7 @@ public class Indexer implements Runnable {
             int toCut = postingLineToAdd.indexOf(':');
             String term = postingLineToAdd.substring(0, toCut);
             if (!termDictionary.containsKey(term)) {
-                postingLineToAdd = term.toUpperCase() + postingLineToAdd.substring(toCut + 1);
+                postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
                 term = term.toUpperCase();
             }
 
@@ -335,7 +339,8 @@ public class Indexer implements Runnable {
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
                 if (!termDictionary.containsKey(term)) {
-                    postingLineToAdd = term.toUpperCase() + postingLineToAdd.substring(toCut + 1);
+                    postingLineToAdd = term.toUpperCase()+ ":" + postingLineToAdd.substring(toCut + 1);
+                    term = term.toUpperCase();
                 }
 
                 // writes the posting line
@@ -384,7 +389,7 @@ public class Indexer implements Runnable {
         String[][] postingLines = new String[totalTempPostingFiles][2];
 
         // create a buffered reader for each of the sorted temp posting files
-        while (counter < totalTempPostingFiles) {
+        while (counter  - 1   < totalTempPostingFiles) {
             try {
                 bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPostingCity" + counter))));
                 counter++;
@@ -519,7 +524,9 @@ public class Indexer implements Runnable {
         String[] postingLine = toMainPosting.poll();
         int brNum = Integer.valueOf(postingLine[1]);
         try {
-            toMainPosting.add(new String[] {bufferedReaders[brNum].readLine(), postingLine[1]});
+            String line =bufferedReaders[brNum].readLine();
+            if(line!= null)
+            toMainPosting.add(new String[] {line, postingLine[1]});
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -681,7 +688,6 @@ public class Indexer implements Runnable {
         stop = false;
         termDictionary = new HashMap<>();
         documentDictionary = new HashMap<>();
-        indexedCities = false;
         totalUniqueTerms = 0;
     }
 
