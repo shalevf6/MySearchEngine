@@ -71,7 +71,7 @@ public class Controller {
                         if (!corpusDirectory.exists()) {
                             showErrorAlert("You must choose an existing corpus folder path!");
                         } else {
-                            File stopWords = new File(dirPath + "\\corpus\\stop words");
+                            File stopWords = new File(dirPath + "\\corpus\\stop_words.txt");
                             if (stopWords.exists()) {
                                 Parse.stemming = stemmingCheckBox.isSelected();
                                 if (Parse.stemming) {
@@ -97,7 +97,7 @@ public class Controller {
                                     e.printStackTrace();
                                 }
                                 */
-                                Parse parse = new Parse(dirPath + "\\corpus\\stop words");
+                                Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt");
                                 ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
                                 Thread readFileThread = new Thread(readFile);
@@ -114,24 +114,25 @@ public class Controller {
                                     indexThread.join();
                                 } catch (InterruptedException e) {
                                     e.printStackTrace();
+                                } finally {
+                                    // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
+                                    startsIndexing = false;
+                                    if (Parse.stemming)
+                                        alreadyIndexedWithStemming = true;
+                                    else
+                                        alreadyIndexedWithoutStemming = true;
+                                    double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
+                                    int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
+                                    int remainingSeconds = (int) (totalTimeInSeconds % 60);
+                                    String totalTime = totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
+                                    String docCount = String.valueOf(Indexer.totalDocuments);
+                                    String termCount = String.valueOf(Indexer.totalUniqueTerms);
+                                    Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
+                                    doneIndexing.setHeaderText("Indexing Done!");
+                                    doneIndexing.setContentText("Total time to index: " + totalTime + "\n\"Total documents indexed: " +
+                                            docCount + "\nTotal unique words found: " + termCount);
+                                    doneIndexing.show();
                                 }
-
-                                // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
-                                startsIndexing = false;
-                                if (Parse.stemming)
-                                    alreadyIndexedWithStemming = true;
-                                else
-                                    alreadyIndexedWithoutStemming = true;
-                                double totalTimeInSeconds = (System.nanoTime() - startTime) * Math.pow(10, -9);
-                                int totalTimeInMinutes = (int) (totalTimeInSeconds / 60);
-                                int remainingSeconds = (int) (totalTimeInSeconds % 60);
-                                String totalTime = "Total time: " + totalTimeInMinutes + " minutes and " + remainingSeconds + " seconds.";
-                                String docCount = "Total documents indexed: " + ReadFile.docCount;
-                                String termCount = "Total unique words found: " + Indexer.totalUniqueTerms;
-                                Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
-                                doneIndexing.setHeaderText("Indexing Done!");
-                                doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal document count: " +
-                                        docCount + "\nTotal unique words found: " + termCount);
                             } else {
                                 showErrorAlert("You must choose an existing stop words file path!");
                             }
@@ -192,11 +193,12 @@ public class Controller {
                 FXMLLoader fxmlLoader = new FXMLLoader();
                 Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
                 if (Indexer.isDictionaryStemmed)
-                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowToMemory(postingPathText +
-                            "\\postingFilesWithStemming\\termDictionaryForShow")));
+                    DictionaryController.setDictionary(Indexer.readDictionaryForShowToMemory(postingPathText +
+                            "\\postingFilesWithStemming\\termDictionaryForShow"));
                 else
-                    fxmlLoader.setController(new DictionaryController(Indexer.readDictionaryForShowToMemory(postingPathText +
-                            "\\postingFilesWithoutStemming\\termDictionaryForShow")));
+                    DictionaryController.setDictionary(Indexer.readDictionaryForShowToMemory(postingPathText +
+                        "\\postingFilesWithoutStemming\\termDictionaryForShow"));
+                fxmlLoader.setController(new DictionaryController());
                 Scene scene = new Scene(root, 600, 400);
                 stage.setScene(scene);
                 stage.initModality(Modality.APPLICATION_MODAL);
@@ -207,7 +209,7 @@ public class Controller {
             }
         }
         else
-            showErrorAlert("no dictionary to show!");
+            showErrorAlert("No dictionary to show!");
     }
 
     /**
@@ -248,8 +250,9 @@ public class Controller {
                 }
                 try {
                     Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setContentText("Dictionary Loaded Successfully!");
+                    alert.show();
                 }
                 catch (Exception e) {
                     showErrorAlert("Not all dictionary files found in path! Try again");
@@ -278,7 +281,7 @@ public class Controller {
             documentDictionary = new File (postingPathText + "\\postingFilesWithStemming\\documentDictionary");
         else
             documentDictionary = new File (postingPathText + "\\postingFilesWithoutStemming\\documentDictionary");
-        ObjectInputStream objectInputStream = null;
+        ObjectInputStream objectInputStream;
         HashMap<String,int[]> documentDictionaryObject = null;
         try {
             objectInputStream = new ObjectInputStream(new FileInputStream(documentDictionary));
@@ -287,7 +290,7 @@ public class Controller {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        if (documentDictionaryObject.size() != ReadFile.docCount) {
+        if (documentDictionaryObject.size() != Indexer.totalDocuments) {
             showErrorAlert("Document dictionary doesn't have the same document amount from last load / indexing!\n Hit reset in order to load a new dictionary!");
             return false;
         }
