@@ -122,7 +122,7 @@ public class ReadFile implements Runnable {
             if (docString.contains("<F P=104>")) {
                 int cityStart = docString.indexOf("<F P=104>");
                 int cityEnd = docString.indexOf("</F>", cityStart);
-                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
+                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[?!:,#`@^~&+{.$%\\-*}|\"<=>\\s;()_\\\\\\[\\]]+");
                 if (docCityArr.length != 0) {
                     String city = docCityArr[0];
                     int counter = 0;
@@ -150,7 +150,7 @@ public class ReadFile implements Runnable {
             if (docString.contains("<F P=105>")) {
                 int languageStart = docString.indexOf("<F P=105>");
                 int languageEnd = docString.indexOf("</F>", languageStart);
-                String[] docLanguage = (docString.substring(languageStart + 9, languageEnd)).split("[\\s]+");
+                String[] docLanguage = (docString.substring(languageStart + 9, languageEnd)).split("[?!:,#`@^~&+{.$%\\-*}|\"<=>\\s;()_\\\\\\[\\]]+");
                 if (docLanguage.length != 0) {
                     String language = docLanguage[0];
                     int counter = 0;
@@ -158,7 +158,7 @@ public class ReadFile implements Runnable {
                         counter++;
                         language = docLanguage[counter];
                     }
-                    if (!language.equals("") && language.length() > 1) {
+                    if (!language.equals("") && language.length() > 1 && isOnlyLetters(language)) {
                         String languageUpper = language.toUpperCase();
                         if(!Controller.languages.contains(languageUpper))
                             Controller.languages.add(languageUpper);
@@ -226,7 +226,7 @@ public class ReadFile implements Runnable {
             if (docString.contains("<F P=104>")) {
                 int cityStart = docString.indexOf("<F P=104>");
                 int cityEnd = docString.indexOf("</F>", cityStart);
-                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
+                String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[?!:,#`@^~&+{.$%\\-*}|\"<=>\\s;()_\\\\\\[\\]]+");
                 if (docCityArr.length != 0) {
                     docCity = docCityArr[0];
                     int counter = 0;
