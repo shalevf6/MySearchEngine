@@ -14,7 +14,7 @@ import java.util.concurrent.BlockingQueue;
 public class Indexer implements Runnable {
 
     static private boolean stop = false;
-    static boolean indexedCities = false;
+    static public  boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
     static public int totalDocuments = 0;
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
@@ -52,8 +52,6 @@ public class Indexer implements Runnable {
     private PriorityQueue<String[]> toMainPosting = new PriorityQueue<>((o1, o2) -> {
         String o1Line = o1[0];
         String o2Line = o2[0];
-        if(o1Line==null)
-            System.out.println("idan");
         int toCut1 = o1Line.indexOf(':');
         int toCut2 = o2Line.indexOf(':');
         String term1 = o1Line.substring(0, toCut1);
@@ -495,8 +493,10 @@ public class Indexer implements Runnable {
         for (BufferedReader br : bufferedReaders) {
             try {
                 postingLines[counter][0] = br.readLine();
-                postingLines[counter][1] = Integer.toString(counter);
-                toMainPosting.add(postingLines[counter]);
+                if (postingLines[counter][0] != null) {
+                    postingLines[counter][1] = Integer.toString(counter);
+                    toMainPosting.add(postingLines[counter]);
+                }
                 counter++;
             } catch (IOException e) {
                 e.printStackTrace();
@@ -545,7 +545,7 @@ public class Indexer implements Runnable {
         try {
             String line = bufferedReaders[brNum].readLine();
             if(line!= null)
-            toMainPosting.add(new String[] {line, postingLine[1]});
+                toMainPosting.add(new String[] {line, postingLine[1]});
         } catch (IOException e) {
             e.printStackTrace();
         }
