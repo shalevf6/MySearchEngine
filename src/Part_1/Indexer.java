@@ -653,6 +653,7 @@ public class Indexer implements Runnable {
             // creating an object input stream for reading the dictionary's sorted string list
             ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
             List<String> dictionaryForShow = (List<String>)(objectInputStream.readObject());
+            objectInputStream.close();
             return dictionaryForShow;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

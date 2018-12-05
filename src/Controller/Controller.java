@@ -157,11 +157,14 @@ public class Controller {
             postingPath.setText("");
             stemmingCheckBox.setSelected(true);
             File dir = new File(postingPathText);
-            for (File dir2 : dir.listFiles()) {
-                for (File f : dir2.listFiles())
-                    f.delete();
-                dir2.delete();
-            }
+            if (dir != null)
+                for (File dir2 : dir.listFiles()) {
+                    if (dir2 != null) {
+                        for (File f : dir2.listFiles())
+                            f.delete();
+                        dir2.delete();
+                    }
+                }
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
             Parse.resetAll();
