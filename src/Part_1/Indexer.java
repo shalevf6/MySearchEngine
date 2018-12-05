@@ -251,10 +251,11 @@ public class Indexer implements Runnable {
         if (dirs != null && dirs.length > 0) {
             for (File dir : dirs) {
                 File[] files = dir.listFiles();
-                for (int i = 0; i < files.length; i++) {
-                    if (files[i].getName().contains("temp"))
-                        files[i].delete();
-                }
+                if (files != null)
+                    for (int i = 0; i < files.length; i++) {
+                        if (files[i].getName().contains("temp"))
+                            files[i].delete();
+                    }
             }
         }
     }
@@ -584,17 +585,18 @@ public class Indexer implements Runnable {
 
     /**
      * gets a requested dictionary. If it's not on the main memory, pulls it from the appropriate file
+     * @param path - the posting files path
      * @param stemming - is the dictionary looked for is stemmed or not
      */
-    private static void setTermDictionary(boolean stemming) throws IOException, ClassNotFoundException {
+    private static void setTermDictionary(String path, boolean stemming) throws IOException, ClassNotFoundException {
         if (stemming) {
             if (!isDictionaryStemmed) {
-                readDictionaryToMemory(Controller.postingPathText + "\\postingFilesWithStemming\\termDictionary", 1);
+                readDictionaryToMemory(path + "\\postingFilesWithStemming\\termDictionary", 1);
                 totalUniqueTerms = termDictionary.size();
                 isDictionaryStemmed = true;
             }
         } else if (isDictionaryStemmed) {
-            readDictionaryToMemory(Controller.postingPathText + "\\postingFilesWithoutStemming\\termDictionary", 1);
+            readDictionaryToMemory(path + "\\postingFilesWithoutStemming\\termDictionary", 1);
             totalUniqueTerms = termDictionary.size();
             isDictionaryStemmed = false;
         }
@@ -681,7 +683,7 @@ public class Indexer implements Runnable {
      */
     public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) throws IOException, ClassNotFoundException {
         // read the term dictionary to the memory
-        setTermDictionary(stemming);
+        setTermDictionary(tempPostingPath, stemming);
         // reads the document dictionary to the memory
         if (stemming)
             readDictionaryToMemory(tempPostingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
@@ -714,7 +716,7 @@ public class Indexer implements Runnable {
     /**
      * resets parts of the static variables in order to index again, with / without stemming
      */
-    static void resetPartially() {
+    public static void resetPartially() {
         stop = false;
         termDictionary = new HashMap<>();
         documentDictionary = new HashMap<>();

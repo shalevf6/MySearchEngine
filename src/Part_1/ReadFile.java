@@ -30,8 +30,6 @@ public class ReadFile implements Runnable {
         // get to the corpus directory
         File dir = new File(dirPath + "\\corpus");
         if (dir.exists()) {
-            Parse.resetPartially();
-            Indexer.resetPartially();
             // go once through the corpus to get all the city's in the tag <F P=104>
             getCityDictionary(dir);
             // get to all the corpus's sub-directories
@@ -131,7 +129,8 @@ public class ReadFile implements Runnable {
                         counter++;
                         city = docCityArr[counter];
                     }
-                    if (!city.equals("") && docCityArr[0].length() > 1 && isOnlyLetters(city)) {
+                    if (!city.equals("") && city.length() > 1 && isOnlyLetters(city) && !city.toUpperCase().equals("RADIO") &&
+                            !city.toUpperCase().equals("NEWS")) {
                         String cityUpper = city.toUpperCase();
                         // checks if we already added this city to the dictionary
                         if (!Indexer.termDictionary.containsKey(cityUpper)) {
@@ -207,14 +206,15 @@ public class ReadFile implements Runnable {
                 int cityStart = docString.indexOf("<F P=104>");
                 int cityEnd = docString.indexOf("</F>", cityStart);
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
-                if (docCityArr.length != 0 && docCityArr.length > 1) {
+                if (docCityArr.length != 0) {
                     docCity = docCityArr[0];
                     int counter = 0;
                     while (docCity.equals("") && counter + 1 < docCityArr.length){
                         counter++;
                         docCity = docCityArr[counter];
                     }
-                    if (!docCity.equals("") && docCityArr[0].length() > 1 && isOnlyLetters(docCity)) {
+                    if (!docCity.equals("") && docCity.length() > 1 && isOnlyLetters(docCity) && !docCity.toUpperCase().equals("RADIO") &&
+                            !docCity.toUpperCase().equals("NEWS")) {
                         String cityUpper = docCity.toUpperCase();
                         newDoc.setCity(cityUpper);
                     }
