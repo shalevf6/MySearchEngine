@@ -3,19 +3,23 @@ package Controller;
 import Part_1.Indexer;
 import Part_1.Parse;
 import Part_1.ReadFile;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * This class controlls all the GUI elements from the main.fxml file
@@ -190,18 +194,31 @@ public class Controller {
             try {
                 Stage stage = new Stage();
                 stage.setTitle("The Corpus's Dictionary");
-                FXMLLoader fxmlLoader = new FXMLLoader();
-                Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
+                List<String> dictionaryList;
                 if (Indexer.isDictionaryStemmed)
-                    DictionaryController.setDictionary(Indexer.readDictionaryForShowToMemory(postingPathText +
-                            "\\postingFilesWithStemming\\termDictionaryForShow"));
+                    dictionaryList = Indexer.readDictionaryForShowToMemory(postingPathText + "\\postingFilesWithStemming\\termDictionaryForShow");
                 else
-                    DictionaryController.setDictionary(Indexer.readDictionaryForShowToMemory(postingPathText +
-                        "\\postingFilesWithoutStemming\\termDictionaryForShow"));
-                fxmlLoader.setController(new DictionaryController());
+                    dictionaryList = Indexer.readDictionaryForShowToMemory(postingPathText + "\\postingFilesWithoutStemming\\termDictionaryForShow");
+//                FXMLLoader fxmlLoader = new FXMLLoader();
+//                DictionaryController dictionaryController = new DictionaryController(dictionaryList);
+//                fxmlLoader.setController(dictionaryController);
+//                Parent root = fxmlLoader.load(getClass().getResource("/fxml/dictionary.fxml"));
+//                dictionaryController.setDictionary(dictionaryList);
+                ListView<String> listView = new ListView<>();
+                listView.getItems().setAll(FXCollections.observableList(dictionaryList));
+                listView.setEditable(false);
+                listView.prefWidth(600);
+//                final VBox vBox = new VBox();
+//                vBox.setSpacing(5);
+//                vBox.setPadding(new Insets(10,0,0,10));
+//                vBox.getChildren().addAll(listView);
+//                vBox.setAlignment(Pos.CENTER);
+                AnchorPane root = new AnchorPane();
+                root.prefWidth(600);
+                root.getChildren().addAll(listView);
                 Scene scene = new Scene(root, 600, 400);
-                stage.setScene(scene);
                 stage.initModality(Modality.APPLICATION_MODAL);
+                stage.setScene(scene);
                 stage.show();
             }
             catch (Exception e) {
@@ -240,7 +257,7 @@ public class Controller {
                         if (alreadyIndexedWithStemming) {
                             boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
                             loadCityDictionary = false;
-                            if (checksOut)
+                            if (!checksOut)
                                 return;
                         } else
                             postingPathText = tempPostingPath.getText();
