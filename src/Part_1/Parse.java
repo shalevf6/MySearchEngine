@@ -421,7 +421,7 @@ public class Parse implements Runnable {
     }
 
     /**
-     * adds a new (or existing) term that were found outside the text tage to the corpus and document dictionaries
+     * adds a new (or existing) term that were found outside the text tag to the corpus and document dictionaries
      * @param current - the current term to be added to the dictionaries
      */
     private void updateDictionariesOutsideText(String current) {
@@ -548,6 +548,11 @@ public class Parse implements Runnable {
             termData[3] = 1;
     }
 
+    /** main function that handles strings with numbers that are not money or percentage
+     * @param current
+     * @param counter
+     * @return int value of how much to add to the parse counter.
+     */
     private int RegularNumCheck(String current, int counter) {
         int toReturn = 0;
         String current2;
@@ -629,6 +634,11 @@ public class Parse implements Runnable {
         return toReturn;
     }
 
+    /** this is the main function of handling cases that the current string needs to be consider the string after and they are both in the same term
+     * @param current string that contain a number
+     * @param counter
+     * @return the string after changed to be as a term
+     */
     private String handleMoreThenOneNumber(String current, int counter) {
         int toReturn = 0;
         String current2;
@@ -750,6 +760,14 @@ public class Parse implements Runnable {
         return toReturn;
     }
 
+    /** main function of cases that the current string is a number but a presenatge or money number
+     * @param current
+     * @param current2
+     * @param current3
+     * @param current4
+     * @param counter
+     * @return int value of how much to add to counter of the main parse function
+     */
     private int HandleMoneyAndPercentage(String current, String current2, String current3, String current4, int counter) {
         int add2Counter = 0;
         // ------- PERCENTAGE CHECK -------
@@ -790,6 +808,10 @@ public class Parse implements Runnable {
         return add2Counter;
     }
 
+    /** handle cases of numbers with doc that needs to be change to be with only 2 numbers after the dot
+     * @param current
+     * @return the current string after the change
+     */
     private String handleDot(String current) {
         String ToReturn = "";
         String[] SplitDot = current.split("\\.");
@@ -850,8 +872,10 @@ public class Parse implements Runnable {
                     if (notFraction(current2)) {
                         current = current + " " + current2;
                         updateDictionaries(tempCurrent + "-" + current);
-                        updateDictionaries(current);
-                        updateDictionaries(tempCurrent);
+                        if(!current.contains("$") && !current.contains("%"))
+                            updateDictionaries(current);
+                        if(!tempCurrent.contains("%") && !tempCurrent.contains("$"))
+                            updateDictionaries(tempCurrent);
                         return 2;
                     }
                     if (counter < afterSplit.length - 1)
@@ -887,8 +911,10 @@ public class Parse implements Runnable {
                 }
                 if (isNumeric2(tempCurrent) && tempCurrent.contains(","))
                     tempCurrent = changeNumToRegularNum(tempCurrent);
-                updateDictionaries(tempCurrent);
-                updateDictionaries(current);
+                if(!tempCurrent.contains("%") && !tempCurrent.contains("$"))
+                    updateDictionaries(tempCurrent);
+                if(!current.contains("%") && !current.contains("$"))
+                    updateDictionaries(current);
                 updateDictionaries(tempCurrent + "-" + current);
                 return ToAdd2Counter + 1;
             }
@@ -897,17 +923,17 @@ public class Parse implements Runnable {
                 String tempCurrent = DashSplit[0];
                 current = DashSplit[1];
                 if (isNumeric2(tempCurrent)) {
-                    changeNumToRegularNum(tempCurrent);
-                    //tempCurrent = handleZero(tempCurrent);
+                   current = changeNumToRegularNum(tempCurrent);
+
                 }
                 if (isNumeric2(current)) {
-                    changeNumToRegularNum(current);
-                    //current = handleZero(current);
+                    current = changeNumToRegularNum(current);
                 }
                 //1-----NUMBER-WORD----------1//
                 if (isNumeric2(tempCurrent)) {
-                    tempCurrent = changeNumToRegularNum(tempCurrent); // TODO : check it doesn't enter this if and adds tf for nothing
-                    updateDictionaries(tempCurrent);
+                    tempCurrent = changeNumToRegularNum(tempCurrent);
+                    if(!tempCurrent.contains("%") && !tempCurrent.contains("$"))
+                        updateDictionaries(tempCurrent);
                     // checks if the right part is a word
                     if (isOnlyLetters(current)) {
                         // checks if it's not a stop word to add it alone to the dictionary
@@ -928,7 +954,8 @@ public class Parse implements Runnable {
                         //2.1-------WORD-NUMBER FRACTION---------2.1//
                         if (notFraction(current2)) {
                             current = current + " " + current2;
-                            updateDictionaries(current);
+                            if(!current.contains("%") && !current.contains("$"))
+                                updateDictionaries(current);
                             // checks if the left part is a word
                             if (isOnlyLetters(tempCurrent)) {
                                 // checks if it's not a stop word to add it alone to the dictionary
@@ -970,9 +997,7 @@ public class Parse implements Runnable {
                             current = current + "B";
                             ToAdd2Counter++;
                         }
-                        if (current.contains("M")) {
-                            current = current.substring(0, current.length() - 1) + " M";
-                        }
+
                         // checks if the left part is a word
                         if (isOnlyLetters(tempCurrent)) {
                             // checks if it's not a stop word to add it alone to the dictionary
@@ -985,7 +1010,8 @@ public class Parse implements Runnable {
                             checkFurtherSplits(tempCurrent);
                         }
                         updateDictionaries(tempCurrent.toLowerCase() + "-" + current);
-                        updateDictionaries(current);
+                        if(!current.contains("$") && !current.contains("%"))
+                            updateDictionaries(current);
                         return ToAdd2Counter + 1;
                     }
 
@@ -1003,15 +1029,12 @@ public class Parse implements Runnable {
             String Temp2Current2 = DashSplit[1];
             if (isNumeric2(current)) {
                 current = changeNumToRegularNum(current);
-                //current = handleZero(current);
             }
             if (isNumeric2(Temp2Current2)) {
                 Temp2Current2 = changeNumToRegularNum(Temp2Current2);
-                //Temp2Current2 = handleZero(Temp2Current2);
             }
             if (isNumeric2(TempCurrent2)) {
                 TempCurrent2 = changeNumToRegularNum(TempCurrent2);
-                //TempCurrent2 = handleZero(TempCurrent2);
             }
 
             //-------NUMBER MILLION/THOUSAND/TRILLION/BILLION-NUMBER-------//
@@ -1019,15 +1042,15 @@ public class Parse implements Runnable {
             if (isNumeric2(current) && isNumeric2(Temp2Current2) && !notFraction(TempCurrent2)) {
                 String tempCurrent2Lower = TempCurrent2.toLowerCase();
                 if (tempCurrent2Lower.equals("thousand")) {
-                    current = current + " K";
+                    current = current + "K";
                     ToAdd2Counter++;
                 }//SECOND:IF CURRENT2= MILLION
                 if (tempCurrent2Lower.equals("million") || tempCurrent2Lower.equals("mill")) {
-                    current = current + " M";
+                    current = current + "M";
                     ToAdd2Counter++;
                 }//THIRD:IF CURRENT2= BILLION
                 if (tempCurrent2Lower.equals("billion")) {
-                    current = current + " B";
+                    current = current + "B";
                     ToAdd2Counter++;
                 }//FORTH:IF CURRENT2= TRILLION
                 if (tempCurrent2Lower.equals("trillion")) {
@@ -1035,11 +1058,13 @@ public class Parse implements Runnable {
                     temp = temp * 1000;
                     int temp2 = temp.intValue();
                     current = String.valueOf(temp2);
-                    current = current + " B";
+                    current = current + "B";
                     ToAdd2Counter = ToAdd2Counter + 1;
                 }
-                updateDictionaries(current);
-                updateDictionaries(Temp2Current2);
+                if(!current.contains("%") && !current.contains("%"))
+                    updateDictionaries(current);
+                if(!current.contains("%") && !current.contains("$"))
+                    updateDictionaries(Temp2Current2);
                 updateDictionaries(current + "-" + Temp2Current2);
                 return ToAdd2Counter + 1;
             }
@@ -1047,15 +1072,15 @@ public class Parse implements Runnable {
             if (isNumeric2(current) && notFraction(TempCurrent2) && isNumeric2(Temp2Current2)) {
                 String current3Lower = current3.toLowerCase();
                 if (current3Lower.equals("thousand")) {
-                    Temp2Current2 = Temp2Current2 + " K";
+                    Temp2Current2 = Temp2Current2 + "K";
                     ToAdd2Counter++;
                 }//SECOND:IF CURRENT3= MILLION
                 if (current3Lower.equals("million") || current3Lower.equals("mill")) {
-                    Temp2Current2 = Temp2Current2 + " M";
+                    Temp2Current2 = Temp2Current2 + "M";
                     ToAdd2Counter++;
                 }//THIRD:IF CURRENT3= BILLION
                 if (current3Lower.equals("billion")) {
-                    Temp2Current2 = Temp2Current2 + " B";
+                    Temp2Current2 = Temp2Current2 + "B";
                     ToAdd2Counter++;
                 }//FORTH:IF CURRENT3= TRILLION
                 if (current3Lower.equals("trillion")) {
@@ -1065,10 +1090,11 @@ public class Parse implements Runnable {
                     counter++;
                     counter--;
                     Temp2Current2 = String.valueOf(temp22);
-                    Temp2Current2 = Temp2Current2 + " B";
+                    Temp2Current2 = Temp2Current2 + "B";
                     ToAdd2Counter = ToAdd2Counter + (2 - 1);
                 }
-                updateDictionaries(Temp2Current2);
+                if(!Temp2Current2.contains("%") && !Temp2Current2.contains("$"))
+                    updateDictionaries(Temp2Current2);
                 // checks if the right part is a word
                 if (isOnlyLetters(Temp2Current2)) {
                     // checks if it's not a stop word to add it alone to the dictionary
@@ -1105,6 +1131,11 @@ public class Parse implements Runnable {
         return current;
     }
 
+    /** this function returns true if the string given has dash, and only one dash!
+     *
+     * @param current the string that we want to check
+     * @return true if there is only one dash in the string.
+     */
     private boolean HandleDashwithNums(String current) {
         String[] SplitDash = current.split("-");
         if (SplitDash.length == 2) {
@@ -1614,6 +1645,10 @@ public class Parse implements Runnable {
         return 0;
     }
 
+    /** this function checks if there is not letters in the string given
+     * @param s
+     * @return true if the string given not contains letters
+     */
     private boolean haveNoletters(String s) {
         boolean ans = true;
         for(int i = 0 ;i< s.length();i++){
@@ -1958,7 +1993,7 @@ public class Parse implements Runnable {
         return true;
     }
 
-    /**this function changes the string current to the price according to the directions
+    /**this function changes the string current to the price according to the directions given in the worksheet
      * @param current
      * @param current2
      * @param current3
@@ -2386,7 +2421,6 @@ public class Parse implements Runnable {
      */
     private static boolean isNumeric2(String str){
         boolean ans = false;
-        // TODO Might change to take less time
         if(str.contains("0") || str.contains("1")||str.contains("2") || str.contains("3") || str.contains("4")
                 || str.contains("5") || str.contains("6") || str.contains("7") || str.contains("8") || str.contains("9")){
             ans = true;
