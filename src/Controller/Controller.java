@@ -161,11 +161,11 @@ public class Controller {
             File dir = new File(postingPathText);
             if (dir != null)
                 for (File dir2 : dir.listFiles()) {
-                    if (dir2 != null) {
+                    if (dir2.listFiles() != null) {
                         for (File f : dir2.listFiles())
                             f.delete();
-                        dir2.delete();
                     }
+                    dir2.delete();
                 }
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
@@ -280,26 +280,27 @@ public class Controller {
     public void handleLanguagesChoosing(ActionEvent actionEvent) {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             Stage stage = new Stage();
-            stage.setTitle("The Corpus's Dictionary");
+            stage.setTitle("Available Languages");
             ChoiceBox<String> choiceBox = new ChoiceBox<>();
-            List<String> list;
-            if (languages == null)
-                languages = Indexer.readDictionaryForShowToMemory(postingPathText);
+            if (languages == null || languages.size() == 0)
+                languages = Indexer.readDictionaryForShowToMemory(postingPathText + "\\languages");
             choiceBox.getItems().setAll(FXCollections.observableList(languages));
-            choiceBox.prefWidth(600);
+            choiceBox.setMaxWidth(200);
             AnchorPane root = new AnchorPane();
             root.getChildren().addAll(choiceBox);
             AnchorPane.setBottomAnchor(choiceBox, 0.0);
             AnchorPane.setTopAnchor(choiceBox, 0.0);
             AnchorPane.setRightAnchor(choiceBox, 0.0);
             AnchorPane.setLeftAnchor(choiceBox, 0.0);
-            root.prefWidth(600);
-            root.prefWidth(400);
-            Scene scene = new Scene(root, 600, 400);
+            root.prefWidth(200);
+            root.prefWidth(200);
+            Scene scene = new Scene(root, 200, 200);
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
             stage.show();
         }
+        else
+            showErrorAlert("Need to index / load at least\nonce to choose a language!");
     }
 
     /**
