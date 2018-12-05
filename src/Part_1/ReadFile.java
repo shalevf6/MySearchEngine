@@ -160,7 +160,8 @@ public class ReadFile implements Runnable {
                     }
                     if (!language.equals("") && language.length() > 1) {
                         String languageUpper = language.toUpperCase();
-                       Controller.languages.add(languageUpper);
+                        if(!Controller.languages.contains(languageUpper))
+                            Controller.languages.add(languageUpper);
                     }
                 }
             }
@@ -404,5 +405,11 @@ public class ReadFile implements Runnable {
     @Override
     public void run() {
         readThroughFiles();
+    }
+
+    public static void main(String[] args){
+    ReadFile idan = new ReadFile("C:\\Users\\עידן\\Desktop");
+    idan.readThroughFiles();
+
     }
 }
