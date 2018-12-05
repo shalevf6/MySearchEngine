@@ -553,8 +553,8 @@ public class Parse implements Runnable {
     }
 
     /** main function that handles strings with numbers that are not money or percentage
-     * @param current
-     * @param counter
+     * @param current - the current string to check
+     * @param counter - the counter for the afterSplit string array
      * @return int value of how much to add to the parse counter.
      */
     private int RegularNumCheck(String current, int counter) {
@@ -640,7 +640,7 @@ public class Parse implements Runnable {
 
     /** this is the main function of handling cases that the current string needs to be consider the string after and they are both in the same term
      * @param current string that contain a number
-     * @param counter
+     * @param counter - the counter for the afterSplit string array
      * @return the string after changed to be as a term
      */
     private String handleMoreThenOneNumber(String current, int counter) {
@@ -712,64 +712,12 @@ public class Parse implements Runnable {
         return current;
         }
 
-
-    private int handleFixedNumbers(String current, String current2) {
-        int toReturn = 0;
-        double ans;
-        if(current.contains("K")){
-            current =current.substring(0,current.length()-1);
-            double dow =Double.parseDouble(current);
-            dow = dow*1000;
-            current =String.valueOf(dow);
-        }
-        if(current.contains("M")){
-            current =current.substring(0,current.length()-1);
-            double dow =Double.parseDouble(current);
-            dow = dow*1000000;
-            current =String.valueOf(dow);
-        }
-        if(current.contains("B")){
-            current =current.substring(0,current.length()-1);
-            double dow =Double.parseDouble(current);
-            dow = dow*1000000000;
-            current =String.valueOf(dow);
-        }
-
-        if (current2.toLowerCase().equals("thousand")) {
-            current = current + "K";
-            current = changeNumToRegularNum(current);
-            toReturn++;
-        }//SECOND:IF CURRENT2= MILLION
-        if (current2.toLowerCase().equals("million") || current2.toLowerCase().equals("mill")) {
-            current = current + "M";
-            current = changeNumToRegularNum(current);
-            toReturn++;
-        }//THIRD:IF CURRENT2= BILLION
-        if (current2.toLowerCase().equals("billion")) {
-            current = current + "B";
-            current = changeNumToRegularNum(current);
-            toReturn++;
-        }//FORTH:IF CURRENT2= TRILLION
-        if (current2.toLowerCase().equals("trillion")) {
-
-            Double temp = Double.parseDouble(current);
-            temp = temp * 1000;
-            int temp2 = temp.intValue();
-            current = String.valueOf(temp2);
-            current = current + "B";
-            current = changeNumToRegularNum(current);
-
-            toReturn++;
-        }
-        return toReturn;
-    }
-
     /** main function of cases that the current string is a number but a presenatge or money number
-     * @param current
-     * @param current2
-     * @param current3
-     * @param current4
-     * @param counter
+     * @param current - the current string to check
+     * @param current2 - the second string to check
+     * @param current3 - the third string to check
+     * @param current4 - the fourth string to check
+     * @param counter - the counter for the afterSplit array
      * @return int value of how much to add to counter of the main parse function
      */
     private int HandleMoneyAndPercentage(String current, String current2, String current3, String current4, int counter) {
@@ -814,7 +762,7 @@ public class Parse implements Runnable {
     }
 
     /** handle cases of numbers with doc that needs to be change to be with only 2 numbers after the dot
-     * @param current
+     * @param current - the string to check
      * @return the current string after the change
      */
     private String handleDot(String current) {
@@ -929,7 +877,6 @@ public class Parse implements Runnable {
                 current = DashSplit[1];
                 if (isNumeric2(tempCurrent)) {
                    current = changeNumToRegularNum(tempCurrent);
-
                 }
                 if (isNumeric2(current)) {
                     current = changeNumToRegularNum(current);
@@ -1119,7 +1066,7 @@ public class Parse implements Runnable {
     }
 
     /**this function changes a string given uf it's contains zero at the beginning and ther's no dots or "," for example 0023---->23
-     * @param current
+     * @param current - the current string to check
      * @return the number after changing without zeros in the beginning
      */
     private String handleZero(String current) {
@@ -1137,21 +1084,16 @@ public class Parse implements Runnable {
     }
 
     /** this function returns true if the string given has dash, and only one dash!
-     *
      * @param current the string that we want to check
      * @return true if there is only one dash in the string.
      */
     private boolean HandleDashwithNums(String current) {
         String[] SplitDash = current.split("-");
-        if (SplitDash.length == 2) {
-            return true;
-        }
-        return false;
+        return (SplitDash.length == 2);
     }
 
     /**
      * handles the 'DD MONTH' / 'DD MONTH YYYY' date cases
-     *
      * @param current  - an optional DD word
      * @param current2 - an optional MONTH word
      * @param current3 - an optional YEAR word
@@ -1210,7 +1152,6 @@ public class Parse implements Runnable {
 
     /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
-     *
      * @param current - a given word that might be a month
      * @param counter - the counter for the words in the split array
      * @return - true if it was found that the case was verified, else - false
@@ -1287,7 +1228,6 @@ public class Parse implements Runnable {
 
     /**
      * checks if the given word is a number which ends with st\nd\rd\th in capital or lower letters
-     *
      * @param number - a given number
      * @return - true if the case we check is true. else - false
      */
@@ -1302,7 +1242,6 @@ public class Parse implements Runnable {
 
     /**
      * gets a month's name in capital letters given its number
-     *
      * @param monthNumber - a given month's number
      * @return - a month's name in capital letters
      */
@@ -1336,7 +1275,6 @@ public class Parse implements Runnable {
 
     /**
      * checks and returns the number that represents the month name in the given string
-     *
      * @param monthName - the given month name
      * @return - the number that represents the month name in the given string. If it's not a month name, than returns "00"
      */
@@ -1370,7 +1308,6 @@ public class Parse implements Runnable {
 
     /**
      * this function checks if the string given is a fraction
-     *
      * @param s - a given string
      * @return true if the string is a fraction. else - false
      */
@@ -1380,8 +1317,7 @@ public class Parse implements Runnable {
             if (ans1.length > 2)
                 return false;
             if (ans1.length == 2) {
-                if (isNumeric(ans1[0]) && isNumeric(ans1[1]))
-                    return true;
+                return (isNumeric(ans1[0]) && isNumeric(ans1[1]));
             }
         }
         return false;
@@ -1434,7 +1370,6 @@ public class Parse implements Runnable {
 
     /**
      * checks if there are more delimiters which we didn't check before in the given string
-     *
      * @param current - a given string
      */
     private void checkFurtherSplits(String current) {
@@ -1459,7 +1394,6 @@ public class Parse implements Runnable {
 
     /**
      * checks and handles the 'BETWEEN NUMBER AND NUMBER' term
-     *
      * @param counter  - the counter for the words in the text
      * @return - the amount of words it checked were part of the term. If not, 0.
      */
@@ -1623,7 +1557,7 @@ public class Parse implements Runnable {
                             updateDictionaries(current1 + " " + current2 + " " + current3 + " " + current4Lower + " " + current5);
                             return 6;
                         }
-                    }//FORTH:IF CURRENT2= TRILLION
+                    }//FOURTH:IF CURRENT2= TRILLION
                     if (current6Lower.equals("trillion")) {
                         Double temp = Double.parseDouble(current5);
                         temp = temp * 1000;
@@ -1651,11 +1585,10 @@ public class Parse implements Runnable {
     }
 
     /** this function checks if there is not letters in the string given
-     * @param s
+     * @param s - the string to be checked
      * @return true if the string given not contains letters
      */
     private boolean haveNoletters(String s) {
-        boolean ans = true;
         for(int i = 0 ;i< s.length();i++){
             if(Character.isLetter(s.charAt(i)) && i== s.length()-1)
                 if(s.charAt(i)!='K' ||s.charAt(i)!='B'||s.charAt(i)!='T'||s.charAt(i)!='M')
@@ -1663,7 +1596,7 @@ public class Parse implements Runnable {
             if(Character.isLetter(s.charAt(i)) && i!= s.length()-1)
                 return false;
         }
-        return ans;
+        return true;
     }
 
     /**
@@ -1680,6 +1613,9 @@ public class Parse implements Runnable {
             String stemmed = "";
             if (stemming) {
                 stemmed = stemmer.stemTerm(current);
+                // if the word, after being stemmed, became one of the city strings, save it before stemming
+                if (Indexer.corpusCityDictionary.containsKey(stemmed.toUpperCase()))
+                    stemmed = current;
             }
             // --- case 1: all of the word is in lower letters ---
             if (current.toLowerCase().equals(current)) {
@@ -1738,6 +1674,8 @@ public class Parse implements Runnable {
                 cityData[3] = 1;
             currentTermDictionary.put(city, cityData);
             int[] corpusTermData = Indexer.termDictionary.get(city);
+            if (corpusTermData == null) // TODO : DELETE THIS
+                System.out.println();
             corpusTermData[1] = corpusTermData[1] + 1;
             corpusTermData[0] = corpusTermData[0] + 1;
         }
@@ -2000,11 +1938,11 @@ public class Parse implements Runnable {
     }
 
     /**this function changes the string current to the price according to the directions given in the worksheet
-     * @param current
-     * @param current2
-     * @param current3
-     * @param current4
-     * @return the string with the real price.
+     * @param current - the current string to be checked
+     * @param current2 - the second string to be checked
+     * @param current3 - the third string to be checked
+     * @param current4 - the fourth string to be checked
+     * @return - the string with the real price.
      */
     private String change_to_price(String current, String current2, String current3,String current4) {
         String ans = "";
@@ -2016,17 +1954,6 @@ public class Parse implements Runnable {
 
         // --- Cases 1.1,2.1: PRICE Dollars ---
         if (current2Lower.equals("dollars")) {
-            /*
-            if(current.contains("m")|| current.contains("bn")){
-                if(current.contains("m")){
-                    current = current.substring(0,current.length()-1);
-                    return current + " M Dollars";
-                }
-                if(current.contains("bn")){
-                    current = current2.substring(0,current.length()-1);
-                    return current + "000 M Dollars";
-                }
-            */
             current = ChangeToPriceNum(current);
             current =handleDot(current);
              current = handleZero(current);
@@ -2064,23 +1991,6 @@ public class Parse implements Runnable {
                     temp = temp * 1000000;
                     current = String.format ("%.0f", temp);
                     current = handleDot(current);
-
-                    /*
-                    String[] arr = current.split("\\.");
-                    Count = arr[1].length();
-                    if (Count == 1)
-                        current = arr[0] + arr[1] + "00000";
-                    if (Count == 2)
-                        current2 = arr[0] + arr[1] + "0000";
-                    if (Count == 3)
-                        current = arr[0] + arr[1] + "000";
-                    if (Count == 4)
-                        current = arr[0] + arr[1] + "00";
-                    if (Count == 5)
-                        current = arr[0] + arr[1] + "0";
-                    if (Count == 6)
-                        current = arr[0] + arr[1];
-                        */
                     current = current + " M Dollars";
                     return current;
                 }
@@ -2489,7 +2399,7 @@ public class Parse implements Runnable {
     /**
      * resets parts of the static variables
      */
-    static void resetPartially() {
+    public static void resetPartially() {
         stop = false;
     }
 

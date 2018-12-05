@@ -12,18 +12,18 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller.Controller">
    <children>
-      <CheckBox fx:id="stemmingCheckBox" layoutX="414.0" layoutY="254.0" mnemonicParsing="false" selected="true" text="Stemming" />
-      <Button layoutX="472.0" layoutY="111.0" mnemonicParsing="false" onAction="#onCorpusBrowse" text="Browse" />
-      <TextField fx:id="postingPath" layoutX="225.0" layoutY="175.0" prefHeight="31.0" prefWidth="238.0" />
-      <TextField fx:id="corpusPath" layoutX="224.0" layoutY="111.0" prefHeight="31.0" prefWidth="238.0" />
-      <Button layoutX="338.0" layoutY="303.0" mnemonicParsing="false" onAction="#onActivate" text="Activate" />
-      <Button layoutX="472.0" layoutY="175.0" mnemonicParsing="false" onAction="#onPostingBrowse" text="Browse" />
-      <Text layoutX="176.0" layoutY="56.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Welcome to My Search Engine!">
+      <CheckBox fx:id="stemmingCheckBox" layoutX="478.0" layoutY="280.0" mnemonicParsing="false" selected="true" text="Stemming" />
+      <Button layoutX="478.0" layoutY="161.0" mnemonicParsing="false" onAction="#onCorpusBrowse" text="Browse" />
+      <TextField fx:id="postingPath" layoutX="231.0" layoutY="225.0" prefHeight="31.0" prefWidth="238.0" />
+      <TextField fx:id="corpusPath" layoutX="230.0" layoutY="161.0" prefHeight="31.0" prefWidth="238.0" />
+      <Button layoutX="379.0" layoutY="275.0" mnemonicParsing="false" onAction="#onActivate" text="Activate" />
+      <Button layoutX="478.0" layoutY="225.0" mnemonicParsing="false" onAction="#onPostingBrowse" text="Browse" />
+      <Text layoutX="176.0" layoutY="89.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Welcome to My Search Engine!">
          <font>
             <Font size="18.0" />
          </font>
       </Text>
-      <ChoiceBox fx:id="languageChoiceBox" layoutX="225.0" layoutY="249.0" prefWidth="150.0">
+      <ChoiceBox fx:id="languageChoiceBox" layoutX="26.0" layoutY="161.0" prefWidth="150.0">
        <items>
            <FXCollections fx:factory="observableArrayList">
                <String fx:value="English" />
@@ -34,20 +34,20 @@
            </FXCollections>
        </items>
       </ChoiceBox>
-      <Button layoutX="67.0" layoutY="303.0" mnemonicParsing="false" onAction="#onReset" text="Reset" wrapText="true" />
-      <Button layoutX="25.0" layoutY="175.0" mnemonicParsing="false" onAction="#onDictionaryShow" text="Show Dictionary" />
-      <Button layoutX="25.0" layoutY="111.0" mnemonicParsing="false" onAction="#onDictionaryLoad" text="Load Dictionary" />
-      <Text layoutX="225.0" layoutY="99.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert path for Corpus and stop words:">
+      <Button layoutX="73.0" layoutY="275.0" mnemonicParsing="false" onAction="#onReset" text="Reset" wrapText="true" />
+      <Button layoutX="37.0" layoutY="225.0" mnemonicParsing="false" onAction="#onDictionaryShow" text="Show Dictionary" />
+      <Button layoutX="231.0" layoutY="275.0" mnemonicParsing="false" onAction="#onDictionaryLoad" text="Load Dictionary" />
+      <Text layoutX="231.0" layoutY="149.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert path for Corpus and stop words:">
          <font>
             <Font size="14.0" />
          </font>
       </Text>
-      <Text layoutX="224.0" layoutY="164.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert path for posting file\files:" wrappingWidth="237.65137195587158">
+      <Text layoutX="230.0" layoutY="214.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert path for posting file\files:" wrappingWidth="237.65137195587158">
          <font>
             <Font size="14.0" />
          </font>
       </Text>
-      <Text layoutX="225.0" layoutY="236.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Choose a language:">
+      <Text layoutX="26.0" layoutY="148.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Choose a language:">
          <font>
             <Font size="14.0" />
          </font>

@@ -80,24 +80,11 @@ public class Controller {
                                     alreadyIndexedWithoutStemming = true;
                                 }
                                 (new File(postingPathText + "\\postingForCities")).mkdir();
-                                /*
-                                File postingPathFile = new File (ClassLoader.g"\\fxml\\postingPath");
-                                try {
-                                    postingPathFile.createNewFile();
-                                    FileOutputStream fileOutputStream = new FileOutputStream(postingPathFile.getAbsolutePath());
-                                    OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
-                                    BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
-                                    bufferedWriter.write(postingPathText);
-                                    bufferedWriter.close();
-                                    outputStreamWriter.close();
-                                    fileOutputStream.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                                */
                                 Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt");
                                 ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
+                                Parse.resetPartially();
+                                Indexer.resetPartially();
                                 Thread readFileThread = new Thread(readFile);
                                 Thread parseThread = new Thread(parse);
                                 Thread indexThread = new Thread(indexer);
@@ -127,7 +114,7 @@ public class Controller {
                                     String termCount = String.valueOf(Indexer.totalUniqueTerms);
                                     Alert doneIndexing = new Alert(Alert.AlertType.INFORMATION);
                                     doneIndexing.setHeaderText("Indexing Done!");
-                                    doneIndexing.setContentText("Total time to index: " + totalTime + "\n\"Total documents indexed: " +
+                                    doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal documents indexed: " +
                                             docCount + "\nTotal unique words found: " + termCount);
                                     doneIndexing.show();
                                 }
@@ -142,6 +129,9 @@ public class Controller {
 
             }
         }
+        else
+            if(alreadyIndexedAll())
+                showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
     }
 
     /**
@@ -270,6 +260,9 @@ public class Controller {
                 }
             }
         }
+        else
+        if(alreadyIndexedAll())
+            showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
     }
 
     /**
