@@ -169,6 +169,7 @@ public class Controller {
                 }
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
+            languages = new LinkedList<>();
             Parse.resetAll();
             Indexer.resetAll();
         }
@@ -248,8 +249,10 @@ public class Controller {
                             }
                             alreadyIndexedWithoutStemming = true;
                         }
-                        if (loadCityDictionary)
+                        if (loadCityDictionary) {
                             Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
+                            Indexer.readDictionaryForShowToMemory(tempPostingPath.getText() + "\\languages");
+                        }
                         Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
                         postingPathText = tempPostingPath.getText();
                         Indexer.indexedCities = true;
@@ -268,6 +271,35 @@ public class Controller {
         else
         if(alreadyIndexedAll())
             showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
+    }
+
+    /**
+     * opens a new window with a choice box of languages from the corpus (if the corpus was indexer / loaded before)
+     * @param actionEvent - unused
+     */
+    public void handleLanguagesChoosing(ActionEvent actionEvent) {
+        if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
+            Stage stage = new Stage();
+            stage.setTitle("The Corpus's Dictionary");
+            ChoiceBox<String> choiceBox = new ChoiceBox<>();
+            List<String> list;
+            if (languages == null)
+                languages = Indexer.readDictionaryForShowToMemory(postingPathText);
+            choiceBox.getItems().setAll(FXCollections.observableList(languages));
+            choiceBox.prefWidth(600);
+            AnchorPane root = new AnchorPane();
+            root.getChildren().addAll(choiceBox);
+            AnchorPane.setBottomAnchor(choiceBox, 0.0);
+            AnchorPane.setTopAnchor(choiceBox, 0.0);
+            AnchorPane.setRightAnchor(choiceBox, 0.0);
+            AnchorPane.setLeftAnchor(choiceBox, 0.0);
+            root.prefWidth(600);
+            root.prefWidth(400);
+            Scene scene = new Scene(root, 600, 400);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(scene);
+            stage.show();
+        }
     }
 
     /**

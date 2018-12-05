@@ -220,21 +220,21 @@ public class Indexer implements Runnable {
         if (Parse.stemming) {
             isDictionaryStemmed = true;
             mergePostingFiles(postingPath + "\\postingFilesWithStemming");
-
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\termDictionary", 1);
-            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow");
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
         }
         else {
             isDictionaryStemmed = false;
             mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
             writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionary", 1);
-            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow");
+            writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow", true);
             writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\documentDictionary", 2);
         }
         if (!indexedCities) {
             mergeCityPostingFiles(postingPath + "\\postingForCities");
             writeDictionaryToDisk(postingPath + "\\postingForCities\\cityDictionary", 3);
+            writeTermDictionaryForShowToDisk(postingPath + "\\languages", false);
             indexedCities = true;
         }
         deleteAllTempFiles(postingPath);
@@ -627,16 +627,20 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * write the dictionary's string to a file in the disk
+     * write the dictionary's string list or the languages string list to a file in the disk
      * @param path - the path which the dictionary's string should be written to
+     * @param writeDictionary - true, if needs to write the term dictionary for show. false, if needs to write the languages list
      */
-    private void writeTermDictionaryForShowToDisk(String path) {
+    private void writeTermDictionaryForShowToDisk(String path, boolean writeDictionary) {
         File dictionaryForShow = new File(path);
         try {
             dictionaryForShow.createNewFile();
             // creating a Buffered Writer for writing the dictionary sorted string list
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionaryForShow));
-            objectOutputStream.writeObject(getDictionaryString());
+            if (writeDictionary)
+                objectOutputStream.writeObject(getDictionaryString());
+            else
+                objectOutputStream.writeObject(Controller.languages);
             objectOutputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -644,7 +648,7 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * reads a dictionary's sorted string list from a file in the disk to the main memory
+     * reads a dictionary's sorted string list or the languages string list from a file in the disk to the main memory
      * @return - the dictionary's sorted string list
      */
     public static List<String> readDictionaryForShowToMemory(String path) {
