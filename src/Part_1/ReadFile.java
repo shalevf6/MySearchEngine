@@ -1,5 +1,6 @@
 package Part_1;
 
+import Controller.Controller;
 import javafx.scene.control.Alert;
 
 import java.io.*;
@@ -144,6 +145,23 @@ public class ReadFile implements Runnable {
                     }
                 }
             }
+            if (docString.contains("<F P=105>")) {
+                int lenguStart = docString.indexOf("<F P=105>");
+                int lenguend = docString.indexOf("</F>", lenguStart);
+                String[] docLanguage = (docString.substring(lenguStart + 9, lenguend)).split("[\\s]+");
+                if (docLanguage.length != 0) {
+                    String langu = docLanguage[0];
+                    int counter = 0;
+                    while (langu.equals("") && counter + 1 < docLanguage.length){
+                        counter++;
+                        langu = docLanguage[counter];
+                    }
+                    if (!langu.equals("") && langu.length() > 1) {
+                        String LanguUpper = langu.toUpperCase();
+                       Controller.languages.add(LanguUpper);
+                    }
+                }
+            }
             // gets the next document's start index
             docStart = allDocumentLines.indexOf("<DOC>", docEnd);
         }
@@ -283,8 +301,31 @@ public class ReadFile implements Runnable {
                     int populationStartIndex = l.indexOf("geobytespopulation") + 21;
                     int populationFinishIndex = l.indexOf("\"", populationStartIndex);
                     String population = "";
-                    if (populationFinishIndex - populationStartIndex != 0)
+                    if (populationFinishIndex - populationStartIndex != 0) {
                         population = l.substring(populationStartIndex, populationFinishIndex);
+                        Double temp = Double.parseDouble(population);
+                        if(temp>=1000000000){
+                            temp = temp/1000000000;
+                            population =String.format ("%.0f", temp);
+                            population = handleDot(population);
+                            population = population + "B";
+                        }
+                        else if(temp>= 1000000){
+                            temp = temp/1000000000;
+                            population =String.format ("%.0f", temp);
+                            population = handleDot(population);
+                            population = population + "M";
+                        }
+                        else if(temp>=1000){
+                            temp = temp/1000;
+                            population =String.format ("%.0f", temp);
+                            population = handleDot(population);
+                            population = population + "K";
+                        }
+                        else {
+                            population = handleDot(population);
+                        }
+                    }
                     String[] cityData = new String[4];
                     cityData[0] = country;
                     cityData[1] = coin;
@@ -300,6 +341,46 @@ public class ReadFile implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    /** handle cases of numbers with doc that needs to be change to be with only 2 numbers after the dot
+     * @param current - the string to check
+     * @return the current string after the change
+     */
+    private String handleDot(String current) {
+        String ToReturn = "";
+        String[] SplitDot = current.split("\\.");
+        if(SplitDot.length ==1)
+            return current;
+        else{
+            ToReturn =SplitDot[0]+".";
+            int i =0;
+            if(SplitDot[1].length() >= 2 && SplitDot[1].charAt(1) != '0' ) {
+                ToReturn = ToReturn + SplitDot[1].charAt(0) + SplitDot[1].charAt(1);
+                if(ToReturn.charAt(ToReturn.length()-1) == '.')
+                    ToReturn = ToReturn.substring(0,ToReturn.length() - 1);
+                return ToReturn;
+            }
+            if(SplitDot[1].length() == 1 && SplitDot[1].charAt(0) != '0') {
+                ToReturn = ToReturn + SplitDot[1].charAt(0);
+                if(ToReturn.charAt(ToReturn.length()-1) == '.')
+                    ToReturn = ToReturn.substring(0,ToReturn.length()-1);
+                return ToReturn;
+            }
+            if(SplitDot[1].length() >= 2 && SplitDot[1].charAt(1) == '0' ){
+                if(SplitDot[1].charAt(0)!='0'){
+                    ToReturn = ToReturn+ SplitDot[1].charAt(0);
+                    if(ToReturn.charAt(ToReturn.length()-1)=='.')
+                        ToReturn = ToReturn.substring(0,ToReturn.length() - 1);
+                    return ToReturn;
+                }
+                else {
+                    if(ToReturn.charAt(ToReturn.length()-1) == '.')
+                        ToReturn = ToReturn.substring(0,ToReturn.length() - 1);
+                    return ToReturn;
+                }
+            }
+        }
+        return ToReturn;
     }
 
     /**

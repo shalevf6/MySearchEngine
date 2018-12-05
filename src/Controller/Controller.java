@@ -13,6 +13,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -29,6 +30,7 @@ public class Controller {
     private boolean alreadyIndexedWithStemming = false;
     private boolean alreadyIndexedWithoutStemming = false;
     private TextField tempPostingPath = new TextField();
+    public static List<String> languages = new LinkedList<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
