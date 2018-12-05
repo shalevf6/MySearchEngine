@@ -97,7 +97,7 @@ public class ReadFile implements Runnable {
                         }
                         bufferedReader.close();
                         int docStart = allDocumentLines.indexOf("<DOC>");
-                        parseThroughDocsForCities(docStart);
+                        parseThroughDocsForCitiesAndLanguages(docStart);
                     }
                     catch (IOException e) {
                         e.printStackTrace();
@@ -111,7 +111,7 @@ public class ReadFile implements Runnable {
      * parses through the documents to locate the tag <F P=104></F> if exists
      * @param docStart - the firs document's start indexs
      */
-    private void parseThroughDocsForCities(int docStart) {
+    private void parseThroughDocsForCitiesAndLanguages(int docStart) {
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
 
@@ -145,20 +145,22 @@ public class ReadFile implements Runnable {
                     }
                 }
             }
+
+            // gets all the corpus's languages
             if (docString.contains("<F P=105>")) {
-                int lenguStart = docString.indexOf("<F P=105>");
-                int lenguend = docString.indexOf("</F>", lenguStart);
-                String[] docLanguage = (docString.substring(lenguStart + 9, lenguend)).split("[\\s]+");
+                int languageStart = docString.indexOf("<F P=105>");
+                int languageEnd = docString.indexOf("</F>", languageStart);
+                String[] docLanguage = (docString.substring(languageStart + 9, languageEnd)).split("[\\s]+");
                 if (docLanguage.length != 0) {
-                    String langu = docLanguage[0];
+                    String language = docLanguage[0];
                     int counter = 0;
-                    while (langu.equals("") && counter + 1 < docLanguage.length){
+                    while (language.equals("") && counter + 1 < docLanguage.length){
                         counter++;
-                        langu = docLanguage[counter];
+                        language = docLanguage[counter];
                     }
-                    if (!langu.equals("") && langu.length() > 1) {
-                        String LanguUpper = langu.toUpperCase();
-                       Controller.languages.add(LanguUpper);
+                    if (!language.equals("") && language.length() > 1) {
+                        String languageUpper = language.toUpperCase();
+                       Controller.languages.add(languageUpper);
                     }
                 }
             }
@@ -304,20 +306,20 @@ public class ReadFile implements Runnable {
                     if (populationFinishIndex - populationStartIndex != 0) {
                         population = l.substring(populationStartIndex, populationFinishIndex);
                         Double temp = Double.parseDouble(population);
-                        if(temp>=1000000000){
+                        if(temp >= 1000000000){
                             temp = temp/1000000000;
                             population =String.format ("%.0f", temp);
                             population = handleDot(population);
                             population = population + "B";
                         }
-                        else if(temp>= 1000000){
-                            temp = temp/1000000000;
+                        else if(temp >= 1000000){
+                            temp = temp / 1000000000;
                             population =String.format ("%.0f", temp);
                             population = handleDot(population);
                             population = population + "M";
                         }
-                        else if(temp>=1000){
-                            temp = temp/1000;
+                        else if(temp >= 1000){
+                            temp = temp / 1000;
                             population =String.format ("%.0f", temp);
                             population = handleDot(population);
                             population = population + "K";
