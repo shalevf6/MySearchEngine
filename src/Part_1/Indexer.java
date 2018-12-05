@@ -328,7 +328,7 @@ public class Indexer implements Runnable {
             }
 
             // sorts the posting line's entries by normalized tf
-            postingLineToAdd = sortByTf(postingLineToAdd);
+//            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // write first line separately so the main posting file won't end with a \n (new line)
             bw.write(postingLineToAdd);
@@ -358,7 +358,7 @@ public class Indexer implements Runnable {
                 }
 
                 // sorts the posting line's entries by normalized tf
-                postingLineToAdd = sortByTf(postingLineToAdd);
+//                postingLineToAdd = sortByTf(postingLineToAdd);
 
                 // writes the posting line
                 bw.write('\n' + postingLineToAdd);
@@ -428,7 +428,7 @@ public class Indexer implements Runnable {
             String postingLineToAdd = checkAndMergePostingLines();
 
             // sorts the posting line's entries by normalized tf
-            postingLineToAdd = sortByTf(postingLineToAdd);
+//            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // initiates the bytes counter for the posting pointer
             int postingPointer = 0;
@@ -449,6 +449,9 @@ public class Indexer implements Runnable {
 
                 // checks and merges all duplicate posting lines that are of the same term
                 postingLineToAdd = checkAndMergePostingLines();
+
+                // sorts the posting line's entries by normalized tf
+//            postingLineToAdd = sortByTf(postingLineToAdd);
 
                 // writes the posting line
                 bw.write('\n' + postingLineToAdd);
@@ -557,7 +560,7 @@ public class Indexer implements Runnable {
     private static List<String> getDictionaryString() {
         Set<String> termSet = termDictionary.keySet();
 
-        ObservableList<String> linesForListView = FXCollections.observableArrayList();
+        List<String> linesForListView = new LinkedList<>();
 
         // adding all the terms and df data to the priority queue for sorting
         for (String term : termSet) {
@@ -643,12 +646,12 @@ public class Indexer implements Runnable {
      * reads a dictionary's sorted string list from a file in the disk to the main memory
      * @return - the dictionary's sorted string list
      */
-    public static ObservableList<String> readDictionaryForShowToMemory(String path) {
+    public static List<String> readDictionaryForShowToMemory(String path) {
         File dictionary = new File(path);
         try {
             // creating an object input stream for reading the dictionary's sorted string list
             ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
-            ObservableList<String> dictionaryForShow = (ObservableList<String>)(objectInputStream.readObject());
+            List<String> dictionaryForShow = (List<String>)(objectInputStream.readObject());
             return dictionaryForShow;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

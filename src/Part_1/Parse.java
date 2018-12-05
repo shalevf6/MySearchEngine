@@ -27,7 +27,6 @@ public class Parse implements Runnable {
 
     /**
      * a constructor for the Parse class
-     *
      * @param path - the path to the stop words file
      */
     public Parse(String path) {
@@ -36,7 +35,6 @@ public class Parse implements Runnable {
 
     /**
      * This function generates the stop words Dictionary to Array List.
-     *
      * @param path is the location of the Dictionary
      */
     private void getStopWords(String path) {
