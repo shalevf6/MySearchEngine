@@ -1756,14 +1756,14 @@ public class Parse implements Runnable {
             int length = word.length();
 
             // checks if there is a delimiter at the start of the word
-            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%' || word.charAt(0) > 122 /* ||
-                    word.charAt(0) < 33 */) {
+            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%' || word.charAt(0) > 122 ||
+                    word.charAt(0) < 33) {
                 return removeExtraDelimiters(word.substring(1));
             }
 
             // checks if there is a delimiter at the end of the word
             if (word.charAt(length - 1) == '.' || word.charAt(length - 1) == '/' || word.charAt(length - 1) == '-' || word.charAt(length - 1) == '\'' ||
-                    word.charAt(length - 1) == '$'  || word.charAt(length - 1) > 122 /* || word.charAt(length - 1) < 33 */)
+                    word.charAt(length - 1) == '$'  || word.charAt(length - 1) > 122 || word.charAt(length - 1) < 33)
                 return removeExtraDelimiters(word.substring(0, length - 1));
 
             return word;

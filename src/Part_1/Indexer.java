@@ -2,8 +2,6 @@ package Part_1;
 
 import Controller.Controller;
 import GeneralClasses.Document;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 
 import java.io.*;
 import java.util.*;
@@ -109,26 +107,27 @@ public class Indexer implements Runnable {
                     doc.deleteDictionary();
                     // ------ START: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     Set<String> termSet = docTermDictionary.keySet();
-                    double max_tf = doc.getMax_tf();
                     for (String term : termSet) {
                         if (!term.equals("")) {
                             short[] termData = docTermDictionary.get(term);
                             String postingValue;
-                            double tf = termData[0];
+                            short tf = termData[0];
+                            /* // TODO: REMOVE NORMALIZED TF COUNT (OR SAVE IT SOMEWHERE ELSE)
                             tf = tf / max_tf;
                             // in order for the normalized tf value not to be too high
                             String normalizedTf = String.valueOf(tf);
-                            if (normalizedTf.length() >= 9)
-                                normalizedTf = normalizedTf.substring(0, 8);
+                            if (normalizedTf.length() >= 8)
+                                normalizedTf = normalizedTf.substring(0, 7);
+                                */
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
-                                postingValue = term + ":" + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
+                                postingValue = term + ":" + docId + "," + tf + "," + termData[1] + termData[2] + termData[3] + ";";
                                 tempTermDictionary.put(term, postingValue);
                             }
                             // ---- it's NOT THE FIRST posting entry for this term ----
                             else {
                                 postingValue = tempTermDictionary.get(term);
-                                postingValue = postingValue + docId + "," + normalizedTf + "," + termData[1] + termData[2] + termData[3] + ";";
+                                postingValue = postingValue + docId + "," + tf + "," + termData[1] + termData[2] + termData[3] + ";";
 //                                postingValue = sortByTf(postingValue);
                                 tempTermDictionary.put(term, postingValue);
                             }

@@ -48,8 +48,11 @@ public class ReadFile implements Runnable {
                             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(tempFiles[0])));
                             String line;
                             allDocumentLines = new StringBuilder();
-                            while ((line = bufferedReader.readLine()) != null) {
+                            line = bufferedReader.readLine();
+                            if (line != null)
                                 allDocumentLines.append(line);
+                            while ((line = bufferedReader.readLine()) != null) {
+                                allDocumentLines.append("\n").append(line);
                             }
                             bufferedReader.close();
                             int docStart = allDocumentLines.indexOf("<DOC>");
@@ -88,8 +91,11 @@ public class ReadFile implements Runnable {
                         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(tempFiles[0])));
                         String line;
                         allDocumentLines = new StringBuilder();
-                        while ((line = bufferedReader.readLine()) != null) {
+                        line = bufferedReader.readLine();
+                        if (line != null)
                             allDocumentLines.append(line);
+                        while ((line = bufferedReader.readLine()) != null) {
+                            allDocumentLines.append("\n").append(line);
                         }
                         bufferedReader.close();
                         int docStart = allDocumentLines.indexOf("<DOC>");
