@@ -218,6 +218,7 @@ public class Parse implements Runnable {
                                 }
                                 // means it's a number:
                                 else {
+
                                     String current2 = "";
                                     String current3 = "";
                                     String current4 = "";
@@ -253,6 +254,7 @@ public class Parse implements Runnable {
                                             continue;
                                         }
                                     }
+
                                     //--------MORE THEN ONE DASH---------//
                                     if (!HowMuchToChange && current.contains("-")) {
                                         String[] splitedByDash = current.split("-");
@@ -260,7 +262,7 @@ public class Parse implements Runnable {
                                         counter++;
                                         continue;
                                     }
-                                    if (!isNumeric(current) && !current.contains(",") || current.contains("$") || current2.toLowerCase().equals("dollars") ||
+                                    if (current.contains("$") || current2.toLowerCase().equals("dollars") ||
                                             current2.toLowerCase().equals("percentage") || current2.toLowerCase().equals("percent") ||
                                             current3.toLowerCase().equals("dollars") || current4.toLowerCase().equals("dollars")) {
 
@@ -788,6 +790,7 @@ public class Parse implements Runnable {
             }
                 // ------- PRICE CHECK -------
                 dollar = checkIfMoney(current, current2, current3, current4);
+
                 // --- all cases: Price Dollars, Price Fraction Dollars, $price,....
                 if (dollar) {
                     current = change_to_price(current, current2, current3, current4);
@@ -2438,7 +2441,7 @@ public class Parse implements Runnable {
      */
     private boolean CheckIfValidString(String str) {
         boolean ans = false;
-        if (isNumeric2(str) && !str.contains("-") && !str.contains(",") && !str.contains("\\.")) {
+        if (isNumeric2(str) && !str.contains("-")  && !str.contains("\\.")) {
             for (int i = 0; i < str.length(); i++) {
                 char charAt2 = str.charAt(i);
                 if (Character.isLetter(charAt2)) {
