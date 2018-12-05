@@ -33,8 +33,7 @@ public class ReadFile implements Runnable {
             Parse.resetPartially();
             Indexer.resetPartially();
             // go once through the corpus to get all the city's in the tag <F P=104>
-            if (!Indexer.indexedCities)
-                getCityDictionary(dir);
+            getCityDictionary(dir);
             // get to all the corpus's sub-directories
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
@@ -128,14 +127,14 @@ public class ReadFile implements Runnable {
                 if (docCityArr.length != 0) {
                     String city = docCityArr[0];
                     int counter = 0;
-                    while (city.equals("") && counter + 1<docCityArr.length){
+                    while (city.equals("") && counter + 1 < docCityArr.length){
                         counter++;
-                        city =docCityArr[counter];
+                        city = docCityArr[counter];
                     }
-                    if (!city.equals("") && isOnlyLetters(city)) {
+                    if (!city.equals("") && docCityArr[0].length() > 1 && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         // checks if we already added this city to the dictionary
-                        if (!Indexer.corpusCityDictionary.containsKey(cityUpper)) {
+                        if (!Indexer.termDictionary.containsKey(cityUpper)) {
                             addToCityDictionary(cityUpper);
                         }
                         else {
@@ -159,12 +158,12 @@ public class ReadFile implements Runnable {
     private void parseThroughDoc(int docStart) {
         // checks if there are any more document's to fetch from the file
         while (docStart != -1) {
-            String docString = "";
-            String docNumber = "";
-            String docText = "";
-            String docTitle = "";
+            String docString;
+            String docNumber;
+            String docText;
+            String docTitle;
             String docDate = "";
-            String docCity = "";
+            String docCity;
 
             int docEnd = allDocumentLines.indexOf("</DOC>", docStart);
             docString = allDocumentLines.substring(docStart + 5,docEnd);
@@ -174,8 +173,6 @@ public class ReadFile implements Runnable {
 
             // gets the document's number
             docNumber = (docString.substring(docNumberStart + 7, docNumberEnd)).trim();
-
-//            System.out.println(docNumber);
 
             GeneralClasses.Document newDoc = new GeneralClasses.Document(docNumber);
 
@@ -210,14 +207,14 @@ public class ReadFile implements Runnable {
                 int cityStart = docString.indexOf("<F P=104>");
                 int cityEnd = docString.indexOf("</F>", cityStart);
                 String[] docCityArr = (docString.substring(cityStart + 9, cityEnd)).split("[\\s]+");
-                if (docCityArr.length != 0) {
+                if (docCityArr.length != 0 && docCityArr.length > 1) {
                     docCity = docCityArr[0];
                     int counter = 0;
                     while (docCity.equals("") && counter + 1 < docCityArr.length){
                         counter++;
                         docCity = docCityArr[counter];
                     }
-                    if (!docCity.equals("") && isOnlyLetters(docCity)) {
+                    if (!docCity.equals("") && docCityArr[0].length() > 1 && isOnlyLetters(docCity)) {
                         String cityUpper = docCity.toUpperCase();
                         newDoc.setCity(cityUpper);
                     }
@@ -272,27 +269,28 @@ public class ReadFile implements Runnable {
             BufferedReader br = new BufferedReader(new InputStreamReader(urlc.getInputStream()));
             String l = br.readLine();
             if (l != null) {
-                int countryStartIndex = l.indexOf("geobytescountry") + 18;
-                int countryFinishIndex = l.indexOf("\"",countryStartIndex);
-                String country = "";
-                if (countryFinishIndex - countryStartIndex != 0)
-                    country = l.substring(countryStartIndex, countryFinishIndex);
-                int coinStartIndex = l.indexOf("geobytescurrencycode") + 23;
-                int coinFinishIndex = l.indexOf("\"",coinStartIndex);
-                String coin = "";
-                if (coinFinishIndex - coinStartIndex != 0)
-                    coin = l.substring(coinStartIndex, coinFinishIndex);
-                int populationStartIndex = l.indexOf("geobytespopulation") + 21;
-                int populationFinishIndex = l.indexOf("\"",populationStartIndex);
-                String population = "";
-                if (populationFinishIndex - populationStartIndex != 0)
-                    population = l.substring(populationStartIndex, populationFinishIndex);
-                String[] cityData = new String[4];
-                cityData[0] = country;
-                cityData[1] = coin;
-                cityData[2] = population;
-
-                Indexer.corpusCityDictionary.put(city, cityData);
+                if (!Indexer.indexedCities) {
+                    int countryStartIndex = l.indexOf("geobytescountry") + 18;
+                    int countryFinishIndex = l.indexOf("\"", countryStartIndex);
+                    String country = "";
+                    if (countryFinishIndex - countryStartIndex != 0)
+                        country = l.substring(countryStartIndex, countryFinishIndex);
+                    int coinStartIndex = l.indexOf("geobytescurrencycode") + 23;
+                    int coinFinishIndex = l.indexOf("\"", coinStartIndex);
+                    String coin = "";
+                    if (coinFinishIndex - coinStartIndex != 0)
+                        coin = l.substring(coinStartIndex, coinFinishIndex);
+                    int populationStartIndex = l.indexOf("geobytespopulation") + 21;
+                    int populationFinishIndex = l.indexOf("\"", populationStartIndex);
+                    String population = "";
+                    if (populationFinishIndex - populationStartIndex != 0)
+                        population = l.substring(populationStartIndex, populationFinishIndex);
+                    String[] cityData = new String[4];
+                    cityData[0] = country;
+                    cityData[1] = coin;
+                    cityData[2] = population;
+                    Indexer.corpusCityDictionary.put(city, cityData);
+                }
                 int[] corpusTermData = new int[3];
                 corpusTermData[0] = 1;
                 corpusTermData[1] = 1;

@@ -1668,7 +1668,6 @@ public class Parse implements Runnable {
 
     /**
      * handles all letter cases for a given word
-     *
      * @param current - a given word
      */
     private void handleAllLetters(String current) {
