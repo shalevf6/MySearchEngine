@@ -31,8 +31,8 @@ public class ReadFile implements Runnable {
         // get to the corpus directory
         File dir = new File(dirPath + "\\corpus");
         if (dir.exists()) {
-            // go once through the corpus to get all the city's in the tag <F P=104>
-            getCityDictionary(dir);
+            // go once through the corpus to get all the cities in the tag <F P=104> and all the languages in the tag <F P=105>
+            getCityDictionaryAndLanguages(dir);
             // get to all the corpus's sub-directories
             File[] subDirs = dir.listFiles();
             if (subDirs != null) {
@@ -74,9 +74,9 @@ public class ReadFile implements Runnable {
 
     /**
      * go once through all the corpus in order to get information about all the cities in
-     * the tag <F P=104></F>
+     * the tag <F P=104></F> and all the languages in the tag <F P=105></F>
      */
-    private void getCityDictionary(File dir) {
+    private void getCityDictionaryAndLanguages(File dir) {
         // get to all the corpus's sub-directories
         File[] subDirs = dir.listFiles();
         if (subDirs != null) {
@@ -108,8 +108,8 @@ public class ReadFile implements Runnable {
     }
 
     /**
-     * parses through the documents to locate the tag <F P=104></F> if exists
-     * @param docStart - the firs document's start indexs
+     * parses through the documents to locate the tags <F P=104></F> and <F P=105></F> if exists
+     * @param docStart - the firs document's start index
      */
     private void parseThroughDocsForCitiesAndLanguages(int docStart) {
         // checks if there are any more document's to fetch from the file
