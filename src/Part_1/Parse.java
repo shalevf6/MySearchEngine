@@ -104,7 +104,7 @@ public class Parse implements Runnable {
                         String current;
                         int counter = 0;
                         // splits the text before parsing
-                        afterSplit = data.split("(?!,[0-9])[?!:,#`@^~&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
+                        afterSplit = data.split("(?!/[0-9])(?!,[0-9])[?!:,#`@^~&+{*}|\"<=>\\s;()_\\\\\\[\\]]+");
                         afterSplitLength = afterSplit.length;
                         if (turnToDocument) {
                             firstPartCounter = afterSplitLength / 10;
@@ -382,15 +382,17 @@ public class Parse implements Runnable {
                                     corpusTermData[1] = corpusTermData[1] + 1;
                                 }
                                 else {
-                                    int[] corpusTermData = new int[3];
-                                    corpusTermData[0] = 1;
-                                    corpusTermData[1] = 1;
-                                    short[] termData = new short[4];
-                                    termData[0] = 1;
-                                    if (max_tf < 1)
-                                        max_tf = 1;
-                                    currentTermDictionary.put(monthName.toLowerCase(), termData);
-                                    Indexer.termDictionary.put(monthName, corpusTermData);
+                                    if (!monthName.equals("")) {
+                                        int[] corpusTermData = new int[3];
+                                        corpusTermData[0] = 1;
+                                        corpusTermData[1] = 1;
+                                        short[] termData = new short[4];
+                                        termData[0] = 1;
+                                        if (max_tf < 1)
+                                            max_tf = 1;
+                                        currentTermDictionary.put(monthName.toLowerCase(), termData);
+                                        Indexer.termDictionary.put(monthName, corpusTermData);
+                                    }
                                 }
                                 updateDictionariesOutsideText(monthNumber + "-" + dateSplit1);
                                 document.setDocDate(date);
@@ -1754,13 +1756,14 @@ public class Parse implements Runnable {
             int length = word.length();
 
             // checks if there is a delimiter at the start of the word
-            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%') {
+            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%' || word.charAt(0) > 122 /* ||
+                    word.charAt(0) < 33 */) {
                 return removeExtraDelimiters(word.substring(1));
             }
 
             // checks if there is a delimiter at the end of the word
             if (word.charAt(length - 1) == '.' || word.charAt(length - 1) == '/' || word.charAt(length - 1) == '-' || word.charAt(length - 1) == '\'' ||
-                    word.charAt(length - 1) == '$')
+                    word.charAt(length - 1) == '$'  || word.charAt(length - 1) > 122 /* || word.charAt(length - 1) < 33 */)
                 return removeExtraDelimiters(word.substring(0, length - 1));
 
             return word;
@@ -1926,6 +1929,7 @@ public class Parse implements Runnable {
      */
     private void updateDictionaries(String current) {
         if (!current.equals("")) {
+            current = current.trim();
             boolean newTerm = true;
             short[] termData;
             int[] corpusTermData;
