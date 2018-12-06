@@ -254,7 +254,6 @@ public class Parse implements Runnable {
                                             continue;
                                         }
                                     }
-
                                     //--------MORE THEN ONE DASH---------//
                                     if (!HowMuchToChange && current.contains("-")) {
                                         String[] splitedByDash = current.split("-");
@@ -262,7 +261,7 @@ public class Parse implements Runnable {
                                         counter++;
                                         continue;
                                     }
-                                    if (current.contains("$") || current2.toLowerCase().equals("dollars") ||
+                                    if (current.contains("$") || current.contains("%") || current2.toLowerCase().equals("dollars") ||
                                             current2.toLowerCase().equals("percentage") || current2.toLowerCase().equals("percent") ||
                                             current3.toLowerCase().equals("dollars") || current4.toLowerCase().equals("dollars")) {
 
@@ -567,7 +566,9 @@ public class Parse implements Runnable {
     private int RegularNumCheck(String current, int counter) {
         int toReturn = 0;
         String current2;
-        String current3;
+        String[] current3 = current.split("\\.");
+        if(current3.length>=3)
+            return 0;
         String current4;
 
         if(current.contains("B")&& !current.contains(".")){
@@ -593,16 +594,16 @@ public class Parse implements Runnable {
         if(current.contains(".") && !current.contains(",") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
             Double temp = 0.0;
             if(current.contains("K")) {
-                current = current.substring(0,current.length()-1);
-                temp = Double.parseDouble(current);
-                temp = temp * 1000;
+                current = current.substring(0, current.length() - 1);
+                try {
+                    temp = Double.parseDouble(current);
+                    temp = temp * 1000;
+                } catch (NumberFormatException e) {
+                    System.out.println("idan");
+                }
             }
             if(current.contains("M")) {
-                current = current.substring(0,current.length()-1);
-                if(!isNumeric(current) && !current.contains("."))
-                    System.out.println("idan");
-                if(current.contains("M")||current.contains("B")||current.contains("K") ||current.contains("T"))
-                    System.out.println("idan");
+                current = current.substring(0, current.length() - 1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000;
             }
@@ -659,10 +660,6 @@ public class Parse implements Runnable {
      * @return the string after changed to be as a term
      */
     private String handleMoreThenOneNumber(String current, int counter) {
-        int toReturn = 0;
-        String current2;
-        String current3;
-        String current4;
         if(current.contains("B")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
@@ -826,6 +823,14 @@ public class Parse implements Runnable {
         return ToReturn;
     }
 
+    /**this function handles cases the the current string or current2 string has dash inside
+     * @param current
+     * @param current2
+     * @param current3
+     * @param current4
+     * @param counter
+     * @return
+     */
     private int HandelDashNUms(String current, String current2, String current3, String current4, int counter) {
         int ToAdd2Counter = 0;
         //------current has Dash-------//
