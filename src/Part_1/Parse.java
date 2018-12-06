@@ -824,12 +824,12 @@ public class Parse implements Runnable {
     }
 
     /**this function handles cases the the current string or current2 string has dash inside
-     * @param current
-     * @param current2
-     * @param current3
-     * @param current4
-     * @param counter
-     * @return
+     * @param current first string to check with dash
+     * @param current2 second string to check with dash
+     * @param current3 for cases of million/billion/trillion or fraction
+     * @param current4 for cases of million/trillion/billion or fraction
+     * @param counter the counter of afterSplit array
+     * @return the addition to the counter
      */
     private int HandelDashNUms(String current, String current2, String current3, String current4, int counter) {
         int ToAdd2Counter = 0;
@@ -2097,9 +2097,9 @@ public class Parse implements Runnable {
     }
 
     /** this function checks if the current string should be a price number.
-     * @param current
-     * @param p1
-     * @param current3
+     * @param current is the string needed to check if needes to be in money cases
+     * @param p1 second string needed to check if needes to be in money cases
+     * @param current3 third string needed to check if needes to be in money cases
      * @return true if the current string should be consider as a price.
      */
     private boolean checkIfMoney(String current, String p1, String current3,String current4) {
