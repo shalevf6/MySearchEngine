@@ -67,7 +67,7 @@ languages found in the data set.
 Keep in mind, the "Show dictionary" button will work only after loading / indexing a
 dataset beforehand. Pressing the "Reset" button will of course mean that only after 
 another loading / indexing, the "Show Dictionary" button will work again.
-### Addidtional data about the synchornization between "Activae" and "Load Dictionaries':
+### Addidtional data about the synchornization between "Activate" and "Load Dictionaries":
 The application is able to handle any combinition of order between "Activate" and "Load
 Dictionary" with or without stemming, given that all of that is done on the same corpus.
 For example, you can load all the stemmed posting files of the corpus and after it press
