@@ -19,10 +19,10 @@ You can write the path of the files in the text box next to each "Browse" button
 ### The "Stemming" check box:
 While checked, it will do one of 2 things:
 1. If the "Activate" button will be pressed, it will alert the system the the indexing
-   process will be using stemming.
+   process will not be using stemming.
 2. If the "Load Dictionary" button will be pressed, it will alert the system that the
-   posting files and dictionaries that are loaded went through stemming (and save them
-   accordingly).
+   posting files and dictionaries that are loaded didn't went through stemming (and save
+   them accordingly).
    
 While unchecked, it will do one of 2 things:
 1. If the "Activate" button will be pressed, it will alert the system the the indexing
@@ -67,6 +67,38 @@ languages found in the data set.
 Keep in mind, the "Show dictionary" button will work only after loading / indexing a
 dataset beforehand. Pressing the "Reset" button will of course mean that only after 
 another loading / indexing, the "Show Dictionary" button will work again.
+
+## Files and directories structure:
+After running the application, there will be some files and directories created on your
+computer, under the path that was given as input in the lower "Browse" button or the
+"Load Dictionary" button. I will now explain the structure of those files.
+
+If you were loading / indexing a corpus with stemming, a directory named "postingFilesWithStemming"
+will be created, and under it 4 files:
+1. mainPosting - which is the posting file for all the terms in the dictionary (stemmed). can also be
+				 viewed as text.
+2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
+3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
+4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
+					   as an object, for when you click the "Show Dictionary" button.
+
+If you were loading / indexing a corpus without stemming, a directory named "postingFilesWithoutStemming"
+will be created, and under it 4 files:
+1. mainPosting - which is the posting file for all the terms in the dictionary (not stemmed). can also
+be viewed as text.
+2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
+3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
+4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
+					   as an object, for when you click the "Show Dictionary" button.
+					   
+Additionaly, there will be another directory named "postingForCities" that will be created once after
+the first Indexing / Loading, with the 2 following files inside it:
+1. mainCityPosting - which is the posting file for all the cities in the dictionary. can also be
+					 viewed as text.
+2. cityDictionary - which is a hashMap of all the cities as keys that is saved as an object.
+
+Furthermore, one file (not a directory) named "languages" will be created after one Loading / Indexing,
+which is a List<String> of all the languages in the data set.
 
 
 ## Link to the project's repository in github:
