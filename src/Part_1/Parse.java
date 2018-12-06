@@ -1432,17 +1432,17 @@ public class Parse implements Runnable {
                     String current5Lower = current5.toLowerCase();
 
                     if (current5Lower.equals("thousand")) {
-                        current4 = current4 + " K";
+                        current4 = current4 + "K";
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }//SECOND:IF CURRENT2 = MILLION
                     if (current5Lower.equals("million") || current5Lower.equals("mill")) {
-                        current4 = current4 + " M";
+                        current4 = current4 + "M";
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }//THIRD:IF CURRENT2 = BILLION
                     if (current5Lower.equals("billion")) {
-                        current4 = current4 + " B";
+                        current4 = current4 + "B";
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }//FORTH:IF CURRENT2 = TRILLION
@@ -1491,15 +1491,15 @@ public class Parse implements Runnable {
                     boolean toAdd = false;
                     String current3Lower = current3.toLowerCase();
                     if (current3Lower.equals("thousand")) {
-                        current2 = current2 + " K";
+                        current2 = current2 + "K";
                         toAdd = true;
                     }//SECOND:IF CURRENT2= MILLION
                     if (current3Lower.equals("million") || current3Lower.equals("mill")) {
-                        current2 = current2 + " M";
+                        current2 = current2 + "M";
                         toAdd = true;
                     }//THIRD:IF CURRENT2= BILLION
                     if (current3Lower.equals("billion")) {
-                        current2 = current2 + " B";
+                        current2 = current2 + "B";
                         toAdd = true;
                     }//FORTH:IF CURRENT2= TRILLION
                     if (current3Lower.equals("trillion")) {
@@ -1507,7 +1507,7 @@ public class Parse implements Runnable {
                         temp = temp * 1000;
                         int temp2 = temp.intValue();
                         current2 = String.valueOf(temp2);
-                        current2 = current2 + " B";
+                        current2 = current2 + "B";
                         toAdd = true;
                     }
                     if (notFraction(current5) && toAdd) {
@@ -1526,7 +1526,7 @@ public class Parse implements Runnable {
                         current6 = afterSplit[counter + 5];
                     String current6Lower = current6.toLowerCase();
                     if (current6Lower.equals("thousand")) {
-                        current5 = current5 + " K";
+                        current5 = current5 + "K";
                         if (toAdd) {
                             updateDictionaries(current1 + " " + current2 + " " + current3 + " " + current4Lower + " " + current5);
                             return 6;
@@ -1537,7 +1537,7 @@ public class Parse implements Runnable {
                         }
                     }//SECOND:IF CURRENT2= MILLION
                     if (current6Lower.equals("million") || current6Lower.equals("mill")) {
-                        current5 = current5 + " M";
+                        current5 = current5 + "M";
                         if (toAdd) {
                             updateDictionaries(current1 + " " + current2 + " " + current3 + " " + current4Lower + " " + current5);
                             return 6;
@@ -1548,7 +1548,7 @@ public class Parse implements Runnable {
                         }
                     }//THIRD:IF CURRENT2= BILLION
                     if (current6Lower.equals("billion")) {
-                        current5 = current5 + " B";
+                        current5 = current5 + "B";
                         if (toAdd) {
                             updateDictionaries(current1 + " " + current2 + " " + current3 + " " + current4Lower + " " + current5);
                             return 6;
@@ -1563,7 +1563,7 @@ public class Parse implements Runnable {
                         temp = temp * 1000;
                         int temp2 = temp.intValue();
                         current5 = String.valueOf(temp2);
-                        current5 = current4 + " B";
+                        current5 = current4 + "B";
                         if (toAdd) {
                             updateDictionaries(current1 + " " + current2 + " " + current3 + " " + current4Lower + " " + current5);
                             return 6;

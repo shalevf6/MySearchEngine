@@ -74,7 +74,7 @@ public class Indexer implements Runnable {
      * the primary index function
      * @param postingPath - the path for saving the posting files
      */
-    private void indexAll(String postingPath){
+    private void indexAll(String postingPath) throws IOException {
         // ------ START: CREATE ALL TEMP POSTING FILES ------
         int tempPostingNum = 1;
         while (true) {
@@ -238,6 +238,21 @@ public class Indexer implements Runnable {
             indexedCities = true;
         }
         deleteAllTempFiles(postingPath);
+        /*
+        System.out.println("Need to delete");
+        int[] intToOpen =termDictionary.get("TermToCheck");
+        if(isDictionaryStemmed) {
+            RandomAccessFile ToCheck = new RandomAccessFile(postingPath+"\\postingFilesWithStemming\\documentDictionary", "r");
+            //ToCheck.seek((long) intToOpen[2]);
+            ToCheck.write(intToOpen[2]);
+        }
+        else {
+            RandomAccessFile ToCheck = new RandomAccessFile(postingPath+"\\postingFilesWithStemming\\documentDictionary", "r");
+            //ToCheck.seek((long) intToOpen[2]);
+            ToCheck.write(intToOpen[2]);
+
+        }
+        */
         // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARIES TO FILES ------
     }
 
@@ -730,6 +745,10 @@ public class Indexer implements Runnable {
 
     @Override
     public void run() {
-        indexAll(Controller.postingPathText);
+        try {
+            indexAll(Controller.postingPathText);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
