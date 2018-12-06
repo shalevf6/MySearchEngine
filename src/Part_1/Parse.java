@@ -599,6 +599,10 @@ public class Parse implements Runnable {
             }
             if(current.contains("M")) {
                 current = current.substring(0,current.length()-1);
+                if(!isNumeric(current) && !current.contains("."))
+                    System.out.println("idan");
+                if(current.contains("M")||current.contains("B")||current.contains("K") ||current.contains("T"))
+                    System.out.println("idan");
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000;
             }
@@ -682,18 +686,22 @@ public class Parse implements Runnable {
         if(current.contains(".") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
             Double temp = 0.0;
             if(current.contains("K")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000;
             }
             if(current.contains("M")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000;
             }
             if(current.contains("B")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000000;
             }
             if(current.contains("T")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000000*1000;
             }
@@ -1467,11 +1475,13 @@ public class Parse implements Runnable {
                     if (current5Lower.equals("trillion")) {
                         current4 =current4 + "T";
                         current4 =handleMoreThenOneNumber(current4,counter);
-                        Double temp = Double.parseDouble(current4);
-                        temp = temp /1000;
-                        int temp2 = temp.intValue();
-                        current4 = String.format ("%.0f", temp);
-                        current4 = current4 + "B";
+                        if(!current4.contains("B") && !current4.contains("K") && !current4.contains("M")) {
+                            Double temp = Double.parseDouble(current4);
+                            temp = temp / 1000;
+                            int temp2 = temp.intValue();
+                            current4 = String.format("%.0f", temp);
+                            current4 = current4 + "B";
+                        }
                         updateDictionaries(current1 + " " + current2 + " " + current3Lower + " " + current4 );
                         return 5;
                     }

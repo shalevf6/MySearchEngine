@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="cdb932d9-7e58-4d94-93a9-e7b232ef17da" name="Default" comment="Added all Indexer Functionality up until the merge posting part.&#10;Fixed fxml bug.&#10;Fixed">
+    <list default="true" id="cdb932d9-7e58-4d94-93a9-e7b232ef17da" name="Default" comment="Fixed empty posting city file bug in indexer.&#10;Started fixing stemming / non stemming option bugs.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Controller/Controller.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Controller/Controller.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Part_1/Indexer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Part_1/Indexer.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Part_1/Parse.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/Part_1/Parse.java" afterDir="false" />
     </list>
     <ignored path="JavaFxApplication.iws" />
@@ -64,28 +62,59 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="Document.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/GeneralClasses/Document.java">
+      <file leaf-file-name="Indexer.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Part_1/Indexer.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-70">
-              <caret line="3" selection-start-line="3" selection-end-line="3" />
+            <state relative-caret-position="119">
+              <caret line="229" column="120" selection-start-line="229" selection-start-column="120" selection-end-line="229" selection-end-column="120" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Parse.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Parse.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/Part_1/Parse.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="71">
-              <caret line="465" column="42" lean-forward="true" selection-start-line="465" selection-start-column="42" selection-end-line="465" selection-end-column="42" />
+            <state relative-caret-position="157">
+              <caret line="604" column="47" selection-start-line="604" selection-start-column="47" selection-end-line="604" selection-end-column="47" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#1090#1091#0" expanded="true" />
-                <element signature="e#1124#1125#0" expanded="true" />
-                <element signature="e#90546#90547#0" expanded="true" />
-                <element signature="e#90573#90574#0" expanded="true" />
-                <element signature="e#90612#90613#0" expanded="true" />
-                <element signature="e#90638#90639#0" expanded="true" />
+                <element signature="e#113199#113200#0" expanded="true" />
+                <element signature="e#113226#113227#0" expanded="true" />
+                <element signature="e#113644#113645#0" expanded="true" />
+                <element signature="e#113670#113671#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FloatingDecimal.class" pinned="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/jre/lib/rt.jar!/sun/misc/FloatingDecimal.class">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="147">
+              <caret line="69" selection-start-line="69" selection-end-line="69" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Double.java" pinned="false" current-in-tab="false">
+        <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/lang/Double.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="147">
+              <caret line="537" selection-start-line="537" selection-end-line="537" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="Controller.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="4335">
+              <caret line="255" column="89" selection-start-line="255" selection-start-column="89" selection-end-line="255" selection-end-column="89" />
+              <folding>
+                <element signature="imports" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -94,44 +123,11 @@
       <file leaf-file-name="ReadFile.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/Part_1/ReadFile.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="170">
-              <caret line="19" column="18" lean-forward="true" selection-start-line="19" selection-start-column="18" selection-end-line="19" selection-end-column="18" />
+            <state relative-caret-position="5610">
+              <caret line="332" column="42" lean-forward="true" selection-start-line="332" selection-start-column="42" selection-end-line="332" selection-end-column="42" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Controller.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="37">
-              <caret line="133" column="7" lean-forward="true" selection-start-line="133" selection-start-column="7" selection-end-line="133" selection-end-column="7" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Indexer.java" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/Part_1/Indexer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="145">
-              <caret line="162" column="68" lean-forward="true" selection-start-line="162" selection-start-column="68" selection-end-line="162" selection-end-column="68" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="DictionaryController.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/Controller/DictionaryController.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="51">
-              <caret line="3" column="35" lean-forward="true" selection-start-line="3" selection-start-column="35" selection-end-line="3" selection-end-column="35" />
             </state>
           </provider>
         </entry>
@@ -149,34 +145,36 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>stem</find>
-      <find>stemTerm</find>
-      <find>parser</find>
-      <find>between</find>
-      <find>getMonthNumber</find>
-      <find>FindMaxTf</find>
-      <find>term</find>
-      <find>remainingDelimiters</find>
-      <find>updateDictionaries</find>
-      <find>documentTitle</find>
-      <find>documentDate</find>
-      <find>documentCity</find>
-      <find>stemmer</find>
-      <find>a</find>
+      <find>handlecity</find>
+      <find>handleall</find>
+      <find>handlecit</find>
+      <find>corpus</find>
+      <find>corpusCityDictionary</find>
+      <find>termData</find>
+      <find>updateDi</find>
       <find>handleAll</find>
+      <find>existsInCo</find>
+      <find>city</find>
+      <find>totalTempPostingFiles</find>
+      <find>upda</find>
+      <find>corpusDictionary</find>
+      <find>delete</find>
+      <find>Buffered</find>
+      <find>object</find>
+      <find>corpusTermData[1]</find>
+      <find>corpusTermData[0]</find>
+      <find>stop words</find>
+      <find>HEYY</find>
+      <find>termData[1]</find>
       <find>currentTermDictionary</find>
-      <find>stop</find>
-      <find>system.out`</find>
-      <find>system.out</find>
-      <find>update</find>
-      <find>handle</find>
-      <find>handleNormal</find>
-      <find>further</find>
-      <find>isO</find>
-      <find>delimiters</find>
-      <find>TODO</find>
-      <find>TODO</find>
-      <find>StringBu</find>
+      <find>sortByTf</find>
+      <find>termDictionary</find>
+      <find>stemmer</find>
+      <find>handleAllLetters</find>
+      <find>handleA</find>
+      <find>monthName</find>
+      <find>tempPostingPath</find>
+      <find>handleMoreThenOneNumber</find>
     </findStrings>
   </component>
   <component name="FindManager">
@@ -188,7 +186,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="shalev" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
   </component>
@@ -202,20 +200,20 @@
         <option value="$USER_HOME$/Downloads/Parse.java" />
         <option value="$USER_HOME$/Downloads/Parse(1).java" />
         <option value="$PROJECT_DIR$/src/Part_1/Stemmer/Stemmer.java" />
-        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/Part_1/Stemmer.java" />
         <option value="$PROJECT_DIR$/src/Main/Main.java" />
         <option value="$PROJECT_DIR$/src/GeneralClasses/Term.java" />
         <option value="$PROJECT_DIR$/src/GeneralClasses/PostingPointer.java" />
+        <option value="$PROJECT_DIR$/src/Controller/AController.java" />
+        <option value="$PROJECT_DIR$/pom.xml" />
         <option value="$PROJECT_DIR$/src/GeneralClasses/Document.java" />
-        <option value="$PROJECT_DIR$/src/Part_1/ReadFile.java" />
-        <option value="$PROJECT_DIR$/Resources/fxml/main.fxml" />
         <option value="$PROJECT_DIR$/Resources/fxml/dictionary.fxml" />
         <option value="$PROJECT_DIR$/src/Controller/DictionaryController.java" />
-        <option value="$PROJECT_DIR$/src/Controller/AController.java" />
-        <option value="$PROJECT_DIR$/src/Part_1/Parse.java" />
+        <option value="$PROJECT_DIR$/src/Part_1/ReadFile.java" />
+        <option value="$PROJECT_DIR$/Resources/fxml/main.fxml" />
         <option value="$PROJECT_DIR$/src/Controller/Controller.java" />
         <option value="$PROJECT_DIR$/src/Part_1/Indexer.java" />
+        <option value="$PROJECT_DIR$/src/Part_1/Parse.java" />
       </list>
     </option>
   </component>
@@ -230,10 +228,9 @@
   </component>
   <component name="PhpWorkspaceProjectConfiguration" backward_compatibility_performed="true" />
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="-10" />
-    <option name="y" value="-10" />
-    <option name="width" value="1940" />
-    <option name="height" value="1060" />
+    <option name="x" value="685" />
+    <option name="width" value="700" />
+    <option name="height" value="735" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="1" id="Add" />
@@ -243,9 +240,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
-      <pane id="PackagesPane" />
-      <pane id="AndroidView" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -297,6 +291,9 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
+      <pane id="PackagesPane" />
+      <pane id="AndroidView" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -310,6 +307,7 @@
     <property name="OverrideImplement.combined" value="false" />
     <property name="Repository.Attach.JavaDocs" value="false" />
     <property name="Repository.Attach.Sources" value="false" />
+    <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file://C:/Users/Shalev/Documents/GitHub/MySearchEngine/src/Part_1/Indexer.java" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
     <property name="dynamic.classpath" value="false" />
@@ -319,7 +317,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.11494253" />
     <property name="recentsLimit" value="5" />
-    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
+    <property name="settings.editor.selected.configurable" value="preferences.editor" />
   </component>
   <component name="RecentsManager">
     <key name="CopyClassDialog.RECENTS_KEY">
@@ -343,12 +341,7 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="false" />
           <option name="myId" value="UPDATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/Resources/fxml/main.fxml</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/Controller/Controller.java</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/GeneralClasses/Document.java</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/Part_1/Indexer.java</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/src/Part_1/Parse.java</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/Part_1/ReadFile.java</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Created" />
@@ -363,7 +356,6 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="true" />
           <option name="myId" value="REMOVED_FROM_REPOSITORY" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/src/GeneralClasses/Term.java</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Restored" />
@@ -460,6 +452,17 @@
   <component name="RunManager" selected="Application.Main">
     <configuration default="true" type="Applet" factoryName="Applet">
       <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+    </configuration>
+    <configuration name="Indexer" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="Part_1.Indexer" />
+      <module name="MySearchEngine" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="Part_1.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
     </configuration>
     <configuration name="Main" type="Application" factoryName="Application">
       <option name="MAIN_CLASS_NAME" value="Main.Main" />
@@ -567,13 +570,14 @@
       <item itemvalue="Application.Main" />
       <item itemvalue="Application.Parse" />
       <item itemvalue="Application.ReadFile" />
+      <item itemvalue="Application.Indexer" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.Indexer" />
         <item itemvalue="Application.ReadFile" />
         <item itemvalue="Application.Parse" />
-        <item itemvalue="Application.ReadFile" />
-        <item itemvalue="Application.Parse" />
+        <item itemvalue="Application.Indexer" />
         <item itemvalue="Application.ReadFile" />
       </list>
     </recent_temporary>
@@ -600,77 +604,8 @@
       <workItem from="1543227130516" duration="83696000" />
       <workItem from="1543492661648" duration="2535000" />
       <workItem from="1543517244851" duration="33010000" />
-      <workItem from="1543611250359" duration="19829000" />
-    </task>
-    <task id="LOCAL-00001" summary="Added Stemmer, StemmerInterface, Indexer, Parser and ReadFile classes">
-      <created>1541252485137</created>
-      <option name="number" value="00001" />
-      <option name="presentableId" value="LOCAL-00001" />
-      <option name="project" value="LOCAL" />
-      <updated>1541252485137</updated>
-    </task>
-    <task id="LOCAL-00002" summary="Fixed unknown maven error">
-      <created>1541262120240</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1541262120240</updated>
-    </task>
-    <task id="LOCAL-00003" summary="Added GeneralClasses: Document and Term">
-      <created>1541271440136</created>
-      <option name="number" value="00003" />
-      <option name="presentableId" value="LOCAL-00003" />
-      <option name="project" value="LOCAL" />
-      <updated>1541271440136</updated>
-    </task>
-    <task id="LOCAL-00004" summary="Added jsoup parser to ReadFile">
-      <created>1542465229766</created>
-      <option name="number" value="00004" />
-      <option name="presentableId" value="LOCAL-00004" />
-      <option name="project" value="LOCAL" />
-      <updated>1542465229766</updated>
-    </task>
-    <task id="LOCAL-00005" summary="Added Doc Queue and Threads">
-      <created>1542468682137</created>
-      <option name="number" value="00005" />
-      <option name="presentableId" value="LOCAL-00005" />
-      <option name="project" value="LOCAL" />
-      <updated>1542468682137</updated>
-    </task>
-    <task id="LOCAL-00006" summary="Added GUI elements.&#10;Added Indexer queue.&#10;Changed ReadFile.&#10;Updated Document class.">
-      <created>1542476489872</created>
-      <option name="number" value="00006" />
-      <option name="presentableId" value="LOCAL-00006" />
-      <option name="project" value="LOCAL" />
-      <updated>1542476489873</updated>
-    </task>
-    <task id="LOCAL-00007" summary="Updated ReadFile and Parse threads in Controller class&#10;Updated Parse and Readfile builders.">
-      <created>1542478399635</created>
-      <option name="number" value="00007" />
-      <option name="presentableId" value="LOCAL-00007" />
-      <option name="project" value="LOCAL" />
-      <updated>1542478399635</updated>
-    </task>
-    <task id="LOCAL-00008" summary="Updated unhandled exception in controller.&#10;Updated Indexer's queue">
-      <created>1542483170799</created>
-      <option name="number" value="00008" />
-      <option name="presentableId" value="LOCAL-00008" />
-      <option name="project" value="LOCAL" />
-      <updated>1542483170799</updated>
-    </task>
-    <task id="LOCAL-00009" summary="Updated Reset button to reset check box">
-      <created>1542484880311</created>
-      <option name="number" value="00009" />
-      <option name="presentableId" value="LOCAL-00009" />
-      <option name="project" value="LOCAL" />
-      <updated>1542484880311</updated>
-    </task>
-    <task id="LOCAL-00010" summary="Added javadoc for the following classes: Controller, Document, &#10;Indexer, ReadFile.">
-      <created>1542487508467</created>
-      <option name="number" value="00010" />
-      <option name="presentableId" value="LOCAL-00010" />
-      <option name="project" value="LOCAL" />
-      <updated>1542487508467</updated>
+      <workItem from="1543611250359" duration="195646000" />
+      <workItem from="1544088455206" duration="18267000" />
     </task>
     <task id="LOCAL-00011" summary="Updated javadoc for above classes.&#10;Update Blocking Queue for Indexer.&#10;Added more html tag elements to be found in ReadFile.&#10;Added more field and functions in Document.">
       <created>1542556942818</created>
@@ -819,11 +754,207 @@
       <option name="project" value="LOCAL" />
       <updated>1543674395975</updated>
     </task>
-    <option name="localTasksCounter" value="32" />
+    <task id="LOCAL-00032" summary="Fixed afterSplit split by path instead of data.&#10;Tried to add temp file for resetting the postingPath.">
+      <created>1543676009273</created>
+      <option name="number" value="00032" />
+      <option name="presentableId" value="LOCAL-00032" />
+      <option name="project" value="LOCAL" />
+      <updated>1543676009273</updated>
+    </task>
+    <task id="LOCAL-00033" summary="Fixed some more parse problems.&#10;Updated Indexer dictionary writing to files.&#10;Updated controller to show and load dictionaries.">
+      <created>1543701733494</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1543701733494</updated>
+    </task>
+    <task id="LOCAL-00034" summary="Added API support for city dictionary.&#10;Fixed little bug in Indexer and Parse.">
+      <created>1543778670182</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1543778670182</updated>
+    </task>
+    <task id="LOCAL-00035" summary="Fixed some more bugs">
+      <created>1543786370096</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1543786370096</updated>
+    </task>
+    <task id="LOCAL-00036" summary="On Controller: Fixed show dictionary and added appropriate error, Fixed load dictionary if clause.&#10;On Document: changed termDictionary's value to be a short array.&#10;On Parse: added a stop boolean reset method, fixed city check, changed all tf values to short, and fixed the corpus dictionary's entry and city dictionary's entries accordingly.&#10;On ReadFile: added a corpus sweep (before the initial sweep) to add the cities to the city and corpus dictionaries.&#10;On Indexer: Fixed normalized tf support, added posting for cities creation (only once), added a readFirstLines function for the BufferedReaders array, added 2 functions to write and load the dictionary for show (as a sorted string) and added a reset stop function.">
+      <created>1543856250518</created>
+      <option name="number" value="00036" />
+      <option name="presentableId" value="LOCAL-00036" />
+      <option name="project" value="LOCAL" />
+      <updated>1543856250518</updated>
+    </task>
+    <task id="LOCAL-00037" summary="Deleted unnecessary hashmap">
+      <created>1543856749247</created>
+      <option name="number" value="00037" />
+      <option name="presentableId" value="LOCAL-00037" />
+      <option name="project" value="LOCAL" />
+      <updated>1543856749247</updated>
+    </task>
+    <task id="LOCAL-00038" summary="Fixed Parse bug in adding to corpus dictionary">
+      <created>1543857133491</created>
+      <option name="number" value="00038" />
+      <option name="presentableId" value="LOCAL-00038" />
+      <option name="project" value="LOCAL" />
+      <updated>1543857133491</updated>
+    </task>
+    <task id="LOCAL-00039" summary="Added a function which adds a found term into the corpus's dictionary">
+      <created>1543858149158</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1543858149158</updated>
+    </task>
+    <task id="LOCAL-00040" summary="Fixed small bug in updating corpus dictionary">
+      <created>1543858613043</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1543858613043</updated>
+    </task>
+    <task id="LOCAL-00041" summary="Fixed some bug in update dictionary in Parse">
+      <created>1543860132473</created>
+      <option name="number" value="00041" />
+      <option name="presentableId" value="LOCAL-00041" />
+      <option name="project" value="LOCAL" />
+      <updated>1543860132473</updated>
+    </task>
+    <task id="LOCAL-00042" summary="Fixed Indexer bug.&#10;Started adding reset stuff to controller.">
+      <created>1543863554336</created>
+      <option name="number" value="00042" />
+      <option name="presentableId" value="LOCAL-00042" />
+      <option name="project" value="LOCAL" />
+      <updated>1543863554336</updated>
+    </task>
+    <task id="LOCAL-00043" summary="On Controller: fixed onDictionaryLoad and onDictionaryShow.&#10;On Document: removed the termList field and added a function to delete all text saved from the document.&#10;On Indexer: removed copying from corpus dictionary, added some write and load functions to and from the memory.&#10;On Parse: deleted the corpus dictionary (replaced by the term dictionary in Indexer) .&#10;On ReadFile: changed all references to corpus dictionary, to term dictionary in indexer.">
+      <created>1543919248609</created>
+      <option name="number" value="00043" />
+      <option name="presentableId" value="LOCAL-00043" />
+      <option name="project" value="LOCAL" />
+      <updated>1543919248609</updated>
+    </task>
+    <task id="LOCAL-00044" summary="Started to fix dictionary load and show in Controller, fixed normalizedTf size and dictionary show string format in Indexer, added removeExtraDelimiters for strings that split because of '-' or '/' in Parse.">
+      <created>1543928166588</created>
+      <option name="number" value="00044" />
+      <option name="presentableId" value="LOCAL-00044" />
+      <option name="project" value="LOCAL" />
+      <updated>1543928166588</updated>
+    </task>
+    <task id="LOCAL-00045" summary="Changed dictionary.fxml TextArea to ListView, and changed DictionaryController accordingly.&#10;Fixed controller ShowDictionary.&#10;Fixed some bugs in Indexer and changed the termDictionaryForShow build to List&lt;String&gt;.&#10;Some More Parse fixes.">
+      <created>1543943358451</created>
+      <option name="number" value="00045" />
+      <option name="presentableId" value="LOCAL-00045" />
+      <option name="project" value="LOCAL" />
+      <updated>1543943358451</updated>
+    </task>
+    <task id="LOCAL-00046" summary="Fixed controller, added 10% check of text to Parse, fixed Indexer.">
+      <created>1543948842366</created>
+      <option name="number" value="00046" />
+      <option name="presentableId" value="LOCAL-00046" />
+      <option name="project" value="LOCAL" />
+      <updated>1543948842366</updated>
+    </task>
+    <task id="LOCAL-00047" summary="Trying to fixed dictionary for show">
+      <created>1544005602376</created>
+      <option name="number" value="00047" />
+      <option name="presentableId" value="LOCAL-00047" />
+      <option name="project" value="LOCAL" />
+      <updated>1544005602376</updated>
+    </task>
+    <task id="LOCAL-00048" summary="FINALLY fixed dictionary show.&#10;Little fixes in Parse.">
+      <created>1544008196024</created>
+      <option name="number" value="00048" />
+      <option name="presentableId" value="LOCAL-00048" />
+      <option name="project" value="LOCAL" />
+      <updated>1544008196024</updated>
+    </task>
+    <task id="LOCAL-00049" summary="Changed normalized tf to regular tf in posting lists.&#10;Fixed ReadFile bug that removed new line chars.&#10;Fixed Parse bug that didn't remove odd symbols from terms.">
+      <created>1544014728865</created>
+      <option name="number" value="00049" />
+      <option name="presentableId" value="LOCAL-00049" />
+      <option name="project" value="LOCAL" />
+      <updated>1544014728865</updated>
+    </task>
+    <task id="LOCAL-00050" summary="Fixed empty posting city file bug in indexer.&#10;Started fixing stemming / non stemming option bugs.&#10;Fixed city indexing bug in ReadFile">
+      <created>1544021629202</created>
+      <option name="number" value="00050" />
+      <option name="presentableId" value="LOCAL-00050" />
+      <option name="project" value="LOCAL" />
+      <updated>1544021629205</updated>
+    </task>
+    <task id="LOCAL-00051" summary="Changed a bit the GUI window.&#10;Fixed some issues in Controller.&#10;Added null check to deleting the temp files in Indexer.&#10;Added check for stemming a word into a city word in Parse.&#10;Fixed some ReadFile problems and moved resetPartially to Controller.">
+      <created>1544032097039</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1544032097039</updated>
+    </task>
+    <task id="LOCAL-00052" summary="More Controller Fixes.&#10;Closed ObjectInputStream on Indexer.">
+      <created>1544035511879</created>
+      <option name="number" value="00052" />
+      <option name="presentableId" value="LOCAL-00052" />
+      <option name="project" value="LOCAL" />
+      <updated>1544035511880</updated>
+    </task>
+    <task id="LOCAL-00053" summary="Changes spelling in ReadFile">
+      <created>1544035973353</created>
+      <option name="number" value="00053" />
+      <option name="presentableId" value="LOCAL-00053" />
+      <option name="project" value="LOCAL" />
+      <updated>1544035973353</updated>
+    </task>
+    <task id="LOCAL-00054" summary="Some more grammar fixes in ReadFile">
+      <created>1544036281191</created>
+      <option name="number" value="00054" />
+      <option name="presentableId" value="LOCAL-00054" />
+      <option name="project" value="LOCAL" />
+      <updated>1544036281191</updated>
+    </task>
+    <task id="LOCAL-00055" summary="Added new window of languages choice box to GUI.&#10;Added writing and loading of List&lt;String&gt; of languages to Indexer.">
+      <created>1544037784392</created>
+      <option name="number" value="00055" />
+      <option name="presentableId" value="LOCAL-00055" />
+      <option name="project" value="LOCAL" />
+      <updated>1544037784392</updated>
+    </task>
+    <task id="LOCAL-00056" summary="Fix language chooser size in Controller.&#10;Fix split for languages and cities in ReadFile.">
+      <created>1544041448341</created>
+      <option name="number" value="00056" />
+      <option name="presentableId" value="LOCAL-00056" />
+      <option name="project" value="LOCAL" />
+      <updated>1544041448342</updated>
+    </task>
+    <task id="LOCAL-00057" summary="Added stemming check for date adding in Parse.">
+      <created>1544093314648</created>
+      <option name="number" value="00057" />
+      <option name="presentableId" value="LOCAL-00057" />
+      <option name="project" value="LOCAL" />
+      <updated>1544093314650</updated>
+    </task>
+    <task id="LOCAL-00058" summary="Some more fixes on switching between Activate / Load to Stemming / Not Stemming.">
+      <created>1544098564033</created>
+      <option name="number" value="00058" />
+      <option name="presentableId" value="LOCAL-00058" />
+      <option name="project" value="LOCAL" />
+      <updated>1544098564033</updated>
+    </task>
+    <task id="LOCAL-00059" summary="Fixed pointers to posting lists problem.">
+      <created>1544103230651</created>
+      <option name="number" value="00059" />
+      <option name="presentableId" value="LOCAL-00059" />
+      <option name="project" value="LOCAL" />
+      <updated>1544103230651</updated>
+    </task>
+    <option name="localTasksCounter" value="60" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="230020000" />
+    <option name="totallyTimeSpent" value="424104000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="6" />
@@ -831,7 +962,7 @@
     <layout>
       <window_info anchor="right" id="Palette" order="3" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Messages" order="15" weight="0.22758621" />
+      <window_info anchor="bottom" id="Messages" order="15" weight="0.3048276" />
       <window_info anchor="right" id="Palette&#9;" order="9" />
       <window_info id="Image Layers" order="6" />
       <window_info anchor="right" id="Capture Analysis" order="7" />
@@ -839,22 +970,23 @@
       <window_info anchor="right" id="Maven Projects" order="4" />
       <window_info anchor="bottom" id="Database Changes" order="13" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="12" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49934897" weight="0.3213793" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.49934897" weight="0.35448277" />
       <window_info anchor="bottom" id="Terminal" order="14" weight="0.32965517" />
       <window_info id="Capture Tool" order="5" />
       <window_info id="Designer" order="2" />
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6703755" visible="true" weight="0.16276042" />
+      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.6703755" visible="true" weight="0.15039062" />
       <window_info anchor="right" id="Database" order="5" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.21517241" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info id="UI Designer" order="3" />
       <window_info anchor="right" id="Theme Preview" order="8" />
       <window_info id="Favorites" order="4" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.37103447" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.31724137" />
       <window_info anchor="right" id="JetGradle" order="6" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" x="0" y="0" width="337" height="638" id="Documentation" order="10" side_tool="true" weight="0.3294271" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.21517241" />
       <window_info anchor="bottom" id="Changes" order="7" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Profiler" order="9" />
@@ -872,108 +1004,60 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="INCLUDE_TEXT_INTO_SHELF" value="false" />
-    <MESSAGE value="Updated ReadFile and Parse threads in Controller class&#10;Updated Parse and Readfile builders." />
-    <MESSAGE value="Updated unhandled exception in controller.&#10;Updated Indexer's queue" />
-    <MESSAGE value="Updated Reset button to reset check box" />
-    <MESSAGE value="Added javadoc for the following classes: Controller, Document, &#10;Indexer, ReadFile." />
-    <MESSAGE value="Updated javadoc for above classes.&#10;Update Blocking Queue for Indexer.&#10;Added more html tag elements to be found in ReadFile.&#10;Added more field and functions in Document." />
-    <MESSAGE value="Updated blocking queue to contain elements of the type Document.&#10;Updated Parse class to have a blocking queue." />
-    <MESSAGE value="Updated runnable implementation in Indexer.&#10;Created Indexer thread in controller." />
-    <MESSAGE value="Added Guava MultiHashMap to Maven.&#10;Added MultiHashMap as a field to Document class.&#10;Added ReadFile class test to Main class." />
-    <MESSAGE value="Added comments to Parse class" />
-    <MESSAGE value="Removed MultiHashMap from Maven. Updated all necessary classes.." />
-    <MESSAGE value="Changed all currant to current" />
-    <MESSAGE value="Updated word elements in parse and some Document elements." />
-    <MESSAGE value="Fixed Merge." />
-    <MESSAGE value="Updated date cases and some word cases.&#10;Started to fix ReadFile.&#10;Removed StemmerInterface.&#10;Transfered Stemmer to package Part_1." />
-    <MESSAGE value="Merge fixes" />
-    <MESSAGE value="Fixed ReadFile and finished date case.&#10;Added city field to Document." />
-    <MESSAGE value="Added Stemmer support for words in Parse, and fixed Stemmer class.&#10;Added a new hash map for the cities.&#10;Changed updateDictionaries function reference in many places to handleNormalLetters function reference.&#10;Merged 2 handle capital letters scenarios." />
-    <MESSAGE value="Updated document fields.&#10;Shifted Main back to its original form.&#10;Updated ReadFile to check document number.&#10;Updated dictionary value int array in Parse." />
-    <MESSAGE value="Fixed stemmer stemming in Parse" />
-    <MESSAGE value="Fixed doc dictionary for only lower letters, and more Parse fixes." />
-    <MESSAGE value="Fixed merge conflicts" />
-    <MESSAGE value="Fixed delimiters problems. Added parse through title, date and city." />
-    <MESSAGE value="Added all Indexer Functionality up until the merge posting part.&#10;Fixed fxml bug.&#10;Fixed docTitle fields to be null if not initiated.&#10;Added deleteDictionary to Document class.&#10;Fixed stop words file reading bug&#10;Fixed checkNumberEnding bug.&#10;Changed isNumeric function to check from Integer class." />
-    <MESSAGE value="Added dictionary showing window - dictionary.fxml and DictionaryController.&#10;Added needed function for sorting dictionary to Indexer.&#10;Fixed and updated Parse.&#10;Added necessary functions and fixes for controller to display dictionary." />
-    <MESSAGE value="Added dictionary sort functionality.&#10;Fixed some duplicate codes in Parse." />
-    <option name="LAST_COMMIT_MESSAGE" value="Added dictionary sort functionality.&#10;Fixed some duplicate codes in Parse." />
+    <MESSAGE value="Fixed some more bugs" />
+    <MESSAGE value="On Controller: Fixed show dictionary and added appropriate error, Fixed load dictionary if clause.&#10;On Document: changed termDictionary's value to be a short array.&#10;On Parse: added a stop boolean reset method, fixed city check, changed all tf values to short, and fixed the corpus dictionary's entry and city dictionary's entries accordingly.&#10;On ReadFile: added a corpus sweep (before the initial sweep) to add the cities to the city and corpus dictionaries.&#10;On Indexer: Fixed normalized tf support, added posting for cities creation (only once), added a readFirstLines function for the BufferedReaders array, added 2 functions to write and load the dictionary for show (as a sorted string) and added a reset stop function." />
+    <MESSAGE value="Deleted unnecessary hashmap" />
+    <MESSAGE value="Fixed Parse bug in adding to corpus dictionary" />
+    <MESSAGE value="Added a function which adds a found term into the corpus's dictionary" />
+    <MESSAGE value="Fixed small bug in updating corpus dictionary" />
+    <MESSAGE value="Fixed some bug in update dictionary in Parse" />
+    <MESSAGE value="Fixed Indexer bug.&#10;Started adding reset stuff to controller." />
+    <MESSAGE value="On Controller: fixed onDictionaryLoad and onDictionaryShow.&#10;On Document: removed the termList field and added a function to delete all text saved from the document.&#10;On Indexer: removed copying from corpus dictionary, added some write and load functions to and from the memory.&#10;On Parse: deleted the corpus dictionary (replaced by the term dictionary in Indexer) .&#10;On ReadFile: changed all references to corpus dictionary, to term dictionary in indexer." />
+    <MESSAGE value="Started to fix dictionary load and show in Controller, fixed normalizedTf size and dictionary show string format in Indexer, added removeExtraDelimiters for strings that split because of '-' or '/' in Parse." />
+    <MESSAGE value="Changed dictionary.fxml TextArea to ListView, and changed DictionaryController accordingly.&#10;Fixed controller ShowDictionary.&#10;Fixed some bugs in Indexer and changed the termDictionaryForShow build to List&lt;String&gt;.&#10;Some More Parse fixes." />
+    <MESSAGE value="Fixed controller, added 10% check of text to Parse, fixed Indexer." />
+    <MESSAGE value="Trying to fixed dictionary for show" />
+    <MESSAGE value="FINALLY fixed dictionary show.&#10;Little fixes in Parse." />
+    <MESSAGE value="Changed normalized tf to regular tf in posting lists.&#10;Fixed ReadFile bug that removed new line chars.&#10;Fixed Parse bug that didn't remove odd symbols from terms." />
+    <MESSAGE value="Fixed empty posting city file bug in indexer.&#10;Started fixing stemming / non stemming option bugs.&#10;Fixed city indexing bug in ReadFile" />
+    <MESSAGE value="Changed a bit the GUI window.&#10;Fixed some issues in Controller.&#10;Added null check to deleting the temp files in Indexer.&#10;Added check for stemming a word into a city word in Parse.&#10;Fixed some ReadFile problems and moved resetPartially to Controller." />
+    <MESSAGE value="More Controller Fixes.&#10;Closed ObjectInputStream on Indexer." />
+    <MESSAGE value="Changes spelling in ReadFile" />
+    <MESSAGE value="Some more grammar fixes in ReadFile" />
+    <MESSAGE value="Added new window of languages choice box to GUI.&#10;Added writing and loading of List&lt;String&gt; of languages to Indexer." />
+    <MESSAGE value="Fix language chooser size in Controller.&#10;Fix split for languages and cities in ReadFile." />
+    <MESSAGE value="Added stemming check for date adding in Parse." />
+    <MESSAGE value="Some more fixes on switching between Activate / Load to Stemming / Not Stemming." />
+    <MESSAGE value="Fixed pointers to posting lists problem." />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed pointers to posting lists problem." />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="4" />
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/Part_1/Parse.java</url>
+          <line>602</line>
+          <properties />
+          <option name="timeStamp" value="113" />
+        </line-breakpoint>
+      </breakpoints>
+      <option name="time" value="114" />
     </breakpoint-manager>
   </component>
   <component name="antWorkspaceConfiguration">
     <option name="IS_AUTOSCROLL_TO_SOURCE" value="false" />
     <option name="FILTER_TARGETS" value="false" />
   </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="watch">
+      <expression>
+        <expression-string>cityData.metadata</expression-string>
+        <language-id>JAVA</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/Main/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="17" lean-forward="true" selection-start-line="17" selection-end-line="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Main/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer/StemmerInterface.java" />
-    <entry file="file://$PROJECT_DIR$/pom.xml" />
-    <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="13" selection-start-line="2" selection-start-column="13" selection-end-line="2" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Main/Main.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="221">
-          <caret line="17" column="4" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/ReadFile.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" column="21" selection-start-line="2" selection-start-column="21" selection-end-line="2" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Parse.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Indexer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="68">
-          <caret line="4" selection-start-line="4" selection-end-line="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/Part_1/ReadFile.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="85">
@@ -1040,13 +1124,6 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer/StemmerInterface.java" />
     <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer/Stemmer.java" />
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/lang/String.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="372">
-          <caret line="1966" selection-start-line="1966" selection-end-line="1966" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/util/HashMap.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="191">
@@ -1054,24 +1131,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pom.xml">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" column="12" selection-start-line="21" selection-start-column="12" selection-end-line="21" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Downloads/Parse.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="1" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="142">
-          <caret line="45" column="43" selection-start-line="45" selection-start-column="43" selection-end-line="45" selection-end-column="43" />
         </state>
       </provider>
     </entry>
@@ -1084,13 +1147,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/GeneralClasses/Term.java" />
-    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/control/TextInputControl.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="173">
-          <caret line="347" column="35" selection-start-line="347" selection-start-column="35" selection-end-line="347" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/com/sun/glass/ui/InvokeLaterDispatcher.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="127">
@@ -1137,11 +1193,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="184" column="13" selection-start-line="184" selection-start-column="13" selection-end-line="184" selection-end-column="13" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#976#977#0" expanded="true" />
-            <element signature="e#1010#1011#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1149,10 +1200,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="225">
           <caret line="144" column="22" selection-start-line="144" selection-start-column="22" selection-end-line="144" selection-end-column="22" />
-          <folding>
-            <element signature="e#3369#3370#0" expanded="true" />
-            <element signature="e#3398#3399#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1163,22 +1210,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Controller/AController.java">
+    <entry file="file://$PROJECT_DIR$/src/Controller/AController.java" />
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/util/Comparator.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="8" column="24" lean-forward="true" selection-start-line="8" selection-start-column="24" selection-end-line="8" selection-end-column="24" />
-          <folding>
-            <element signature="e#163#164#0" expanded="true" />
-            <element signature="e#204#205#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="128">
+          <caret line="149" column="8" selection-start-line="149" selection-start-column="8" selection-end-line="149" selection-end-column="8" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Resources/fxml/dictionary.fxml">
-      <provider editor-type-id="JavaFX-Scene-Builder" />
+    <entry file="jar://$MAVEN_REPOSITORY$/com/wirefreethought/geodb/geodb-java-client/1.1.2/geodb-java-client-1.1.2.jar!/com/wirefreethought/geodb/client/model/CitiesResponse.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="272">
-          <caret line="16" column="26" lean-forward="true" selection-start-line="16" selection-start-column="26" selection-end-line="16" selection-end-column="26" />
+        <state relative-caret-position="-455">
+          <caret line="41" column="29" selection-start-line="41" selection-start-column="29" selection-end-line="41" selection-end-column="29" />
         </state>
       </provider>
     </entry>
@@ -1186,76 +1229,188 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
           <caret line="15" column="5" selection-start-line="15" selection-start-column="5" selection-end-line="15" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/lang/String.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="372">
+          <caret line="2131" column="19" selection-start-line="2131" selection-start-column="19" selection-end-line="2131" selection-end-column="19" />
           <folding>
-            <element signature="imports" expanded="true" />
+            <element signature="e#82971#82972#0" expanded="true" />
+            <element signature="e#83020#83021#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Controller/DictionaryController.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/io/ObjectInputStream.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="51">
-          <caret line="3" column="35" lean-forward="true" selection-start-line="3" selection-start-column="35" selection-end-line="3" selection-end-column="35" />
+        <state relative-caret-position="157">
+          <caret line="416" column="24" selection-start-line="416" selection-start-column="24" selection-end-line="416" selection-end-column="24" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Resources/fxml/main.fxml">
-      <provider selected="true" editor-type-id="JavaFX-Scene-Builder" />
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="17" column="24" selection-start-line="17" selection-start-column="24" selection-end-line="17" selection-end-column="24" />
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/beans/property/ObjectPropertyBase.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="149">
+          <caret line="108" selection-start-line="108" selection-end-line="108" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/ReadFile.java">
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/control/ListView.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="170">
-          <caret line="19" column="18" lean-forward="true" selection-start-line="19" selection-start-column="18" selection-end-line="19" selection-end-column="18" />
+        <state relative-caret-position="319">
+          <caret line="390" selection-start-line="390" selection-end-line="390" />
           <folding>
-            <element signature="imports" expanded="true" />
+            <element signature="e#17232#17233#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Controller/DictionaryController.java" />
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/control/TextField.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="156">
+          <caret line="105" selection-start-line="105" selection-end-line="105" />
+          <folding>
+            <element signature="e#3264#3265#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/Node.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="156">
+          <caret line="8413" selection-start-line="8413" selection-end-line="8413" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/control/Button.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="156">
+          <caret line="186" selection-start-line="186" selection-end-line="186" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/Scene.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="149">
+          <caret line="2494" selection-start-line="2494" selection-end-line="2494" />
+          <folding>
+            <element signature="e#66617#66618#0" expanded="true" />
+            <element signature="e#66663#66664#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/event/Event.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="334">
+          <caret line="198" selection-start-line="198" selection-end-line="198" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/fxml/FXMLLoader.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="149">
+          <caret line="1657" selection-start-line="1657" selection-end-line="1657" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/javafx-src.zip!/javafx/scene/control/TextInputControl.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="149">
+          <caret line="347" column="35" selection-start-line="347" selection-start-column="35" selection-end-line="347" selection-end-column="35" />
+          <folding>
+            <element signature="e#50373#50374#0" expanded="true" />
+            <element signature="e#50422#50423#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pom.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="374">
+          <caret line="22" selection-start-line="22" selection-end-line="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Part_1/Stemmer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="46" column="22" selection-start-line="46" selection-start-column="22" selection-end-line="46" selection-end-column="22" />
+          <folding>
+            <element signature="e#2372#2373#0" expanded="true" />
+            <element signature="e#2418#2419#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/GeneralClasses/Document.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-70">
+        <state relative-caret-position="51">
           <caret line="3" selection-start-line="3" selection-end-line="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="37">
-          <caret line="133" column="7" lean-forward="true" selection-start-line="133" selection-start-column="7" selection-end-line="133" selection-end-column="7" />
           <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/Part_1/Parse.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="71">
-          <caret line="465" column="42" lean-forward="true" selection-start-line="465" selection-start-column="42" selection-end-line="465" selection-end-column="42" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#1090#1091#0" expanded="true" />
-            <element signature="e#1124#1125#0" expanded="true" />
-            <element signature="e#90546#90547#0" expanded="true" />
-            <element signature="e#90573#90574#0" expanded="true" />
-            <element signature="e#90612#90613#0" expanded="true" />
-            <element signature="e#90638#90639#0" expanded="true" />
+            <element signature="e#1680#1681#0" expanded="true" />
+            <element signature="e#1710#1711#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/Part_1/Indexer.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="145">
-          <caret line="162" column="68" lean-forward="true" selection-start-line="162" selection-start-column="68" selection-end-line="162" selection-end-column="68" />
+        <state relative-caret-position="119">
+          <caret line="229" column="120" selection-start-line="229" selection-start-column="120" selection-end-line="229" selection-end-column="120" />
           <folding>
             <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Controller/Controller.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="4335">
+          <caret line="255" column="89" selection-start-line="255" selection-start-column="89" selection-end-line="255" selection-end-column="89" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Part_1/ReadFile.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5610">
+          <caret line="332" column="42" lean-forward="true" selection-start-line="332" selection-start-column="42" selection-end-line="332" selection-end-column="42" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/jre/lib/rt.jar!/sun/misc/FloatingDecimal.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="147">
+          <caret line="69" selection-start-line="69" selection-end-line="69" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://C:/Program Files/Java/jdk1.8.0_161/src.zip!/java/lang/Double.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="147">
+          <caret line="537" selection-start-line="537" selection-end-line="537" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/Part_1/Parse.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="157">
+          <caret line="604" column="47" selection-start-line="604" selection-start-column="47" selection-end-line="604" selection-end-column="47" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#113199#113200#0" expanded="true" />
+            <element signature="e#113226#113227#0" expanded="true" />
+            <element signature="e#113644#113645#0" expanded="true" />
+            <element signature="e#113670#113671#0" expanded="true" />
           </folding>
         </state>
       </provider>
