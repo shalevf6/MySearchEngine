@@ -2403,6 +2403,7 @@ public class Parse implements Runnable {
      * resets all the static variables
      */
     public static void resetAll() {
+        docQueue = new ArrayBlockingQueue<>(3000);
         stop = false;
         stemming = false;
     }
@@ -2411,6 +2412,7 @@ public class Parse implements Runnable {
      * resets parts of the static variables
      */
     public static void resetPartially() {
+        docQueue = new ArrayBlockingQueue<>(3000);
         stop = false;
     }
 

@@ -171,6 +171,7 @@ public class Controller {
             languages = new LinkedList<>();
             Parse.resetAll();
             Indexer.resetAll();
+            tempPostingPath = new TextField();
         }
     }
 
@@ -220,10 +221,10 @@ public class Controller {
     public void onDictionaryLoad(ActionEvent actionEvent) {
         if (!startsIndexing && (!alreadyIndexedAll())) {
             boolean stemming = stemmingCheckBox.isSelected();
-            chooseAndSaveDirectoryPath(tempPostingPath);
             if ((stemming && alreadyIndexedWithStemming) || (!stemming && alreadyIndexedWithoutStemming))
                 showErrorAlert("Already loaded / indexed this option!");
             else {
+                chooseAndSaveDirectoryPath(tempPostingPath);
                 if (!tempPostingPath.getText().equals("")) {
                     boolean tempWithStemming = alreadyIndexedWithStemming;
                     boolean tempWithoutStemming = alreadyIndexedWithoutStemming;
@@ -256,7 +257,7 @@ public class Controller {
                         postingPathText = tempPostingPath.getText();
                         Indexer.indexedCities = true;
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setContentText("Dictionary Loaded Successfully!");
+                        alert.setContentText("Dictionaries Loaded Successfully!");
                         alert.show();
                     } catch (IOException | ClassNotFoundException e) {
                         showErrorAlert("Not all dictionary files found in path! Try again");
@@ -323,17 +324,18 @@ public class Controller {
         else
             documentDictionary = new File (postingPathText + "\\postingFilesWithoutStemming\\documentDictionary");
         ObjectInputStream objectInputStream;
-        HashMap<String,int[]> documentDictionaryObject = null;
+        HashMap<String,int[]> documentDictionaryObject;
         try {
             objectInputStream = new ObjectInputStream(new FileInputStream(documentDictionary));
             documentDictionaryObject = (HashMap<String, int[]>) objectInputStream.readObject();
             objectInputStream.close();
+            if (documentDictionaryObject.size() != Indexer.totalDocuments) {
+                showErrorAlert("Document dictionary doesn't have the same document amount from last load / indexing!\n Hit reset in order to load a new dictionary!");
+                return false;
+            }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        if (documentDictionaryObject.size() != Indexer.totalDocuments) {
-            showErrorAlert("Document dictionary doesn't have the same document amount from last load / indexing!\n Hit reset in order to load a new dictionary!");
-            return false;
+            showErrorAlert("Document dictionary doesn't exist from last load / indexing!\n Hit reset in order to load a new dictionary!");
+            tempPostingPath = new TextField();
         }
         return true;
     }
