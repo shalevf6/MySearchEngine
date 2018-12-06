@@ -570,41 +570,45 @@ public class Parse implements Runnable {
         String current3;
         String current4;
 
-        if(current.contains("B")&& !current.contains("\\.")){
+        if(current.contains("B")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
-        if(current.contains("M")&& !current.contains("\\.")){
+        if(current.contains("M")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000";
         }
-        if(current.contains("B")&& !current.contains("\\.")){
+        if(current.contains("B")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
-        if(current.contains("K")&& !current.contains("\\.")){
+        if(current.contains("K")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000";
         }
-        if(current.contains("T")&& !current.contains("\\.")){
+        if(current.contains("T")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000,000";
         }
-        if(current.contains("\\.") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
+        if(current.contains(".") && !current.contains(",") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
             Double temp = 0.0;
             if(current.contains("K")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000;
             }
             if(current.contains("M")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000;
             }
             if(current.contains("B")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000000;
             }
             if(current.contains("T")) {
+                current = current.substring(0,current.length()-1);
                 temp = Double.parseDouble(current);
                 temp = temp * 1000000000*1000;
             }
@@ -655,27 +659,27 @@ public class Parse implements Runnable {
         String current2;
         String current3;
         String current4;
-        if(current.contains("B")&& !current.contains("\\.")){
+        if(current.contains("B")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
-        if(current.contains("M")&& !current.contains("\\.")){
+        if(current.contains("M")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000";
         }
-        if(current.contains("B")&& !current.contains("\\.")){
+        if(current.contains("B")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000";
         }
-        if(current.contains("K")&& !current.contains("\\.")){
+        if(current.contains("K")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000";
         }
-        if(current.contains("T")&& !current.contains("\\.")){
+        if(current.contains("T")&& !current.contains(".")){
             current =current.substring(0,current.length()-1);
             current = current + ",000,000,000,000";
         }
-        if(current.contains("\\.") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
+        if(current.contains(".") && (current.contains("B")||current.contains("M")||current.contains("T")||current.contains("K"))){
             Double temp = 0.0;
             if(current.contains("K")) {
                 temp = Double.parseDouble(current);
@@ -750,6 +754,11 @@ public class Parse implements Runnable {
                 if (dollar) {
                     current = change_to_price(current, current2, current3, current4);
                     //current =handleDot(current);
+                    if(current.contains(".")){
+                        String[] tempArr = current.split("\\.");
+                        if(tempArr[0].equals(""))
+                            current = "0"+current;
+                    }
                     updateDictionaries(current);
                     String current2Lower = current2.toLowerCase();
                     if (current2Lower.equals("dollars"))
@@ -865,9 +874,7 @@ public class Parse implements Runnable {
                         current = current + "B";
                         ToAdd2Counter = ToAdd2Counter + 1;
                     }
-                    if (current.contains("M")) {
-                        current = current.substring(0, current.length() - 1) + " M";
-                    }
+
                 }
                 if (isNumeric2(tempCurrent) && tempCurrent.contains(","))
                     tempCurrent = changeNumToRegularNum(tempCurrent);
@@ -1077,7 +1084,7 @@ public class Parse implements Runnable {
      * @return the number after changing without zeros in the beginning
      */
     private String handleZero(String current) {
-        if(current.contains("\\.")|| current.contains(","))
+        if(current.contains(".")|| current.contains(","))
             return current;
         else {
             for(int i = 0 ; i < current.length(); i++){
@@ -2361,7 +2368,7 @@ public class Parse implements Runnable {
      */
     private boolean CheckIfValidString(String str) {
         boolean ans = false;
-        if (isNumeric2(str) && !str.contains("-")  && !str.contains("\\.")) {
+        if (isNumeric2(str) && !str.contains("-")  && !str.contains(".")) {
             for (int i = 0; i < str.length(); i++) {
                 char charAt2 = str.charAt(i);
                 if (Character.isLetter(charAt2)) {
@@ -2374,7 +2381,7 @@ public class Parse implements Runnable {
             }
             ans = true;
         }
-        if (isNumeric2(str) && (str.contains("-") || str.contains("\\."))) {
+        if (isNumeric2(str) && (str.contains("-") || str.contains("."))) {
             for (int i = 0; i < str.length(); i++) {
                 char charAt2 = str.charAt(i);
                 if (Character.isLetter(charAt2)) {
