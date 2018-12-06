@@ -80,7 +80,7 @@ public class Indexer implements Runnable {
         while (true) {
             if (!docQueue.isEmpty()) {
                 int counter = 10000;
-                while (counter > 0  && !stop || !docQueue.isEmpty() && stop) {
+                while (counter > 0 && !stop || !docQueue.isEmpty() && stop) {
                     // ------ START: ADD ALL DOCUMENT DETAILS TO DOCUMENT DICTIONARY ------
                     Document doc = null;
                     try {
@@ -223,8 +223,7 @@ public class Indexer implements Runnable {
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\termDictionary", 1);
             writeTermDictionaryForShowToDisk(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow", true);
             writeDictionaryToDisk(postingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
-        }
-        else {
+        } else {
             isDictionaryStemmed = false;
             mergePostingFiles(postingPath + "\\postingFilesWithoutStemming");
             writeDictionaryToDisk(postingPath + "\\postingFilesWithoutStemming\\termDictionary", 1);
@@ -238,21 +237,6 @@ public class Indexer implements Runnable {
             indexedCities = true;
         }
         deleteAllTempFiles(postingPath);
-        /*
-        System.out.println("Need to delete");
-        int[] intToOpen =termDictionary.get("TermToCheck");
-        if(isDictionaryStemmed) {
-            RandomAccessFile ToCheck = new RandomAccessFile(postingPath+"\\postingFilesWithStemming\\documentDictionary", "r");
-            //ToCheck.seek((long) intToOpen[2]);
-            ToCheck.write(intToOpen[2]);
-        }
-        else {
-            RandomAccessFile ToCheck = new RandomAccessFile(postingPath+"\\postingFilesWithStemming\\documentDictionary", "r");
-            //ToCheck.seek((long) intToOpen[2]);
-            ToCheck.write(intToOpen[2]);
-
-        }
-        */
         // ------ END: MERGE ALL WRITTEN POSTING TEMP FILES AND WRITE DICTIONARIES TO FILES ------
     }
 
@@ -355,6 +339,9 @@ public class Indexer implements Runnable {
 
             // updates the bytes counter for the posting pointer
             postingPointer = postingPointer + postingLineToAdd.getBytes().length;
+            // for adding a '\n' bit
+            if (!toMainPosting.isEmpty())
+                postingPointer = postingPointer + 1;
 
             // keep writing more posting lines
             while (!toMainPosting.isEmpty()) {
@@ -374,14 +361,15 @@ public class Indexer implements Runnable {
 //                postingLineToAdd = sortByTf(postingLineToAdd);
 
                 // writes the posting line
-                bw.write('\n' + postingLineToAdd);
+                postingLineToAdd = '\n' + postingLineToAdd;
+                bw.write(postingLineToAdd);
 
                 // updates the posting pointer in the dictionary to refer to the line in the posting file
                 termData = termDictionary.get(term);
                 termData[2] = postingPointer;
 
                 // updates the bytes counter for the posting pointer
-                postingPointer = postingPointer + postingPointer;
+                postingPointer = postingPointer + postingLineToAdd.getBytes().length;
             }
 
             // closing all Buffered Readers
@@ -454,8 +442,12 @@ public class Indexer implements Runnable {
             String term = postingLineToAdd.substring(0, toCut);
             String[] termData = corpusCityDictionary.get(term);
             termData[3] = String.valueOf(postingPointer);
+
             // updated the bytes counter for the posting pointer
-            postingPointer = postingLineToAdd.getBytes().length;
+            postingPointer = postingPointer + postingLineToAdd.getBytes().length;
+            // for adding a '\n' bit
+            if (!toMainPosting.isEmpty())
+                postingPointer = postingPointer + 1;
 
             // keep writing more posting lines
             while (!toMainPosting.isEmpty()) {
@@ -466,12 +458,14 @@ public class Indexer implements Runnable {
                 // sorts the posting line's entries by normalized tf
 //            postingLineToAdd = sortByTf(postingLineToAdd);
 
-                // writes the posting line
-                bw.write('\n' + postingLineToAdd);
-
-                // updates the posting pointer in the dictionary to refer to the line in the posting file
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
+
+                // writes the posting line
+                postingLineToAdd = '\n' + postingLineToAdd;
+                bw.write(postingLineToAdd);
+
+                // updates the posting pointer in the dictionary to refer to the line in the posting file
                 termData = corpusCityDictionary.get(term);
                 termData[3] = String.valueOf(postingPointer);
 
