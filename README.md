@@ -7,7 +7,7 @@ that answers the rules given by the course's stuff.
 The application was written in Java, so see that Java is installed on your computer, and
 simply click on the My_Search_Engine.jar for running the application.
 
-## List of the buttons and other elements in the main window and their functionalities:
+## List of the buttons and other elements in the main window and their respective functionalities:
 ### There are 2 "Browse" buttons that open up a File Chooser window:
 1. The upper "Browse" button is for getting the path of the folder of the corpus(the
    data set) and within it the stop words file. It's important that the corpuse's
