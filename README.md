@@ -22,6 +22,7 @@ While checked, it will do one of 2 things:
 2. If the "Load Dictionary" button will be pressed, it will alert the system that the
    posting files and dictionaries that are loaded went through stemming (and save them
    accordingly).
+   
 While unchecked, it will do one of 2 things:
 1. If the "Activate" button will be pressed, it will alert the system the the indexing
    process will be using stemming.
