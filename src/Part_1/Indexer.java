@@ -723,6 +723,7 @@ public class Indexer implements Runnable {
      * resets all the static variables
      */
     public static void resetAll() {
+        docQueue = new ArrayBlockingQueue<>(3000);
         stop = false;
         corpusCityDictionary = new HashMap<>();
         termDictionary = new HashMap<>();
@@ -737,6 +738,7 @@ public class Indexer implements Runnable {
      * resets parts of the static variables in order to index again, with / without stemming
      */
     public static void resetPartially() {
+        docQueue = new ArrayBlockingQueue<>(3000);
         stop = false;
         termDictionary = new HashMap<>();
         documentDictionary = new HashMap<>();
