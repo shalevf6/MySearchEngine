@@ -24,7 +24,6 @@ public class Controller {
     public TextField postingPath;
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
-    public ChoiceBox<String> languageChoiceBox;
     public static String postingPathText;
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;

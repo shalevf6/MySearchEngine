@@ -365,10 +365,17 @@ public class Parse implements Runnable {
                                 String date = dateSplit3 + "-" + monthNumber + "-" + dateSplit1;
                                 updateDictionariesOutsideText(date);
                                 String monthName = getMonthNameForDictionary(monthNumber);
-                                if (Indexer.termDictionary.containsKey(monthName)) {
-                                    int[] corpusTermData = Indexer.termDictionary.get(monthName);
-                                    if (currentTermDictionary.containsKey(monthName.toLowerCase())) {
-                                        short[] termData = currentTermDictionary.get(monthName.toLowerCase());
+                                String stemmed = monthName;
+                                if (stemming) {
+                                    stemmed = stemmer.stemTerm(monthName).toUpperCase();
+                                    // if the word, after being stemmed, became one of the city strings, save it before stemming
+                                    if (Indexer.corpusCityDictionary.containsKey(stemmed))
+                                        stemmed = monthName;
+                                }
+                                if (Indexer.termDictionary.containsKey(stemmed)) {
+                                    int[] corpusTermData = Indexer.termDictionary.get(stemmed);
+                                    if (currentTermDictionary.containsKey(stemmed.toLowerCase())) {
+                                        short[] termData = currentTermDictionary.get(stemmed.toLowerCase());
                                         termData[0] = (short) (termData[0] + 1);
                                         if (max_tf < termData[0])
                                             max_tf = termData[0];
@@ -378,7 +385,7 @@ public class Parse implements Runnable {
                                         termData[0] = 1;
                                         if (max_tf < 1)
                                             max_tf = 1;
-                                        currentTermDictionary.put(monthName.toLowerCase(), termData);
+                                        currentTermDictionary.put(stemmed.toLowerCase(), termData);
                                         corpusTermData[0] = corpusTermData[0] + 1;
                                     }
                                     corpusTermData[1] = corpusTermData[1] + 1;
@@ -392,8 +399,8 @@ public class Parse implements Runnable {
                                         termData[0] = 1;
                                         if (max_tf < 1)
                                             max_tf = 1;
-                                        currentTermDictionary.put(monthName.toLowerCase(), termData);
-                                        Indexer.termDictionary.put(monthName, corpusTermData);
+                                            currentTermDictionary.put(stemmed.toLowerCase(), termData);
+                                            Indexer.termDictionary.put(stemmed, corpusTermData);
                                     }
                                 }
                                 updateDictionariesOutsideText(monthNumber + "-" + dateSplit1);
@@ -1145,12 +1152,12 @@ public class Parse implements Runnable {
                 }
                 return 2;
             }
-        }
-        return 0;
-    }
+     }
+     return 0;
+     }
 
 
-    /**
+     /**
      * handles the 'MONTH YEAR' / 'MONTH DD' date case
      * @param current - a given word that might be a month
      * @param counter - the counter for the words in the split array
@@ -1604,41 +1611,42 @@ public class Parse implements Runnable {
      * @param current - a given word
      */
     private void handleAllLetters(String current) {
-        // checks if the given string is a city
-        if (Indexer.corpusCityDictionary.containsKey(current.toUpperCase())) {
-            handleCityTerms(current.toUpperCase());
-        }
-        else {
-            // all cases which the given string is not a city
-            String stemmed = "";
-            if (stemming) {
-                stemmed = stemmer.stemTerm(current);
-                // if the word, after being stemmed, became one of the city strings, save it before stemming
-                if (Indexer.corpusCityDictionary.containsKey(stemmed.toUpperCase()))
-                    stemmed = current;
-            }
-            // --- case 1: all of the word is in lower letters ---
-            if (current.toLowerCase().equals(current)) {
-                if (stemming)
-                    handleLowerLetters(stemmed.toLowerCase());
-                else
-                    handleLowerLetters(current);
+        if (!current.equals("")) {
+            // checks if the given string is a city
+            if (Indexer.corpusCityDictionary.containsKey(current.toUpperCase())) {
+                handleCityTerms(current.toUpperCase());
             } else {
-                // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
-                if ((current.toUpperCase().equals(current)) || (current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
-                        current.substring(1).toLowerCase().equals(current.substring(1)))) {
-                    String lowerCurrent = current.toLowerCase();
-                    if (stemming)
-                        handleCapitalLetters(stemmed.toLowerCase());
-                    else
-                        handleCapitalLetters(lowerCurrent);
+                // all cases which the given string is not a city
+                String stemmed = "";
+                if (stemming) {
+                    stemmed = stemmer.stemTerm(current);
+                    // if the word, after being stemmed, became one of the city strings, save it before stemming
+                    if (Indexer.corpusCityDictionary.containsKey(stemmed.toUpperCase()))
+                        stemmed = current;
                 }
-                // --- case 4: mixed capital, lower case word - > none of the above cases ---
-                else {
+                // --- case 1: all of the word is in lower letters ---
+                if (current.toLowerCase().equals(current)) {
                     if (stemming)
-                        updateDictionaries(stemmed.toLowerCase());
+                        handleLowerLetters(stemmed.toLowerCase());
                     else
-                        updateDictionaries(current.toLowerCase());
+                        handleLowerLetters(current);
+                } else {
+                    // --- cases 2,3: only first letter of word is a capital letter || all of the word is in capital letters ---
+                    if ((current.toUpperCase().equals(current)) || (current.charAt(0) >= 65 && current.charAt(0) <= 90 &&
+                            current.substring(1).toLowerCase().equals(current.substring(1)))) {
+                        String lowerCurrent = current.toLowerCase();
+                        if (stemming)
+                            handleCapitalLetters(stemmed.toLowerCase());
+                        else
+                            handleCapitalLetters(lowerCurrent);
+                    }
+                    // --- case 4: mixed capital, lower case word - > none of the above cases ---
+                    else {
+                        if (stemming)
+                            updateDictionaries(stemmed.toLowerCase());
+                        else
+                            updateDictionaries(current.toLowerCase());
+                    }
                 }
             }
         }
@@ -1928,13 +1936,16 @@ public class Parse implements Runnable {
      * @return - true if its only letters, else false
      */
     private boolean isOnlyLetters(String current) {
-        char[] chars = current.toCharArray();
-        for (char c : chars) {
-            if(!Character.isLetter(c)) {
-                return false;
+        if (!current.equals("")) {
+            char[] chars = current.toCharArray();
+            for (char c : chars) {
+                if (!Character.isLetter(c)) {
+                    return false;
+                }
             }
+            return true;
         }
-        return true;
+        return false;
     }
 
     /**this function changes the string current to the price according to the directions given in the worksheet
