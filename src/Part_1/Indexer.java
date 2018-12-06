@@ -110,13 +110,7 @@ public class Indexer implements Runnable {
                             short[] termData = docTermDictionary.get(term);
                             String postingValue;
                             short tf = termData[0];
-                            /* // TODO: REMOVE NORMALIZED TF COUNT (OR SAVE IT SOMEWHERE ELSE)
-                            tf = tf / max_tf;
-                            // in order for the normalized tf value not to be too high
-                            String normalizedTf = String.valueOf(tf);
-                            if (normalizedTf.length() >= 8)
-                                normalizedTf = normalizedTf.substring(0, 7);
-                                */
+
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
                                 postingValue = term + ":" + docId + "," + tf + "," + termData[1] + termData[2] + termData[3] + ";";
