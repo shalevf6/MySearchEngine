@@ -4,6 +4,8 @@ import Controller.Controller;
 import GeneralClasses.Document;
 
 import java.io.*;
+import java.net.URL;
+import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -25,15 +27,6 @@ public class Indexer implements Runnable {
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
     private BufferedReader[] bufferedReaders;
-
-    /**
-     * Used for sorting the entries of a posting line according to normalized tf
-     */
-    private PriorityQueue<String> entriesSort = new PriorityQueue<>((o1, o2) -> {
-        String[] data1 = o1.split(",");
-        String[] data2 = o2.split(",");
-        return data1[1].compareTo(data2[1]);
-    });
 
     /**
      * Used for sorting the temp posting lines before writing them to the temp posting file
@@ -253,27 +246,6 @@ public class Indexer implements Runnable {
                     }
             }
         }
-    }
-
-    /**
-     * sorts the posting line entries by the normalized tf value
-     *
-     * @param dictionaryValue - the posting line before sorting
-     * @return - the posting line after sorting
-     */
-    private String sortByTf(String dictionaryValue) {
-        StringBuilder stringBuilder = new StringBuilder();
-        String[] splitByTerm = dictionaryValue.split(":");
-        String[] splitByEntries = splitByTerm[1].split(";");
-        stringBuilder.append(splitByTerm[0] + ":");
-        // enters all the entries into the priority queue for sorting
-        for (String entry : splitByEntries) {
-            entriesSort.add(entry);
-        }
-        // gets the sorted entries out of the priority queue
-        while (!entriesSort.isEmpty())
-            stringBuilder.append(entriesSort.poll() + ";");
-        return stringBuilder.toString();
     }
 
     /**
