@@ -113,6 +113,7 @@ https://github.com/shalevf6/MySearchEngine
 
 ## Outsource code used:
 A geobytes API for getting a city's details: http://geobytes.com/get-city-details-api/
+
 The Porter's Stemmer: http://snowball.tartarus.org/algorithms/porter/stemmer.html
 
 ## Built With
