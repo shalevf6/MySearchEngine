@@ -4,8 +4,9 @@ Through this application, you can index and create a posting lists file and dict
 that answers the rules given by the course's stuff.
 
 ## Setup
-The application was written in Java, so see that Java is installed on your computer, and
-simply click on the My_Search_Engine.jar for running the application.
+The application was written in Java, so see that Java is installed on your computer.
+
+In order to run the application, simply download the file "MySearchEngine.jar" and double click it.
 
 ## List of the buttons and other elements in the main window and their respective functionalities:
 ### There are 2 "Browse" buttons that open up a File Chooser window:
