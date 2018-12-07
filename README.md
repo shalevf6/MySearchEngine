@@ -111,6 +111,11 @@ which is a List<String> of all the languages in the data set.
 ## Link to the project's repository in github:
 https://github.com/shalevf6/MySearchEngine
 
+## Outsource code used:
+A geobytes API for getting a city's details: http://geobytes.com/get-city-details-api/
+
+The Porter's Stemmer: http://snowball.tartarus.org/algorithms/porter/stemmer.html
+
 ## Built With
 JavaFX
 
