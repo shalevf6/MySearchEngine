@@ -52,6 +52,13 @@ documents, depends on whether you checked "Stemming" or not. It will pop up an a
 it's done.
 If the path doesn't exist, or the directory in the path doesn't include all the necessary
 files, an appropriate error alert will be shown.
+For using the "Load Dictionary" button without any problem, the folder you put as input
+needs to include 2 directories and 1 file:
+1. postingFilesWithoutStemming OR postingFilesWithStemming (depends whether "Stemming"
+   is checked or not), inside it the following 4 files: "mainPosting", "termDictionary",
+   "documentDictionary, "termDictionaryForShow".
+2. postingForCities, inside it the following files: "mainCityPosting", "cityDictionary".
+3. the file "languages".
 ### The "Reset" button:
 The "Reset" button will erase all of the data saved (if any) in the disk under the posting
 path, and all of the data saved in the main memory as well (all the dictionaries).
