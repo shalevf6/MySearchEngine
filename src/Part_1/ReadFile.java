@@ -6,6 +6,7 @@ import javafx.scene.control.Alert;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.HashMap;
 
 /**
  * This class reads all the corpus's files and parses through them
@@ -15,6 +16,7 @@ public class ReadFile implements Runnable {
 
     private String dirPath;
     private StringBuilder allDocumentLines;
+    private HashMap<String,Integer> notCities = new HashMap<>();
 
     /**
      * A construct  or for the ReadFile class
@@ -22,6 +24,10 @@ public class ReadFile implements Runnable {
      */
     public ReadFile(String dirPath) {
         this.dirPath = dirPath;
+        notCities.put("TEL",1);
+        notCities.put("AIR",1);
+        notCities.put("CHINA",1);
+        notCities.put("NEWS",1);
     }
 
     /**
@@ -130,17 +136,17 @@ public class ReadFile implements Runnable {
                         counter++;
                         city = docCityArr[counter];
                     }
-                    if (!city.equals("") && city.length() > 1 && isOnlyLetters(city) && !city.toUpperCase().equals("RADIO") &&
-                            !city.toUpperCase().equals("NEWS")) {
+                    if (!city.equals("") && city.length() > 2 && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
-                        // checks if we already added this city to the dictionary
-                        if (!Indexer.termDictionary.containsKey(cityUpper)) {
-                            addToCityDictionary(cityUpper);
-                        }
-                        else {
-                            int[] corpusTermData = Indexer.termDictionary.get(cityUpper);
-                            corpusTermData[0] = corpusTermData[0] + 1;
-                            corpusTermData[1] = corpusTermData[1] + 1;
+                        if (!notCities.containsKey(cityUpper)) {
+                            // checks if we already added this city to the dictionary
+                            if (!Indexer.termDictionary.containsKey(cityUpper)) {
+                                addToCityDictionary(cityUpper);
+                            } else {
+                                int[] corpusTermData = Indexer.termDictionary.get(cityUpper);
+                                corpusTermData[0] = corpusTermData[0] + 1;
+                                corpusTermData[1] = corpusTermData[1] + 1;
+                            }
                         }
                     }
                 }
@@ -234,10 +240,10 @@ public class ReadFile implements Runnable {
                         counter++;
                         docCity = docCityArr[counter];
                     }
-                    if (!docCity.equals("") && docCity.length() > 1 && isOnlyLetters(docCity) && !docCity.toUpperCase().equals("RADIO") &&
-                            !docCity.toUpperCase().equals("NEWS")) {
+                    if (!docCity.equals("") && docCity.length() > 2 && isOnlyLetters(docCity)) {
                         String cityUpper = docCity.toUpperCase();
-                        newDoc.setCity(cityUpper);
+                        if (Indexer.corpusCityDictionary.containsKey(cityUpper))
+                            newDoc.setCity(cityUpper);
                     }
                 }
             }
@@ -290,12 +296,17 @@ public class ReadFile implements Runnable {
             BufferedReader br = new BufferedReader(new InputStreamReader(urlc.getInputStream()));
             String l = br.readLine();
             if (l != null) {
-                if (!Indexer.indexedCities) {
-                    int countryStartIndex = l.indexOf("geobytescountry") + 18;
-                    int countryFinishIndex = l.indexOf("\"", countryStartIndex);
-                    String country = "";
-                    if (countryFinishIndex - countryStartIndex != 0)
-                        country = l.substring(countryStartIndex, countryFinishIndex);
+                int countryStartIndex = l.indexOf("geobytescountry") + 18;
+                int countryFinishIndex = l.indexOf("\"", countryStartIndex);
+                String country = "";
+                boolean hasCountry = true;
+                if (countryFinishIndex - countryStartIndex != 0)
+                    country = l.substring(countryStartIndex, countryFinishIndex);
+                else {
+                    hasCountry = false;
+                    notCities.put(city, 1);
+                }
+                if (hasCountry && !Indexer.indexedCities) {
                     int coinStartIndex = l.indexOf("geobytescurrencycode") + 23;
                     int coinFinishIndex = l.indexOf("\"", coinStartIndex);
                     String coin = "";
@@ -307,25 +318,22 @@ public class ReadFile implements Runnable {
                     if (populationFinishIndex - populationStartIndex != 0) {
                         population = l.substring(populationStartIndex, populationFinishIndex);
                         Double temp = Double.parseDouble(population);
-                        if(temp >= 1000000000){
-                            temp = temp/1000000000;
-                            population =String.format ("%.0f", temp);
+                        if (temp >= 1000000000) {
+                            temp = temp / 1000000000;
+                            population = String.format("%.0f", temp);
                             population = handleDot(population);
                             population = population + "B";
-                        }
-                        else if(temp >= 1000000){
+                        } else if (temp >= 1000000) {
                             temp = temp / 1000000000;
-                            population =String.format ("%.0f", temp);
+                            population = String.format("%.0f", temp);
                             population = handleDot(population);
                             population = population + "M";
-                        }
-                        else if(temp >= 1000){
+                        } else if (temp >= 1000) {
                             temp = temp / 1000;
-                            population =String.format ("%.0f", temp);
+                            population = String.format("%.0f", temp);
                             population = handleDot(population);
                             population = population + "K";
-                        }
-                        else {
+                        } else {
                             population = handleDot(population);
                         }
                     }
@@ -335,16 +343,19 @@ public class ReadFile implements Runnable {
                     cityData[2] = population;
                     Indexer.corpusCityDictionary.put(city, cityData);
                 }
-                int[] corpusTermData = new int[3];
-                corpusTermData[0] = 1;
-                corpusTermData[1] = 1;
-                Indexer.termDictionary.put(city, corpusTermData);
+                if (hasCountry) {
+                    int[] corpusTermData = new int[3];
+                    corpusTermData[0] = 1;
+                    corpusTermData[1] = 1;
+                    Indexer.termDictionary.put(city, corpusTermData);
+                }
             }
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     /** handle cases of numbers with doc that needs to be change to be with only 2 numbers after the dot
      * @param current - the string to check
      * @return the current string after the change

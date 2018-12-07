@@ -14,7 +14,7 @@ import java.util.concurrent.BlockingQueue;
 public class Indexer implements Runnable {
 
     static private boolean stop = false;
-    static public  boolean indexedCities = false;
+    static public boolean indexedCities = false;
     static public int totalUniqueTerms = 0;
     static public int totalDocuments = 0;
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
@@ -72,6 +72,7 @@ public class Indexer implements Runnable {
 
     /**
      * the primary index function
+     *
      * @param postingPath - the path for saving the posting files
      */
     private void indexAll(String postingPath) throws IOException {
@@ -236,6 +237,7 @@ public class Indexer implements Runnable {
 
     /**
      * deletes all the temp files from the posting path
+     *
      * @param postingPath - the posting path which the files are saved in
      */
     private void deleteAllTempFiles(String postingPath) {
@@ -255,6 +257,7 @@ public class Indexer implements Runnable {
 
     /**
      * sorts the posting line entries by the normalized tf value
+     *
      * @param dictionaryValue - the posting line before sorting
      * @return - the posting line after sorting
      */
@@ -275,6 +278,7 @@ public class Indexer implements Runnable {
 
     /**
      * merges all the temp Posting Files into one
+     *
      * @param postingPath - the path for the location of all the temp posting files
      */
     private void mergePostingFiles(String postingPath) {
@@ -347,7 +351,7 @@ public class Indexer implements Runnable {
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
                 if (!termDictionary.containsKey(term)) {
-                    postingLineToAdd = term.toUpperCase()+ ":" + postingLineToAdd.substring(toCut + 1);
+                    postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
                     term = term.toUpperCase();
                 }
 
@@ -387,6 +391,7 @@ public class Indexer implements Runnable {
 
     /**
      * merges all the temp city Posting Files into one
+     *
      * @param postingPath - the path for the location of all the temp city posting files
      */
     private void mergeCityPostingFiles(String postingPath) {
@@ -401,7 +406,7 @@ public class Indexer implements Runnable {
         String[][] postingLines = new String[totalTempPostingFiles][2];
 
         // create a buffered reader for each of the sorted temp posting files
-        while (counter  - 1   < totalTempPostingFiles) {
+        while (counter - 1 < totalTempPostingFiles) {
             try {
                 bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPostingCity" + counter))));
                 counter++;
@@ -488,8 +493,9 @@ public class Indexer implements Runnable {
 
     /**
      * reads the first posting lines from each of the temp posting files into a given postingLines array
+     *
      * @param bufferedReaders - a buffered readers array for reading posting lines from each of the temp posting files
-     * @param postingLines - a string array to insert input of the posting lines from the temp posting files
+     * @param postingLines    - a string array to insert input of the posting lines from the temp posting files
      */
     private void readFirstLines(BufferedReader[] bufferedReaders, String[][] postingLines) {
         // read a line from each of the sorted temp posting files
@@ -530,9 +536,8 @@ public class Indexer implements Runnable {
                 // removes the posting line with the same term from the queue and adds a new line instead
                 getAndAddToQueue();
                 // merges all the posting details for the term from both of the posting lines
-                postingLineToAdd[0] =  postingLineToAdd[0].substring(0, line1.length()) + line2.substring(toCut2 + 1);
-            }
-            else
+                postingLineToAdd[0] = postingLineToAdd[0].substring(0, line1.length()) + line2.substring(toCut2 + 1);
+            } else
                 hasDuplicates = false;
         }
         return postingLineToAdd[0];
@@ -541,6 +546,7 @@ public class Indexer implements Runnable {
     /**
      * gets a posting line from the queue, while adding a new posting line from the same temp sorted
      * posting file the line received was from
+     *
      * @return - a string array which has a posting line and a buffered reader number in it
      */
     private String[] getAndAddToQueue() {
@@ -548,8 +554,8 @@ public class Indexer implements Runnable {
         int brNum = Integer.valueOf(postingLine[1]);
         try {
             String line = bufferedReaders[brNum].readLine();
-            if(line!= null)
-                toMainPosting.add(new String[] {line, postingLine[1]});
+            if (line != null)
+                toMainPosting.add(new String[]{line, postingLine[1]});
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -558,6 +564,7 @@ public class Indexer implements Runnable {
 
     /**
      * turns the dictionary into a sorted string
+     *
      * @return - a string representing the sorted dictionary
      */
     private static List<String> getDictionaryString() {
@@ -588,7 +595,8 @@ public class Indexer implements Runnable {
 
     /**
      * gets a requested dictionary. If it's not on the main memory, pulls it from the appropriate file
-     * @param path - the posting files path
+     *
+     * @param path     - the posting files path
      * @param stemming - is the dictionary looked for is stemmed or not
      */
     private static void setTermDictionary(String path, boolean stemming) throws IOException, ClassNotFoundException {
@@ -607,7 +615,8 @@ public class Indexer implements Runnable {
 
     /**
      * writes a certain dictionary (term / document / city) into a file in the disk
-     * @param path - the path in which the file will be created
+     *
+     * @param path        - the path in which the file will be created
      * @param whatToWrite - to know which dictionary to write to a file in the disk
      */
     private void writeDictionaryToDisk(String path, int whatToWrite) {
@@ -616,7 +625,7 @@ public class Indexer implements Runnable {
             dictionary.createNewFile();
             ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(dictionary));
             if (whatToWrite == 1)
-            objectOutputStream.writeObject(termDictionary);
+                objectOutputStream.writeObject(termDictionary);
             if (whatToWrite == 2) {
                 objectOutputStream.writeObject(documentDictionary);
                 totalDocuments = documentDictionary.size();
@@ -631,7 +640,8 @@ public class Indexer implements Runnable {
 
     /**
      * write the dictionary's string list or the languages string list to a file in the disk
-     * @param path - the path which the dictionary's string should be written to
+     *
+     * @param path            - the path which the dictionary's string should be written to
      * @param writeDictionary - true, if needs to write the term dictionary for show. false, if needs to write the languages list
      */
     private void writeTermDictionaryForShowToDisk(String path, boolean writeDictionary) {
@@ -652,6 +662,7 @@ public class Indexer implements Runnable {
 
     /**
      * reads a dictionary's sorted string list or the languages string list from a file in the disk to the main memory
+     *
      * @return - the dictionary's sorted string list
      */
     public static List<String> readDictionaryForShowToMemory(String path) {
@@ -659,7 +670,7 @@ public class Indexer implements Runnable {
         try {
             // creating an object input stream for reading the dictionary's sorted string list
             ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dictionary));
-            List<String> dictionaryForShow = (List<String>)(objectInputStream.readObject());
+            List<String> dictionaryForShow = (List<String>) (objectInputStream.readObject());
             objectInputStream.close();
             return dictionaryForShow;
         } catch (IOException | ClassNotFoundException e) {
@@ -670,6 +681,7 @@ public class Indexer implements Runnable {
 
     /**
      * reads a dictionary from a file in the disk (term / document / city) to the main memory
+     *
      * @param whatToRead - indicates to what dictionary to insert the object we read
      */
     public static void readDictionaryToMemory(String path, int whatToRead) throws IOException, ClassNotFoundException {
@@ -686,8 +698,9 @@ public class Indexer implements Runnable {
 
     /**
      * loads the term dictionary and the document dictionary from the disk to the main memory
+     *
      * @param tempPostingPath - the temp posting path
-     * @param stemming - is the dictionaries are stemmed or not
+     * @param stemming        - is the dictionaries are stemmed or not
      */
     public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) throws IOException, ClassNotFoundException {
         // read the term dictionary to the memory
