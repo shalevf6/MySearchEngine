@@ -34,12 +34,15 @@ While unchecked, it will do one of 2 things:
 The "Activate" button starts the indexing process, with / without stemming (depends if
 the "Stemming" checkbox is checked / unchecked), using the corpus given as input, and
 writes the posting files and dictionaries to the posting path given as input.
+
 Without using the 2 "Browse" buttons (or text boxes) to choose the necessary paths, the
 "Activate" button will not work.
+
 This process will usually take 10 to 15 minutes for a corpus with about half a million
 documents, depends on whether you check "Stemming" or not. It will pop up an alert when
 it's done with the time the index process took, the number of documents that were indexed,
 and the amount of unique terms that were indexed.
+
 If one of the paths doesn't exist, or the path for the corpus doesn't include the corpus
 directory or the stop words file inside it, an appropriate error alert will be shown.
 ### The "Load Dictionary" button:
@@ -47,11 +50,14 @@ The "Load Dictionary" button opens up a file chooser window. You should choose t
 directory of the directory which all the posting and dictionary files are saved in. After 
 selecting a right directory, it starts the loading process, with / without stemming (depends
 if the "Stemming" checkbox was checked / unchecked).
+
 This process will take less than 10 to 40 seconds for a corpus with about half a million
 documents, depends on whether you checked "Stemming" or not. It will pop up an alert when
 it's done.
+
 If the path doesn't exist, or the directory in the path doesn't include all the necessary
 files, an appropriate error alert will be shown.
+
 For using the "Load Dictionary" button without any problem, the folder you put as input
 needs to include 2 directories and 1 file:
 1. postingFilesWithoutStemming OR postingFilesWithStemming (depends whether "Stemming"
@@ -66,12 +72,14 @@ path, and all of the data saved in the main memory as well (all the dictionaries
 The "Show Dictionary" button will open a new window with all of the unique terms in the
 current dictionary (after indexing or loading), sorted by lexicographic order, with the
 amount of times each of the terms were found in total in the data set.
+
 Keep in mind, the "Show dictionary" button will work only after loading / indexing a
 dataset beforehand. Pressing the "Reset" button will of course mean that only after 
 another loading / indexing, the "Show Dictionary" button will work again.
 ### The "Language Chooser" button:
 The "Language Chooser" button will open a small window with a choice box full of all the
 languages found in the data set.
+
 Keep in mind, the "Show dictionary" button will work only after loading / indexing a
 dataset beforehand. Pressing the "Reset" button will of course mean that only after 
 another loading / indexing, the "Show Dictionary" button will work again.
@@ -80,6 +88,7 @@ The application is able to handle any combinition of order between "Activate" an
 Dictionary" with or without stemming, given that all of that is done on the same corpus.
 For example, you can load all the stemmed posting files of the corpus and after it press
 "Activate" for the non-stemming option.
+
 Keep in notice, that after Indexing / Loading in both options (Stemming / Not Stemming),
 the application will not allow another Loading / Indexing.
 
@@ -91,25 +100,25 @@ computer, under the path that was given as input in the lower "Browse" button or
 If you were loading / indexing a corpus with stemming, a directory named "postingFilesWithStemming"
 will be created, and under it 4 files:
 1. mainPosting - which is the posting file for all the terms in the dictionary (stemmed). can also be
-				 viewed as text.
+		 viewed as text.
 2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
 3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
 4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
-					   as an object, for when you click the "Show Dictionary" button.
+		       as an object, for when you click the "Show Dictionary" button.
 
 If you were loading / indexing a corpus without stemming, a directory named "postingFilesWithoutStemming"
 will be created, and under it 4 files:
 1. mainPosting - which is the posting file for all the terms in the dictionary (not stemmed). can also
-be viewed as text.
+		 be viewed as text.
 2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
 3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
 4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
-					   as an object, for when you click the "Show Dictionary" button.
+		       as an object, for when you click the "Show Dictionary" button.
 					   
 Additionaly, there will be another directory named "postingForCities" that will be created once after
 the first Indexing / Loading, with the 2 following files inside it:
 1. mainCityPosting - which is the posting file for all the cities in the dictionary. can also be
-					 viewed as text.
+		     viewed as text.
 2. cityDictionary - which is a hashMap of all the cities as keys that is saved as an object.
 
 Furthermore, one file (not a directory) named "languages" will be created after one Loading / Indexing,
