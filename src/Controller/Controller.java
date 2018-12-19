@@ -4,17 +4,23 @@ import Part_1.Indexer;
 import Part_1.Parse;
 import Part_1.ReadFile;
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class controlls all the GUI elements from the main.fxml file
@@ -24,12 +30,15 @@ public class Controller {
     public TextField postingPath;
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
+    public TextField queryPath;
+    public CheckBox semanticTreatmentCheckBox;
     public static String postingPathText;
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;
     private boolean alreadyIndexedWithoutStemming = false;
     private TextField tempPostingPath = new TextField();
     public static List<String> languages = new LinkedList<>();
+    public static HashMap<String,Integer> citiesToFilter = new HashMap<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -192,16 +201,17 @@ public class Controller {
                 ListView<String> listView = new ListView<>();
                 listView.getItems().setAll(FXCollections.observableList(dictionaryList));
                 listView.setEditable(false);
-                listView.prefWidth(600);
+                listView.prefWidth(805);
+                listView.prefHeight(500);
                 AnchorPane root = new AnchorPane();
                 root.getChildren().addAll(listView);
                 AnchorPane.setBottomAnchor(listView, 0.0);
                 AnchorPane.setTopAnchor(listView, 0.0);
                 AnchorPane.setRightAnchor(listView, 0.0);
                 AnchorPane.setLeftAnchor(listView, 0.0);
-                root.prefWidth(600);
-                root.prefWidth(400);
-                Scene scene = new Scene(root, 600, 400);
+                root.prefWidth(805);
+                root.prefWidth(500);
+                Scene scene = new Scene(root, 805, 500);
                 stage.initModality(Modality.APPLICATION_MODAL);
                 stage.setScene(scene);
                 stage.show();
@@ -366,7 +376,124 @@ public class Controller {
         alert.show();
     }
 
-    public static void main(String[] args) {
+    /**
+     * Loads and runs through a file with queries
+     * @param actionEvent - unused
+     */
+    public void onQueryLoad(ActionEvent actionEvent) {
+        if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
+            FileChooser fileChooser = new FileChooser();
+            fileChooser.setTitle("Choose a query file");
+            File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
+            if (selectedFile != null) {
+                BufferedReader bufferedReader = null;
+                try {
+                    // read all the text from the queries file
+                    bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile)));
+                    StringBuilder allQueries = new StringBuilder();
+                    String line;
+                    line = bufferedReader.readLine();
+                    if (line != null)
+                        allQueries.append(line);
+                    while ((line = bufferedReader.readLine()) != null) {
+                        allQueries.append("\n").append(line);
+                    }
+                    bufferedReader.close();
+                    int queryStart = allQueries.indexOf("<title>");
+                    getAndRunQueries(queryStart, allQueries);
+//                path.setText(selectedDirectory.getAbsolutePath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        else
+            showErrorAlert("Need to load \\ index a data set before running a query!");
+    }
+
+    /**
+     * goes through the text from a query file, gets the queries from it and runs it through the corpus
+     * @param queryStart - the index of the first query in the text
+     * @param allQueries - a StringBuilder which contains the text of all the text in a query file
+     */
+    private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
+        while (queryStart != -1) {
+            int queryLimit = allQueries.indexOf("</top>", queryStart);
+
+            int queryEnd = allQueries.indexOf("<desc>", queryStart);
+
+            // gets the query from the text
+            String queryString = allQueries.substring(queryStart + 7,queryEnd);
+
+            // runs the query through the corpus
+            runQuery(queryString);
+
+            queryStart = allQueries.indexOf("<title>", queryLimit);
+        }
+    }
+
+    /**
+     * Runs a given query
+     * @param actionEvent - unused
+     */
+    public void onQueryRun(ActionEvent actionEvent) {
+        if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
+            if (queryPath.getText().equals(""))
+                showErrorAlert("You must fill a query in order to run it!");
+            else {
+                runQuery(queryPath.getText());
+            }
+        }
+        else
+            showErrorAlert("Need to load \\ index a data set before running a query!");
+    }
+
+    /**
+     * Shows all the corpus's cities and gets the choice\s of the use
+     * @param actionEvent - unused
+     */
+    public void onShowAndChooseCities(ActionEvent actionEvent) {
+        // check if there are any cities in the corpus
+        if (Indexer.corpusCityDictionary.size() > 0) {
+            ObservableList<String> citiesToShow = FXCollections.observableArrayList();
+            Set<String> cities = Indexer.corpusCityDictionary.keySet();
+            ListView<String> listView = new ListView<String>();
+            listView.setItems(citiesToShow);
+
+            // add all the cities to the ListView object
+            for (String city : cities) {
+                citiesToShow.add(city);
+            }
+
+            listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+            listView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+
+                @Override
+                public void handle(MouseEvent event) {
+                    ObservableList<String> selectedCities = listView.getSelectionModel().getSelectedItems();
+
+                    for (String selectedCity : selectedCities)
+                        citiesToFilter.put(selectedCity,1);
+                }
+            });
+
+            Stage stage = new Stage();
+            Pane root = new Pane();
+            Scene scene = new Scene(root, 805,500);
+            root.getChildren().add(listView);
+            stage.setScene(scene);
+            stage.show();
+        }
+        else
+            showErrorAlert("No cities found in the corpus!");
+    }
+
+    /**
+     * Runs a given query through the corpus
+     * @param query - a given query
+     */
+    private void runQuery(String query) {
 
     }
 }
