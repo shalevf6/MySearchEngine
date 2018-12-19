@@ -3,6 +3,7 @@ package Controller;
 import Part_1.Indexer;
 import Part_1.Parse;
 import Part_1.ReadFile;
+import Part_2.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -17,10 +18,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.*;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * This class controlls all the GUI elements from the main.fxml file
@@ -494,6 +492,7 @@ public class Controller {
      * @param query - a given query
      */
     private void runQuery(String query) {
-
+        Searcher searcher = new Searcher();
+        ArrayList<String> answers =  searcher.queryResults(query);
     }
 }
