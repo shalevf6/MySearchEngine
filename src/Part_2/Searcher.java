@@ -1,60 +1,23 @@
 package Part_2;
 
-import Controller.Controller;
+import GeneralClasses.Document;
+import GeneralClasses.Query;
+import Part_1.Parse;
+import java.util.HashMap;
 
-import java.util.ArrayList;
-
-/**this class will find out which documents from the corpus are more likely to fit to given Query.
- *
- */
 public class Searcher {
 
-    private static boolean onlyCities;
+    public static HashMap<String, int[]> queryDictionary;
+    private String query;
 
-
-    public Searcher(){
-        if(Controller.citiesToFilter.size()>0){
-            onlyCities =true;
-        }
-        else {
-            onlyCities = false;
-        }
-
+    public Searcher(String query) {
+        queryDictionary = new HashMap<>();
+        this.query = query;
     }
 
-    /**Main searcher function
-     * @param query is the Query given from the user
-     * @return Array list with 50 most likely to fit document to the query
-     */
-    public ArrayList<String> queryResults(String query){
-
-        //-----SPECIFIC CITIES CHOSEN-----//
-        if(onlyCities){
-            return queryResultsWithCities(query);
-        }
-        //--------WITHOUT CITY DEPENDENCY-------//
-        else{
-            return queryResultsWithoutCities(query);
-        }
-
-    }
-
-    /**Searcher function when the user doesn't want to include cities dependency.
-     * @param query a query given.
-     * @return ArrayList with top 50 documents relevant to the query that contains cities chosen.
-     */
-    private ArrayList<String> queryResultsWithoutCities(String query) {
-        ArrayList<String> toReturn = new ArrayList<String>(50);
-        return toReturn;
-    }
-
-    /**Searcher function when the user want to include cities dependency.
-     * @param query a query given.
-     * @return ArrayList with top 50 documents relevant to the query that contains cities chosen.
-     */
-    private ArrayList<String> queryResultsWithCities(String query) {
-        ArrayList<String> toReturn = new ArrayList<String>(50);
-
-        return toReturn;
+    public void sendQueryToParse() {
+        Query queryObject = new Query(query);
+        Parse parse = new Parse("",true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
+        parse.run();
     }
 }

@@ -4,8 +4,6 @@ import Controller.Controller;
 import GeneralClasses.Document;
 
 import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
