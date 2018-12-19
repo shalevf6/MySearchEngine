@@ -1,6 +1,8 @@
 package Part_1;
 
 import GeneralClasses.Document;
+import GeneralClasses.Query;
+import Part_2.Searcher;
 
 import java.io.*;
 import java.util.HashMap;
@@ -13,7 +15,7 @@ import java.util.concurrent.BlockingQueue;
 public class Parse implements Runnable {
 
     static public boolean stemming;
-    static private boolean stop = false;
+    private static boolean stop = false;
     static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(3000);
     private HashMap<String, short[]> currentTermDictionary;
     private HashMap<String, Integer> StopWords;
@@ -24,13 +26,19 @@ public class Parse implements Runnable {
     private boolean dollar;
     private int docPart;
     private int firstPartCounter;
+    private boolean forQuery;
+    private HashMap<String, int[]> termDictionary;
+    private Query query;
 
     /**
      * a constructor for the Parse class
      * @param path - the path to the stop words file
+     * @param forQuery - decides if the parse is for a query or for a corpus
      */
-    public Parse(String path) {
+    public Parse(String path, boolean forQuery, Query query) {
         getStopWords(path);
+        this.forQuery = forQuery;
+        this.query = query;
     }
 
     /**
@@ -52,7 +60,6 @@ public class Parse implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     /**
@@ -60,40 +67,58 @@ public class Parse implements Runnable {
      */
     private void parseAll() {
         while (true) {
-            if (!docQueue.isEmpty()) {
+            if (!docQueue.isEmpty() || query != null) {
+                String[] documents = null;
+                // for fixing the parser to stem / not stem according to the indexed corpus
+                if (forQuery) {
+                    termDictionary = Searcher.queryDictionary;
+                    documents = new String[1];
+                    documents[0] = query.getQueryText();
+                    if (Indexer.isDictionaryStemmed)
+                        stemming = true;
+                    else
+                        stemming = false;
+                }
+                else
+                    termDictionary = Indexer.termDictionary;
                 if (stemming)
                     stemmer = new Stemmer();
                 currentTermDictionary = new HashMap<>();
                 max_tf = 0;
                 dollar = false;
                 docPart = 1;
+                boolean turnToQuery = true;
                 boolean turnToDocument = true;
                 boolean turnToTitle = true;
                 boolean turnToDate = true;
                 Document document = null;
-                try {
-                    document = docQueue.take();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                System.out.println(document.getDocId());
-                String[] documents = document.getDocText();
-                if (documents == null)
-                    turnToDocument = false;
-                String documentTitle = document.getDocTitle();
-                if (documentTitle == null)
-                    turnToTitle = false;
-                String documentDate = document.getDocDate();
-                if (documentDate == null)
-                    turnToDate = false;
-                String documentCity = document.getCity();
-                if (documentCity != null) {
-                    short[] cityData = new short[4];
-                    cityData[0] = 1;
-                    currentTermDictionary.put(documentCity, cityData);
+                String documentTitle = null;
+                String documentDate = null;
+                if (!forQuery) {
+                    try {
+                        document = docQueue.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.println(document.getDocId());
+                    documents = document.getDocText();
+                    if (documents == null)
+                        turnToDocument = false;
+                    documentTitle = document.getDocTitle();
+                    if (documentTitle == null)
+                        turnToTitle = false;
+                    documentDate = document.getDocDate();
+                    if (documentDate == null)
+                        turnToDate = false;
+                    String documentCity = document.getCity();
+                    if (documentCity != null) {
+                        short[] cityData = new short[4];
+                        cityData[0] = 1;
+                        currentTermDictionary.put(documentCity, cityData);
+                    }
                 }
                 // in order to go through both the document's text and the document title
-                while (turnToDocument || turnToTitle) {
+                while ((turnToDocument || turnToTitle) && turnToQuery) {
                     // means now we parse through the document's title
                     if (!turnToDocument) {
                         documents = new String[1];
@@ -338,13 +363,17 @@ public class Parse implements Runnable {
                             }
                         }
                     }
-                    if (turnToDocument)
-                        turnToDocument = false;
-                    else
-                        turnToTitle = false;
+                    if (forQuery)
+                        turnToQuery = false;
+                    else {
+                        if (turnToDocument)
+                            turnToDocument = false;
+                        else
+                            turnToTitle = false;
+                    }
                 }
                 // adds the date of the document to the dictionary
-                if (turnToDate) {
+                if (turnToDate && !forQuery) {
                     String[] dateSplit = documentDate.split("(?!,[0-9])[?!:,#@^&+{*}|<=>\"\\s;()_\\\\\\[\\]]+");
                     int count = 0;
                     int dateSplitLength = dateSplit.length;
@@ -371,8 +400,8 @@ public class Parse implements Runnable {
                                     if (Indexer.corpusCityDictionary.containsKey(stemmed))
                                         stemmed = monthName;
                                 }
-                                if (Indexer.termDictionary.containsKey(stemmed)) {
-                                    int[] corpusTermData = Indexer.termDictionary.get(stemmed);
+                                if (termDictionary.containsKey(stemmed)) {
+                                    int[] corpusTermData = termDictionary.get(stemmed);
                                     if (currentTermDictionary.containsKey(stemmed.toLowerCase())) {
                                         short[] termData = currentTermDictionary.get(stemmed.toLowerCase());
                                         termData[0] = (short) (termData[0] + 1);
@@ -399,7 +428,7 @@ public class Parse implements Runnable {
                                         if (max_tf < 1)
                                             max_tf = 1;
                                             currentTermDictionary.put(stemmed.toLowerCase(), termData);
-                                            Indexer.termDictionary.put(stemmed, corpusTermData);
+                                            termDictionary.put(stemmed, corpusTermData);
                                     }
                                 }
                                 updateDictionariesOutsideText(monthNumber + "-" + dateSplit1);
@@ -412,18 +441,25 @@ public class Parse implements Runnable {
                         document.setDocDate(null);
                     }
                 }
-                // adds the document's dictionary to the document and adds the document into the Indexer queue
-                document.setTfAndTermDictionary(currentTermDictionary, max_tf);
-                // frees more memory by deleting the actual text of the document
-                document.deleteDocumentText();
-                try {
-                    Indexer.docQueue.put(document);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                if (!forQuery) {
+                    // adds the document's dictionary to the document and adds the document into the Indexer queue
+                    document.setTfAndTermDictionary(currentTermDictionary, max_tf);
+                    // frees more memory by deleting the actual text of the document
+                    document.deleteDocumentText();
+                    try {
+                        Indexer.docQueue.put(document);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                else {
+                    stop = true;
+                    query = null;
                 }
             } else {
                 if (stop) {
-                    Indexer.stop();
+                    if (!forQuery)
+                        Indexer.stop();
                     break;
                 }
             }
@@ -438,8 +474,8 @@ public class Parse implements Runnable {
         if (!current.equals("")) {
             short[] termData;
             int[] corpusTermData;
-            if (Indexer.termDictionary.containsKey(current)) {
-                corpusTermData = Indexer.termDictionary.get(current);
+            if (termDictionary.containsKey(current)) {
+                corpusTermData = termDictionary.get(current);
                 if (currentTermDictionary.containsKey(current)) {
                     termData = currentTermDictionary.get(current);
                     short tf = termData[0];
@@ -464,7 +500,7 @@ public class Parse implements Runnable {
                 corpusTermData = new int[3];
                 corpusTermData[0] = 1;
                 corpusTermData[1] = 1;
-                Indexer.termDictionary.put(current, corpusTermData);
+                termDictionary.put(current, corpusTermData);
             }
         }
     }
@@ -515,7 +551,7 @@ public class Parse implements Runnable {
             // if the term exists in the document's dictionary, update the tf count
             if (currentTermDictionary.containsKey(current)) {
                 existsInDocumentDictionaryCase(current);
-                int[] corpusTermData = Indexer.termDictionary.get(current);
+                int[] corpusTermData = termDictionary.get(current);
                 corpusTermData[1] = corpusTermData[1] + 1;
             }
             // enter the new term entry to the document's dictionary
@@ -529,11 +565,11 @@ public class Parse implements Runnable {
                     termData[3] = 1;
                 currentTermDictionary.put(current, termData);
                 // enter the new term to the corpus's dictionary
-                if (!Indexer.termDictionary.containsKey(current))
-                    Indexer.termDictionary.put(current, new int[]{1,1,0});
+                if (!termDictionary.containsKey(current))
+                    termDictionary.put(current, new int[]{1,1,0});
                 // update the df of the term in the corpus's dictionary
                 else {
-                    int[] corpusTermData = Indexer.termDictionary.get(current);
+                    int[] corpusTermData = termDictionary.get(current);
                     corpusTermData[0] = corpusTermData[0] + 1;
                     corpusTermData[1] = corpusTermData[1] + 1;
                 }
@@ -1690,7 +1726,7 @@ public class Parse implements Runnable {
                 max_tf = (short) (tf + 1);
             if (firstPartCounter > 0)
                 cityData[3] = 1;
-            int[] corpusTermData = Indexer.termDictionary.get(city);
+            int[] corpusTermData = termDictionary.get(city);
             corpusTermData[1] = corpusTermData[1] + 1;
         }
         // the city is not in this document's dictionary
@@ -1703,9 +1739,7 @@ public class Parse implements Runnable {
             if (firstPartCounter > 0)
                 cityData[3] = 1;
             currentTermDictionary.put(city, cityData);
-            int[] corpusTermData = Indexer.termDictionary.get(city);
-            if (corpusTermData == null) // TODO : DELETE THIS
-                System.out.println();
+            int[] corpusTermData = termDictionary.get(city);
             corpusTermData[1] = corpusTermData[1] + 1;
             corpusTermData[0] = corpusTermData[0] + 1;
         }
@@ -1750,11 +1784,11 @@ public class Parse implements Runnable {
         String currentUpper = current.toUpperCase();
         short[] termData;
         // word is not in corpus dictionary and is not in document dictionary
-        if (!Indexer.termDictionary.containsKey(current) && !Indexer.termDictionary.containsKey(currentUpper))
+        if (!termDictionary.containsKey(current) && !termDictionary.containsKey(currentUpper))
             notInDictionaries(current, false);
         else {
             // word is in corpus dictionary in lower case
-            if (Indexer.termDictionary.containsKey(current)) {
+            if (termDictionary.containsKey(current)) {
                 // word is in document dictionary
                 if (currentTermDictionary.containsKey(current)) {
                     termData = currentTermDictionary.get(current);
@@ -1765,7 +1799,7 @@ public class Parse implements Runnable {
                         max_tf = (short) (tf + 1);
                     if (firstPartCounter > 0)
                         termData[3] = 1;
-                    int[] corpusTermData = Indexer.termDictionary.get(current);
+                    int[] corpusTermData = termDictionary.get(current);
                     corpusTermData[1] = corpusTermData[1] + 1;
                 }
                 // word is not in document dictionary
@@ -1778,15 +1812,15 @@ public class Parse implements Runnable {
                     if (firstPartCounter > 0)
                         termData[3] = 1;
                     currentTermDictionary.put(current, termData);
-                    int[] corpusTermData = Indexer.termDictionary.get(current);
+                    int[] corpusTermData = termDictionary.get(current);
                     corpusTermData[0] = corpusTermData[0] + 1;
                     corpusTermData[1] = corpusTermData[1] + 1;
                 }
             } else {
                 // word is in corpus dictionary in upper case
-                if (Indexer.termDictionary.containsKey(currentUpper)) {
-                    int[] corpusTermData = Indexer.termDictionary.get(currentUpper);
-                    Indexer.termDictionary.remove(currentUpper);
+                if (termDictionary.containsKey(currentUpper)) {
+                    int[] corpusTermData = termDictionary.get(currentUpper);
+                    termDictionary.remove(currentUpper);
                     // word is not in document dictionary
                     if (!currentTermDictionary.containsKey(current)) {
                         corpusTermData[0] = corpusTermData[0] + 1;
@@ -1804,7 +1838,7 @@ public class Parse implements Runnable {
                         existsInDocumentDictionaryCase(current);
                     }
                     corpusTermData[1] = corpusTermData[1] + 1;
-                    Indexer.termDictionary.put(current, corpusTermData);
+                    termDictionary.put(current, corpusTermData);
                 }
             }
         }
@@ -1818,7 +1852,7 @@ public class Parse implements Runnable {
     private void handleCapitalLetters(String current) {
         String currentUpper = current.toUpperCase();
         // word is not in corpus dictionary and is not in document dictionary
-        if (!Indexer.termDictionary.containsKey(current) && !Indexer.termDictionary.containsKey(currentUpper))
+        if (!termDictionary.containsKey(current) && !termDictionary.containsKey(currentUpper))
             notInDictionaries(current, true);
         else {
             short[] termData;
@@ -1851,20 +1885,20 @@ public class Parse implements Runnable {
     private void existsInCorpusDictionary(String current, String currentUpper, boolean upDf) {
         int[] corpusTermData;
         // word is in corpus dictionary in capital letters
-        if (Indexer.termDictionary.containsKey(currentUpper)) {
-            corpusTermData = Indexer.termDictionary.get(currentUpper);
+        if (termDictionary.containsKey(currentUpper)) {
+            corpusTermData = termDictionary.get(currentUpper);
             if (upDf)
                 corpusTermData[0] = corpusTermData[0] + 1;
             corpusTermData[1] = corpusTermData[1] + 1;
-            Indexer.termDictionary.put(currentUpper, corpusTermData);
+            termDictionary.put(currentUpper, corpusTermData);
         }
         // word is in corpus dictionary in lower case
         else {
-            corpusTermData = Indexer.termDictionary.get(current);
+            corpusTermData = termDictionary.get(current);
             if (upDf)
                 corpusTermData[0] = corpusTermData[0] + 1;
             corpusTermData[1] = corpusTermData[1] + 1;
-            Indexer.termDictionary.put(current, corpusTermData);
+            termDictionary.put(current, corpusTermData);
         }
     }
 
@@ -1886,10 +1920,10 @@ public class Parse implements Runnable {
             termData[3] = 1;
         currentTermDictionary.put(current, termData);
         if (isUpperCase) {
-            Indexer.termDictionary.put(current.toUpperCase(), corpusTermData);
+            termDictionary.put(current.toUpperCase(), corpusTermData);
 
         } else {
-            Indexer.termDictionary.put(current, corpusTermData);
+            termDictionary.put(current, corpusTermData);
         }
     }
 
@@ -1906,7 +1940,7 @@ public class Parse implements Runnable {
             String currentUpper = current.toUpperCase();
             if (currentTermDictionary.containsKey(current)) {
                 // checks if exists in corpus dictionary in upper case letters
-                if (Indexer.termDictionary.containsKey(currentUpper))
+                if (termDictionary.containsKey(currentUpper))
                     handleCapitalLetters(current.toLowerCase());
                 else {
                     termData = currentTermDictionary.get(current);
@@ -1918,7 +1952,7 @@ public class Parse implements Runnable {
                     if (firstPartCounter > 0)
                         termData[3] = 1;
                     newTerm = false;
-                    corpusTermData = Indexer.termDictionary.get(current);
+                    corpusTermData = termDictionary.get(current);
                     corpusTermData[1] = corpusTermData[1] + 1;
                 }
             } else {
@@ -1933,18 +1967,18 @@ public class Parse implements Runnable {
             }
             if (newTerm) {
                 // checks if exists in corpus dictionary in upper case letters
-                if (Indexer.termDictionary.containsKey(currentUpper))
+                if (termDictionary.containsKey(currentUpper))
                     handleCapitalLetters(current.toLowerCase());
                 else {
-                    if (Indexer.termDictionary.containsKey(current)) {
-                        corpusTermData = Indexer.termDictionary.get(current);
+                    if (termDictionary.containsKey(current)) {
+                        corpusTermData = termDictionary.get(current);
                         corpusTermData[0] = corpusTermData[0] + 1;
                         corpusTermData[1] = corpusTermData[1] + 1;
                     } else {
                         corpusTermData = new int[3];
                         corpusTermData[0] = 1;
                         corpusTermData[1] = 1;
-                        Indexer.termDictionary.put(current, corpusTermData);
+                        termDictionary.put(current, corpusTermData);
                     }
                 }
             }
