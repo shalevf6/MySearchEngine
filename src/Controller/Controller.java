@@ -3,6 +3,7 @@ package Controller;
 import Part_1.Indexer;
 import Part_1.Parse;
 import Part_1.ReadFile;
+import Part_2.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -90,7 +91,7 @@ public class Controller {
                                     alreadyIndexedWithoutStemming = true;
                                 }
                                 (new File(postingPathText + "\\postingForCities")).mkdir();
-                                Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt");
+                                Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt", false, null);
                                 ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
                                 Parse.resetPartially();
@@ -494,6 +495,7 @@ public class Controller {
      * @param query - a given query
      */
     private void runQuery(String query) {
-
+        Searcher searcher = new Searcher(query);
+        searcher.sendQueryToParse();
     }
 }
