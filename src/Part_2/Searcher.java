@@ -20,5 +20,4 @@ public class Searcher {
         Parse parse = new Parse("",true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
         parse.run();
     }
-
 }

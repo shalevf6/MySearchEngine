@@ -20,7 +20,7 @@ public class Indexer implements Runnable {
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
     static private HashMap<String, String[]> documentDictionary = new HashMap<>();
     static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(3000);
-    static HashMap<String, int[]> termDictionary = new HashMap<>();
+    public static HashMap<String, int[]> termDictionary = new HashMap<>();
     public static boolean isDictionaryStemmed;
     private HashMap<String, String> tempTermDictionary = new HashMap<>();
     private int totalTempPostingFiles = 0;
