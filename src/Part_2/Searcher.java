@@ -30,7 +30,7 @@ public class Searcher {
      */
     public Queue<String> processQuery() {
         Query queryObject = new Query(query);
-        Parse parse = new Parse("", true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
+        Parse parse = new Parse("C:\\Users\\Shalev\\Desktop\\corpus\\stop_words.txt", true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
         parse.run();
         Ranker ranker = new Ranker();
 
