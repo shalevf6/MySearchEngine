@@ -3,7 +3,6 @@ package Part_1;
 import GeneralClasses.Document;
 import GeneralClasses.Query;
 import Part_2.Searcher;
-
 import java.io.*;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -1669,7 +1668,7 @@ public class Parse implements Runnable {
      * @param current - a given word
      */
     private void handleAllLetters(String current) {
-        if (!current.equals("")) {
+        if (!current.equals("") && current.length() > 1) {
             // checks if the given string is a city
             if (Indexer.corpusCityDictionary.containsKey(current.toUpperCase())) {
                 handleCityTerms(current.toUpperCase());
@@ -1932,7 +1931,7 @@ public class Parse implements Runnable {
      * @param current - the current term to be added to the dictionaries
      */
     private void updateDictionaries(String current) {
-        if (!current.equals("")) {
+        if (!current.equals("") && current.length() > 1) {
             current = current.trim();
             boolean newTerm = true;
             short[] termData;
