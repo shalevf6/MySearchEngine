@@ -80,7 +80,7 @@ public class Indexer implements Runnable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    String[] docData = new String[4];
+                    String[] docData = new String[5];
                     docData[0] = Integer.toString(doc.getMax_tf());
                     docData[1] = Integer.toString(doc.getUniqueWords());
                     String city = doc.getCity();
@@ -97,11 +97,13 @@ public class Indexer implements Runnable {
                     doc.deleteDictionary();
                     // ------ START: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     Set<String> termSet = docTermDictionary.keySet();
+                    int size = 0;
                     for (String term : termSet) {
                         if (!term.equals("")) {
                             short[] termData = docTermDictionary.get(term);
                             String postingValue;
                             short tf = termData[0];
+                            size = size + tf;
 
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
@@ -117,6 +119,8 @@ public class Indexer implements Runnable {
                             }
                         }
                     }
+                    // SAVE AMOUNT OF TOTAL TERMS IN DOCUMENT DICTIONARY
+                    docData[4] = String.valueOf(size);
                     // ------ END: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     counter--;
                 }
