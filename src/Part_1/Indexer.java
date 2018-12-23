@@ -18,7 +18,7 @@ public class Indexer implements Runnable {
     static public int totalUniqueTerms = 0;
     static public int totalDocuments = 0;
     static public HashMap<String, String[]> corpusCityDictionary = new HashMap<>();
-    static private HashMap<String, String[]> documentDictionary = new HashMap<>();
+    static public HashMap<String, String[]> documentDictionary = new HashMap<>();
     static BlockingQueue<Document> docQueue = new ArrayBlockingQueue<>(3000);
     public static HashMap<String, int[]> termDictionary = new HashMap<>();
     public static boolean isDictionaryStemmed;
