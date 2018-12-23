@@ -36,8 +36,8 @@ public class Ranker {
         return ans;
     }
 
-    public Queue<String[]> rank(String[] query) {
-        Queue<String[]> rankToReturn = new LinkedList<>();
+    public Queue<String> rank(String[] query) {
+        Queue<String> rankToReturn = new LinkedList<>();
         HashMap<String, String[]>[] allMaps = new HashMap[query.length];
             //PriorityQueue[] allQueryTerms = new PriorityQueue[query.length];
             RandomAccessFile ToCheck = null;
@@ -141,7 +141,7 @@ public class Ranker {
                         docsAfterBM25.add(arr);
                     }
                 while(!docsAfterBM25.isEmpty()){
-                    rankToReturn.add(docsAfterBM25.poll());
+                    rankToReturn.add(docsAfterBM25.poll()[0]);
                 }
         return rankToReturn;
     }
