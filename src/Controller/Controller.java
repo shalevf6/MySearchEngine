@@ -11,8 +11,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.Pane;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -438,7 +437,7 @@ public class Controller {
                         allQueries.append("\n").append(line);
                     }
                     bufferedReader.close();
-                    int queryStart = allQueries.indexOf("<title>");
+                    int queryStart = allQueries.indexOf("<top>");
                     getAndRunQueries(queryStart, allQueries);
 //                path.setText(selectedDirectory.getAbsolutePath());
                 } catch (IOException e) {
@@ -459,13 +458,20 @@ public class Controller {
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
+            int queryBeginning = allQueries.indexOf("<title>", queryStart);
             int queryEnd = allQueries.indexOf("<desc>", queryStart);
 
+            int queryNumStart = allQueries.indexOf("<num>", queryStart);
+            int queryNumEnd = allQueries.indexOf("<title>", queryNumStart);
+
+            // gets the query's id
+            String queryNum = ((allQueries.substring(queryNumStart + 5, queryNumEnd).trim()).split(":"))[1].trim();
+
             // gets the query from the text
-            String queryString = allQueries.substring(queryStart + 7,queryEnd);
+            String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
 
             // runs the query through the corpus
-            runQuery(queryString);
+            runQuery(queryString, queryNum);
 
             queryStart = allQueries.indexOf("<title>", queryLimit);
         }
@@ -480,7 +486,7 @@ public class Controller {
             if (queryPath.getText().equals(""))
                 showErrorAlert("You must fill a query in order to run it!");
             else {
-                runQuery(queryPath.getText());
+                runQuery(queryPath.getText(), null);
             }
         }
         else
@@ -531,9 +537,108 @@ public class Controller {
     /**
      * Runs a given query through the corpus
      * @param query - a given query
+     * @param queryId - a given query's id
      */
-    private void runQuery(String query) {
+    private void runQuery(String query, String queryId) {
         Searcher searcher = new Searcher(query);
-        searcher.sendQueryToParse();
+        Queue<String> relevantDocs = searcher.processQuery();
+
+        // makes sure there are any relevant documents for the given query
+        if (relevantDocs.isEmpty())
+            showErrorAlert("No relevant documents found for the query: " + query);
+        else {
+            ObservableList<String> list = FXCollections.observableArrayList(relevantDocs);
+            ListView<String> listView = new ListView<>(list);
+            Stage stage = new Stage();
+            StackPane pane = new StackPane();
+            Scene scene = new Scene(pane, 600, 500);
+            stage.setScene(scene);
+            pane.getChildren().add(listView);
+            Button saveResultsButton = new Button("Save Results");
+            saveResultsButton.setWrapText(true);
+            saveResultsButton.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    DirectoryChooser directoryChooser = new DirectoryChooser();
+                    directoryChooser.setTitle("Choose a path");
+                    File selectedDirectory = directoryChooser.showDialog(stage);
+                    if (selectedDirectory != null)
+                        showErrorAlert("No Directory was chose, so the results were not saved!");
+                    else {
+                        File resultsFile;
+                        if (queryId == null) {
+                            int id = 1;
+                            while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
+                                id++;
+                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
+                        }
+                        else
+                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + queryId);
+                        try {
+                            resultsFile.createNewFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+            listView.setCellFactory(param -> new Cell());
+            stage.show(); // TODO : MAKE SURE THAT FOR A QUERY FILE INPUT, IT WAITS UNTIL WINDOW CLOSES FOR NEXT QUERY
+        }
+    }
+
+    /**
+     * Shows the 5 most dominant entities in a document
+     * @param document - the document
+     */
+    private void showEntities(String document) {
+        List<String> entitiesList = new LinkedList<>(); // TODO : NEED REPLACE WITH THE ACTUAL ENTITIES OF THE GIVEN DOCUMENT
+        ObservableList<String> entities = FXCollections.observableArrayList(entitiesList);
+        ListView<String> listView = new ListView<>(entities);
+        Stage stage = new Stage();
+        StackPane pane = new StackPane();
+        Scene scene = new Scene(pane, 600, 500);
+        stage.setScene(scene);
+        pane.getChildren().add(listView);
+        stage.show();
+    }
+
+    /**
+     * A class for showing each doc number relevant to the query, with its ranking grade and a button to show its entities
+     * The code for the class was found at: https://stackoverflow.com/questions/15661500/javafx-listview-item-with-an-image-button
+     */
+    class Cell extends ListCell<String> {
+        HBox hbox = new HBox();
+        Label label = new Label("(empty)");
+        Pane pane = new Pane();
+        Button button = new Button("Identify Entities");
+
+        String lastItem;
+
+        Cell() {
+            super();
+            hbox.getChildren().addAll(label, pane, button);
+            HBox.setHgrow(pane, Priority.ALWAYS);
+            button.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    showEntities(lastItem.split(" ")[0]);
+                }
+            });
+        }
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(null);  // No text in label of super class
+            if (empty) {
+                lastItem = null;
+                setGraphic(null);
+            } else {
+                lastItem = item;
+                label.setText(item!=null ? item : "<null>");
+                setGraphic(hbox);
+            }
+        }
+
     }
 }
