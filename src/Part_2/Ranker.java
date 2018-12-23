@@ -6,18 +6,38 @@ import Part_1.Indexer;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.PriorityQueue;
+import java.util.*;
 
 /**
  * will rank all the documents in the corpus according to given query
  */
 public class Ranker {
-    public Ranker(){ }
-    private HashMap<Integer,String> rank(String[] query) throws IOException {
-        HashMap<Integer,String> rankToreturn = new HashMap<>();
+     private double avgAllDocsLength;
+     private double numberOfDocs;
+
+    public Ranker(){
+       this.numberOfDocs = Indexer.totalDocuments;
+       avgAllDocsLength = calcAvgDocLength(numberOfDocs);
+    }
+
+    /**calculate corpus average document length
+     * @param numberOfDocs
+     * @return the average document length in the corpus.
+     */
+    private double calcAvgDocLength(double numberOfDocs) {
+        double ans = 0.0;
+        Collection<String[]> docs = Indexer.documentDictionary.values();
+        Iterator<String[]> employeeSalaryIterator = docs.iterator();
+        while (employeeSalaryIterator.hasNext()) {
+            String[] entry = employeeSalaryIterator.next();
+            ans =ans + Integer.valueOf(entry[4]);
+        }
+        ans = ans / numberOfDocs;
+        return ans;
+    }
+
+    private Queue<String> rank(String[] query) throws IOException {
+        Queue<String> rankToreturn = new LinkedList<>();
         PriorityQueue[] allQueryTerms = new PriorityQueue[query.length];
         for (PriorityQueue allQueryTerm : allQueryTerms) {
             allQueryTerm = new PriorityQueue<>(new Comparator<String[]>() {
