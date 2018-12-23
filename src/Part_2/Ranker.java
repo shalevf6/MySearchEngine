@@ -36,7 +36,7 @@ public class Ranker {
         return ans;
     }
 
-    private Queue<String> rank(String[] query) throws IOException {
+    public Queue<String> rank(String[] query) {
         Queue<String> rankToreturn = new LinkedList<>();
         PriorityQueue[] allQueryTerms = new PriorityQueue[query.length];
         for (PriorityQueue allQueryTerm : allQueryTerms) {
