@@ -13,6 +13,7 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Modality;
@@ -21,7 +22,7 @@ import java.io.*;
 import java.util.*;
 
 /**
- * This class controlls all the GUI elements from the main.fxml file
+ * This class controls all the GUI elements from the main.fxml file
  */
 public class Controller {
 
@@ -30,6 +31,13 @@ public class Controller {
     public CheckBox stemmingCheckBox;
     public TextField queryPath;
     public CheckBox semanticTreatmentCheckBox;
+    public Text part2Text;
+    public Text loadQueryText;
+    public Button browseQueryButton;
+    public Button showCitiesButton;
+    public Text orText;
+    public Text insertQueryText;
+    public Button runButton;
     public static String postingPathText;
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;
@@ -125,6 +133,7 @@ public class Controller {
                                     doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal documents indexed: " +
                                             docCount + "\nTotal unique words found: " + termCount);
                                     doneIndexing.show();
+                                    showPart2();
                                 }
                             } else {
                                 showErrorAlert("You must choose an existing stop words file path!");
@@ -179,6 +188,7 @@ public class Controller {
             Parse.resetAll();
             Indexer.resetAll();
             tempPostingPath = new TextField();
+            hidePart2();
         }
     }
 
@@ -267,6 +277,7 @@ public class Controller {
                         Alert alert = new Alert(Alert.AlertType.INFORMATION);
                         alert.setContentText("Dictionaries Loaded Successfully!");
                         alert.show();
+                        showPart2();
                     } catch (IOException | ClassNotFoundException e) {
                         showErrorAlert("Not all dictionary files found in path! Try again");
                         alreadyIndexedWithStemming = tempWithStemming;
@@ -279,6 +290,36 @@ public class Controller {
         else
         if(alreadyIndexedAll())
             showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
+    }
+
+    /**
+     * shows all the relevant buttons and text areas for part 2
+     */
+    private void showPart2() {
+        part2Text.setVisible(true);
+        loadQueryText.setVisible(true);
+        browseQueryButton.setVisible(true);
+        showCitiesButton.setVisible(true);
+        orText.setVisible(true);
+        insertQueryText.setVisible(true);
+        runButton.setVisible(true);
+        queryPath.setVisible(true);
+        semanticTreatmentCheckBox.setVisible(true);
+    }
+
+    /**
+     * hides all the relevant buttons and text areas for part 2
+     */
+    private void hidePart2() {
+        part2Text.setVisible(false);
+        loadQueryText.setVisible(false);
+        browseQueryButton.setVisible(false);
+        showCitiesButton.setVisible(false);
+        orText.setVisible(false);
+        insertQueryText.setVisible(false);
+        runButton.setVisible(false);
+        queryPath.setVisible(false);
+        semanticTreatmentCheckBox.setVisible(false);
     }
 
     /**
