@@ -8,6 +8,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -500,11 +501,63 @@ public class Controller {
     public void onShowAndChooseCities(ActionEvent actionEvent) {
         // check if there are any cities in the corpus
         if (Indexer.corpusCityDictionary.size() > 0) {
+            citiesToFilter = new HashMap<>();
             ObservableList<String> citiesToShow = FXCollections.observableArrayList();
             Set<String> cities = Indexer.corpusCityDictionary.keySet();
             ListView<String> listView = new ListView<String>();
             listView.setItems(citiesToShow);
 
+            Label instructions = new Label("Hold the control button while left clicking your choices for choosing cities, and than click \"Confirm Selection\"");
+            instructions.setWrapText(true);
+            Button confirmSelection = new Button("Confirm Selection");
+            Button demiButton1 = new Button("button");
+            Button demiButton2 = new Button("button");
+            Button demiButton3 = new Button("button");
+            Button demiButton4 = new Button("button");
+            Button demiButton5 = new Button("button");
+            Button demiButton6 = new Button("button");
+            demiButton1.setVisible(false);
+            demiButton2.setVisible(false);
+            demiButton3.setVisible(false);
+            demiButton4.setVisible(false);
+            demiButton5.setVisible(false);
+            demiButton6.setVisible(false);
+
+            Stage stage = new Stage();
+
+            confirmSelection.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    List<String> selected = listView.getSelectionModel().getSelectedItems();
+                    for (String selectedCity : selected) {
+                        citiesToFilter.put(selectedCity, 1);
+                    }
+                    stage.close();
+                }
+            });
+
+            // Create the VBox for the Buttons
+            VBox buttons = new VBox();
+            // Add the Buttons to the VBox
+            buttons.getChildren().addAll(demiButton1,demiButton2,demiButton3,demiButton4,demiButton5,instructions,demiButton6,confirmSelection);
+            // Create the Selection HBox
+            HBox selection = new HBox();
+            // Set Spacing to 10 pixels
+            selection.setSpacing(10);
+            // Add the List and the Buttons to the HBox
+            selection.getChildren().addAll(listView,buttons);
+            // Create the GridPane
+            GridPane root = new GridPane();
+            // Set the horizontal and vertical gaps between children
+            root.setHgap(10);
+            root.setVgap(5);
+            // Add the HBox to the GridPane at position 0
+            root.addColumn(0, selection);
+            // Add the Buttons to the GridPane at position 1
+            root.addColumn(1, buttons);
+
+            listView.setPrefHeight(800);
+            listView.setPrefWidth(605);
             // add all the cities to the ListView object
             for (String city : cities) {
                 citiesToShow.add(city);
@@ -512,25 +565,10 @@ public class Controller {
 
             listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-            listView.setOnMouseClicked(new EventHandler<MouseEvent>() {
-
-                @Override
-                public void handle(MouseEvent event) {
-                    ObservableList<String> selectedCities = listView.getSelectionModel().getSelectedItems();
-
-                    for (String selectedCity : selectedCities)
-                        citiesToFilter.put(selectedCity,1);
-                }
-            });
-
-            Stage stage = new Stage();
-            Pane root = new Pane();
-            Scene scene = new Scene(root, 805,500);
-            root.getChildren().add(listView);
+            Scene scene = new Scene(root, 805, 500);
             stage.setScene(scene);
             stage.show();
-        }
-        else
+        } else
             showErrorAlert("No cities found in the corpus!");
     }
 
