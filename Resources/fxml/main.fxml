@@ -44,30 +44,36 @@
             <Font size="28.0" />
          </font>
       </Text>
-      <Text fx:id="part2Text" layoutX="46.0" layoutY="343.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Part 2:" visible="false" wrappingWidth="123.99999797344208">
+      <Text fx:id="part2Text" layoutX="46.0" layoutY="362.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Part 2:" visible="false" wrappingWidth="123.99999797344208">
          <font>
             <Font size="28.0" />
          </font>
       </Text>
-      <Text fx:id="insertQueryText" layoutX="445.0" layoutY="338.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert query manually:" visible="false">
+      <Text fx:id="insertQueryText" layoutX="445.0" layoutY="357.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Insert query manually:" visible="false">
          <font>
             <Font size="14.0" />
          </font>
       </Text>
-      <TextField fx:id="queryPath" layoutX="444.0" layoutY="350.0" prefHeight="31.0" prefWidth="238.0" visible="false" />
-      <Button fx:id="browseQueryButton" layoutX="256.0" layoutY="347.0" mnemonicParsing="false" onAction="#onQueryLoad" text="Browse" visible="false" />
-      <Text fx:id="orText" layoutX="379.0" layoutY="341.0" strokeType="OUTSIDE" strokeWidth="0.0" text="OR" visible="false" wrappingWidth="33.99999797344208">
+      <TextField fx:id="queryPath" layoutX="444.0" layoutY="369.0" prefHeight="31.0" prefWidth="238.0" visible="false" />
+      <Button fx:id="browseQueryButton" layoutX="256.0" layoutY="366.0" mnemonicParsing="false" onAction="#onQueryLoad" text="Browse" visible="false" />
+      <Text fx:id="orText" layoutX="379.0" layoutY="360.0" strokeType="OUTSIDE" strokeWidth="0.0" text="OR" visible="false" wrappingWidth="33.99999797344208">
          <font>
             <Font size="20.0" />
          </font>
       </Text>
-      <Button fx:id="runButton" layoutX="700.0" layoutY="352.0" mnemonicParsing="false" onAction="#onQueryRun" text="Run" visible="false" />
-      <Text fx:id="loadQueryText" layoutX="237.0" layoutY="338.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Load a query file:" visible="false">
+      <Button fx:id="runButton" layoutX="700.0" layoutY="371.0" mnemonicParsing="false" onAction="#onQueryRun" text="Run" visible="false" />
+      <Text fx:id="loadQueryText" layoutX="237.0" layoutY="357.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Load a query file:" visible="false">
          <font>
             <Font size="14.0" />
          </font>
       </Text>
-      <CheckBox fx:id="semanticTreatmentCheckBox" layoutX="444.0" layoutY="418.0" mnemonicParsing="false" selected="true" text="Semantic Treatment" visible="false" />
-      <Button fx:id="showCitiesButton" layoutX="207.0" layoutY="413.0" mnemonicParsing="false" onAction="#onShowAndChooseCities" text="Show &amp; Choose Cities" visible="false" />
+      <CheckBox fx:id="semanticTreatmentCheckBox" layoutX="444.0" layoutY="437.0" mnemonicParsing="false" selected="true" text="Semantic Treatment" visible="false" />
+      <Button fx:id="showCitiesButton" layoutX="207.0" layoutY="432.0" mnemonicParsing="false" onAction="#onShowAndChooseCities" text="Show &amp; Choose Cities" visible="false" />
+      <Button fx:id="loadStopWordsButton" layoutX="413.0" layoutY="288.0" mnemonicParsing="false" onAction="#onLoadStopWords" text="Load Stop Words File" visible="false" wrapText="true" />
+      <Text fx:id="stopWordsInstructionsText" layoutX="222.0" layoutY="299.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Must insert a stop words file path before inserting queries!" visible="false" wrappingWidth="199.99999797344208">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Text>
    </children>
 </AnchorPane>

@@ -36,7 +36,7 @@ public class Ranker {
         return ans;
     }
 
-    public Queue<String> rank(String[] query) {
+    Queue<String> rank(String[] query) {
         Queue<String> rankToReturn = new LinkedList<>();
         HashMap<String, String[]>[] allMaps = new HashMap[query.length];
         //PriorityQueue[] allQueryTerms = new PriorityQueue[query.length];

@@ -69,6 +69,19 @@ public class Indexer implements Runnable {
     private void indexAll(String postingPath) throws IOException {
         // ------ START: CREATE ALL TEMP POSTING FILES ------
         int tempPostingNum = 1;
+
+        // create the document posting file
+        File docPostingFile;
+        if (Parse.stemming)
+            docPostingFile = new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting");
+        else
+            docPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting");
+        docPostingFile.createNewFile();
+        int docPostingPointer = 0;
+
+        // creating a Buffered Writer for the main posting file
+        BufferedWriter toDocPosting = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(docPostingFile)));
+
         while (true) {
             if (!docQueue.isEmpty()) {
                 int counter = 10000;
@@ -80,7 +93,7 @@ public class Indexer implements Runnable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    String[] docData = new String[5];
+                    String[] docData = new String[6];
                     docData[0] = Integer.toString(doc.getMax_tf());
                     docData[1] = Integer.toString(doc.getUniqueWords());
                     String city = doc.getCity();
@@ -97,6 +110,7 @@ public class Indexer implements Runnable {
                     doc.deleteDictionary();
                     // ------ START: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     Set<String> termSet = docTermDictionary.keySet();
+                    String docPostingLine = docId + ":";
                     int size = 0;
                     for (String term : termSet) {
                         if (!term.equals("")) {
@@ -104,6 +118,12 @@ public class Indexer implements Runnable {
                             String postingValue;
                             short tf = termData[0];
                             size = size + tf;
+
+                            // for the doc posting line entry
+                            if (termDictionary.containsKey(term.toUpperCase()) && !(term.contains("1") || term.contains("2") ||term.contains("3") ||
+                                    term.contains("4") || term.contains("5") || term.contains("6") || term.contains("7") || term.contains("8") ||
+                                    term.contains("9") || term.contains("0")))
+                                docPostingLine = docPostingLine + term.toUpperCase() + ";";
 
                             // ---- it's THE FIRST posting entry for this term ----
                             if (!tempTermDictionary.containsKey(term)) {
@@ -121,6 +141,11 @@ public class Indexer implements Runnable {
                     }
                     // SAVE AMOUNT OF TOTAL TERMS IN DOCUMENT DICTIONARY
                     docData[4] = String.valueOf(size);
+                    docData[5] = String.valueOf(docPostingPointer);
+                    // WRITE NEW POSTING LINE TO DOCUMENT POSTING FILE
+                    docPostingLine = docPostingLine + "\n";
+                    toDocPosting.write(docPostingLine);
+                    docPostingPointer = docPostingPointer + docPostingLine.getBytes().length;
                     // ------ END: ADD POSTING ENTRIES FROM EACH TERM IN THE DOCUMENT ------
                     counter--;
                 }
@@ -200,6 +225,9 @@ public class Indexer implements Runnable {
                     break;
             }
         }
+
+        // close the buffered writer to the document posting file
+        toDocPosting.close();
 
         // ------ START: UPDATE THE TOTAL UNIQUE TERMS FOR THE CORPUS FROM THE TERM DICTIONARY ------
         totalUniqueTerms = termDictionary.size();
@@ -292,8 +320,10 @@ public class Indexer implements Runnable {
             int toCut = postingLineToAdd.indexOf(':');
             String term = postingLineToAdd.substring(0, toCut);
             if (!termDictionary.containsKey(term)) {
-                postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
-                term = term.toUpperCase();
+                if (termDictionary.containsKey(term.toUpperCase())) {
+                    postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
+                    term = term.toUpperCase();
+                }
             }
 
             // sorts the posting line's entries by normalized tf
@@ -324,9 +354,13 @@ public class Indexer implements Runnable {
                 // checks if the term should be in capital letters
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
+                if (termDictionary.containsKey(term.toLowerCase()) && termDictionary.containsKey(term.toUpperCase()))
+                    System.out.println(term);
                 if (!termDictionary.containsKey(term)) {
-                    postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
-                    term = term.toUpperCase();
+                    if (termDictionary.containsKey(term.toUpperCase())) {
+                        postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
+                        term = term.toUpperCase();
+                    }
                 }
 
                 // sorts the posting line's entries by normalized tf
@@ -365,7 +399,6 @@ public class Indexer implements Runnable {
 
     /**
      * merges all the temp city Posting Files into one
-     *
      * @param postingPath - the path for the location of all the temp city posting files
      */
     private void mergeCityPostingFiles(String postingPath) {
@@ -568,26 +601,6 @@ public class Indexer implements Runnable {
     }
 
     /**
-     * gets a requested dictionary. If it's not on the main memory, pulls it from the appropriate file
-     *
-     * @param path     - the posting files path
-     * @param stemming - is the dictionary looked for is stemmed or not
-     */
-    private static void setTermDictionary(String path, boolean stemming) throws IOException, ClassNotFoundException {
-        if (stemming) {
-            if (!isDictionaryStemmed) {
-                readDictionaryToMemory(path + "\\postingFilesWithStemming\\termDictionary", 1);
-                totalUniqueTerms = termDictionary.size();
-                isDictionaryStemmed = true;
-            }
-        } else if (isDictionaryStemmed) {
-            readDictionaryToMemory(path + "\\postingFilesWithoutStemming\\termDictionary", 1);
-            totalUniqueTerms = termDictionary.size();
-            isDictionaryStemmed = false;
-        }
-    }
-
-    /**
      * writes a certain dictionary (term / document / city) into a file in the disk
      *
      * @param path        - the path in which the file will be created
@@ -672,13 +685,19 @@ public class Indexer implements Runnable {
 
     /**
      * loads the term dictionary and the document dictionary from the disk to the main memory
-     *
      * @param tempPostingPath - the temp posting path
-     * @param stemming        - is the dictionaries are stemmed or not
+     * @param stemming - is the dictionaries are stemmed or not
      */
     public static void loadAllDictionariesToMemory(String tempPostingPath, boolean stemming) throws IOException, ClassNotFoundException {
         // read the term dictionary to the memory
-        setTermDictionary(tempPostingPath, stemming);
+        if (stemming) {
+            readDictionaryToMemory(tempPostingPath + "\\postingFilesWithStemming\\termDictionary", 1);
+            isDictionaryStemmed = true;
+        } else {
+            readDictionaryToMemory(tempPostingPath + "\\postingFilesWithoutStemming\\termDictionary", 1);
+            isDictionaryStemmed = false;
+        }
+        totalUniqueTerms = termDictionary.size();
         // reads the document dictionary to the memory
         if (stemming)
             readDictionaryToMemory(tempPostingPath + "\\postingFilesWithStemming\\documentDictionary", 2);
@@ -706,7 +725,6 @@ public class Indexer implements Runnable {
         indexedCities = false;
         totalUniqueTerms = 0;
         totalDocuments = 0;
-        isDictionaryStemmed = false;
     }
 
     /**
@@ -727,5 +745,13 @@ public class Indexer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void main (String[] args) throws IOException, ClassNotFoundException { // TODO : DELETE THIS
+        int termToFind;
+        readDictionaryToMemory("C:\\Users\\Shalev\\Downloads\\POSTINGS\\postingFilesWithoutStemming\\termDictionary", 1);
+
+        System.out.println(termDictionary.get("NOVEMBER")[2]);
+        System.out.println();
     }
 }
