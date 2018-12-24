@@ -18,10 +18,12 @@ public class Searcher {
 
     public static HashMap<String, int[]> queryDictionary;
     private String query;
+    private String stopWordsPath;
 
-    public Searcher(String query) {
+    public Searcher(String query, String stopWordsPath) {
         queryDictionary = new HashMap<>();
         this.query = query;
+        this.stopWordsPath = stopWordsPath;
     }
 
     /**
@@ -30,7 +32,7 @@ public class Searcher {
      */
     public Queue<String> processQuery() {
         Query queryObject = new Query(query);
-        Parse parse = new Parse("C:\\Users\\Shalev\\Desktop\\corpus\\stop_words.txt", true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
+        Parse parse = new Parse(stopWordsPath, true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
         parse.run();
         Ranker ranker = new Ranker();
 

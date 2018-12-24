@@ -192,7 +192,7 @@ public class Parse implements Runnable {
                                         String[] orSplit = current.split("/");
                                         for (int i = 0; i < orSplit.length; i++) {
                                             orSplit[i] = removeExtraDelimiters(orSplit[i]);
-                                            if (orSplit[i].endsWith("'s") && !orSplit[i].equals(""))
+                                            if (!orSplit[i].equals("") && orSplit[i].endsWith("'s"))
                                                 orSplit[i] = orSplit[i].substring(0, orSplit[i].length() - 2);
                                             if (!StopWords.containsKey(orSplit[i].toLowerCase()))
                                                 checkFurtherSplits(orSplit[i]);
@@ -233,7 +233,7 @@ public class Parse implements Runnable {
                                     // means its a different/empty letter case
                                     String[] moreWords = current.split("[.'%$]+");
                                     for (int i = 0; i < moreWords.length; i++) {
-                                        if (moreWords[i].endsWith("'s") && !moreWords[i].equals(""))
+                                        if (!moreWords[i].equals("") && moreWords[i].endsWith("'s"))
                                             moreWords[i] = moreWords[i].substring(0, moreWords[i].length() - 2);
                                         if (!moreWords[i].equals("") && !StopWords.containsKey(moreWords[i]))
                                             updateDictionaries(current.toLowerCase());
@@ -399,7 +399,9 @@ public class Parse implements Runnable {
                                     if (Indexer.corpusCityDictionary.containsKey(stemmed))
                                         stemmed = monthName;
                                 }
-                                if (termDictionary.containsKey(stemmed)) {
+                                if (termDictionary.containsKey(stemmed) || termDictionary.containsKey(stemmed.toLowerCase())) {
+                                    if (termDictionary.containsKey(stemmed.toLowerCase()))
+                                        stemmed = stemmed.toLowerCase();
                                     int[] corpusTermData = termDictionary.get(stemmed);
                                     if (currentTermDictionary.containsKey(stemmed.toLowerCase())) {
                                         short[] termData = currentTermDictionary.get(stemmed.toLowerCase());
@@ -511,7 +513,7 @@ public class Parse implements Runnable {
     private void handleSplitedCase(String[] splitedArray) {
         for (int i = 0; i < splitedArray.length; i++) {
             splitedArray[i] = removeExtraDelimiters(splitedArray[i]);
-            if (splitedArray[i].endsWith("'s") && !splitedArray[i].equals(""))
+            if (!splitedArray[i].equals("") && splitedArray[i].endsWith("'s"))
                 splitedArray[i] = splitedArray[i].substring(0, splitedArray[i].length() - 2);
             if (!splitedArray[i].equals("")) {
                 if (isNumeric2(splitedArray[i]) && !CheckIfValidString(splitedArray[i])) {
@@ -548,10 +550,16 @@ public class Parse implements Runnable {
             }
             short[] termData;
             // if the term exists in the document's dictionary, update the tf count
-            if (currentTermDictionary.containsKey(current)) {
-                existsInDocumentDictionaryCase(current);
-                int[] corpusTermData = termDictionary.get(current);
-                corpusTermData[1] = corpusTermData[1] + 1;
+            if (currentTermDictionary.containsKey(current.toLowerCase())) {
+                existsInDocumentDictionaryCase(current.toLowerCase());
+                if (termDictionary.containsKey(current)) {
+                    int[] corpusTermData = termDictionary.get(current);
+                    corpusTermData[1] = corpusTermData[1] + 1;
+                }
+                else {
+                    int[] corpusTermData = termDictionary.get(current.toLowerCase());
+                    corpusTermData[1] = corpusTermData[1] + 1;
+                }
             }
             // enter the new term entry to the document's dictionary
             else {
@@ -562,10 +570,18 @@ public class Parse implements Runnable {
                 termData[docPart] = 1;
                 if (firstPartCounter > 0)
                     termData[3] = 1;
-                currentTermDictionary.put(current, termData);
+                currentTermDictionary.put(current.toLowerCase(), termData);
                 // enter the new term to the corpus's dictionary
-                if (!termDictionary.containsKey(current))
-                    termDictionary.put(current, new int[]{1,1,0});
+                if (!termDictionary.containsKey(current)) {
+                    if (!termDictionary.containsKey(current.toLowerCase())) {
+                        termDictionary.put(current, new int[]{1, 1, 0});
+                    }
+                    else{
+                        int[] corpusTermData = termDictionary.get(current.toLowerCase());
+                        corpusTermData[0] = corpusTermData[0] + 1;
+                        corpusTermData[1] = corpusTermData[1] + 1;
+                    }
+                }
                 // update the df of the term in the corpus's dictionary
                 else {
                     int[] corpusTermData = termDictionary.get(current);
@@ -1398,7 +1414,7 @@ public class Parse implements Runnable {
         if (dashSplitLength == 2 || dashSplitLength == 3) {
             for (int i = 0; i < dashSplitLength; i++) {
                 dashSplit[i] = removeExtraDelimiters(dashSplit[i]);
-                if (dashSplit[i].endsWith("'s") && !dashSplit[i].equals(""))
+                if (!dashSplit[i].equals("") && dashSplit[i].endsWith("'s"))
                     dashSplit[i] = dashSplit[i].substring(0, dashSplit[i].length() - 2);
                 if (!StopWords.containsKey(dashSplit[i])) {
                     // if there is a delimiter in the word
@@ -1423,7 +1439,7 @@ public class Parse implements Runnable {
         // if there are more than 3 words between the '-' delimiter
         else {
             for (int i = 0; i < dashSplitLength; i++) {
-                if (dashSplit[i].endsWith("'s") && !dashSplit[i].equals(""))
+                if (!dashSplit[i].equals("") && dashSplit[i].endsWith("'s"))
                     dashSplit[i] = dashSplit[i].substring(0, dashSplit[i].length() - 2);
                 checkFurtherSplits(dashSplit[i]);
             }

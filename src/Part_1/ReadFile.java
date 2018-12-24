@@ -136,6 +136,9 @@ public class ReadFile implements Runnable {
                         counter++;
                         city = docCityArr[counter];
                     }
+                    city = removeExtraDelimiters(city);
+                    if (!city.equals("") && city.endsWith("'s"))
+                        city = city.substring(0, city.length() - 2);
                     if (!city.equals("") && city.length() > 2 && isOnlyLetters(city)) {
                         String cityUpper = city.toUpperCase();
                         if (!notCities.containsKey(cityUpper)) {
@@ -164,6 +167,9 @@ public class ReadFile implements Runnable {
                         counter++;
                         language = docLanguage[counter];
                     }
+                    language = removeExtraDelimiters(language);
+                    if (!language.equals("") && language.endsWith("'s"))
+                        language = language.substring(0, language.length() - 2);
                     if (!language.equals("") && language.length() > 1 && isOnlyLetters(language)) {
                         String languageUpper = language.toUpperCase();
                         if(!Controller.languages.contains(languageUpper))
@@ -240,6 +246,9 @@ public class ReadFile implements Runnable {
                         counter++;
                         docCity = docCityArr[counter];
                     }
+                    docCity = removeExtraDelimiters(docCity);
+                    if (!docCity.equals("") && docCity.endsWith("'s"))
+                        docCity = docCity.substring(0, docCity.length() - 2);
                     if (!docCity.equals("") && docCity.length() > 2 && isOnlyLetters(docCity)) {
                         String cityUpper = docCity.toUpperCase();
                         if (Indexer.corpusCityDictionary.containsKey(cityUpper))
@@ -413,14 +422,38 @@ public class ReadFile implements Runnable {
         return true;
     }
 
+    /**
+     * removes any extra delimiters from a given word's start or and twice (that we didn't remove when we split the words in the text prior)
+     * except U.S.
+     * @param word - a given word
+     * @return - the given word after the delimiter removal (if necessary)
+     */
+    private String removeExtraDelimiters(String word) {
+        if(!word.equals("")) {
+
+            if(word.equals("U.S."))
+                return word;
+
+            int length = word.length();
+
+            // checks if there is a delimiter at the start of the word
+            if (word.charAt(0) == '/' || word.charAt(0) == '.' || word.charAt(0) == '-' || word.charAt(0) == '\'' || word.charAt(0) == '%' || word.charAt(0) > 122 ||
+                    word.charAt(0) < 33) {
+                return removeExtraDelimiters(word.substring(1));
+            }
+
+            // checks if there is a delimiter at the end of the word
+            if (word.charAt(length - 1) == '.' || word.charAt(length - 1) == '/' || word.charAt(length - 1) == '-' || word.charAt(length - 1) == '\'' ||
+                    word.charAt(length - 1) == '$'  || word.charAt(length - 1) > 122 || word.charAt(length - 1) < 33)
+                return removeExtraDelimiters(word.substring(0, length - 1));
+
+            return word;
+        }
+        return word;
+    }
+
     @Override
     public void run() {
         readThroughFiles();
-    }
-
-    public static void main(String[] args){
-    ReadFile idan = new ReadFile("C:\\Users\\עידן\\Desktop");
-    idan.readThroughFiles();
-
     }
 }

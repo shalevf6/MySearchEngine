@@ -8,10 +8,8 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.DirectoryChooser;
@@ -38,6 +36,9 @@ public class Controller {
     public Text orText;
     public Text insertQueryText;
     public Button runButton;
+    public Button loadStopWordsButton;
+    public Text stopWordsInstructionsText;
+    private String stopWordsPath;
     public static String postingPathText;
     private boolean startsIndexing = false;
     private boolean alreadyIndexedWithStemming = false;
@@ -88,6 +89,7 @@ public class Controller {
                             File stopWords = new File(dirPath + "\\corpus\\stop_words.txt");
                             if (stopWords.exists()) {
                                 Parse.stemming = stemmingCheckBox.isSelected();
+                                stopWordsPath = stopWords.getAbsolutePath();
                                 if (Parse.stemming) {
                                     (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
                                     alreadyIndexedWithStemming = true;
@@ -132,6 +134,8 @@ public class Controller {
                                     doneIndexing.setHeaderText("Indexing Done!");
                                     doneIndexing.setContentText("Total time to index: " + totalTime + "\nTotal documents indexed: " +
                                             docCount + "\nTotal unique words found: " + termCount);
+                                    loadStopWordsButton.setVisible(false);
+                                    stopWordsInstructionsText.setVisible(false);
                                     doneIndexing.show();
                                     showPart2();
                                 }
@@ -143,7 +147,6 @@ public class Controller {
                         showErrorAlert("You must choose an existing posting files path!");
                     }
                 }
-
             }
         }
         else
@@ -185,6 +188,7 @@ public class Controller {
             alreadyIndexedWithStemming = false;
             alreadyIndexedWithoutStemming = false;
             languages = new LinkedList<>();
+            stopWordsPath = null;
             Parse.resetAll();
             Indexer.resetAll();
             tempPostingPath = new TextField();
@@ -243,53 +247,95 @@ public class Controller {
                 showErrorAlert("Already loaded / indexed this option!");
             else {
                 chooseAndSaveDirectoryPath(tempPostingPath);
-                if (!tempPostingPath.getText().equals("")) {
-                    boolean tempWithStemming = alreadyIndexedWithStemming;
-                    boolean tempWithoutStemming = alreadyIndexedWithoutStemming;
-                    try {
-                        boolean loadCityDictionary = true;
-                        if (stemming) {
-                            // to know if i need to load also the city dictionary
-                            if (alreadyIndexedWithoutStemming) {
-                                boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), true);
-                                loadCityDictionary = false;
-                                if (!checksOut)
-                                    return;
+                if (!tempPostingPath.getText().equals(""))
+                    // to check if all files exist in the path
+                    if (allPostingFilesExist(tempPostingPath.getText(), stemming)) {
+                        boolean tempWithStemming = alreadyIndexedWithStemming;
+                        boolean tempWithoutStemming = alreadyIndexedWithoutStemming;
+                        try {
+                            boolean loadCityDictionary = true;
+                            boolean firstLoad = false;
+                            if (!alreadyIndexedWithStemming && !alreadyIndexedWithoutStemming)
+                                firstLoad = true;
+                            if (stemming) {
+                                // to know if i need to load also the city dictionary
+                                if (alreadyIndexedWithoutStemming) {
+                                    boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), true);
+                                    loadCityDictionary = false;
+                                    if (!checksOut)
+                                        return;
+                                }
+                                alreadyIndexedWithStemming = true;
+                            } else {
+                                // to know if i need to load also the city dictionary
+                                if (alreadyIndexedWithStemming) {
+                                    boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
+                                    loadCityDictionary = false;
+                                    if (!checksOut)
+                                        return;
+                                }
+                                alreadyIndexedWithoutStemming = true;
                             }
-                            alreadyIndexedWithStemming = true;
-                        } else {
-                            // to know if i need to load also the city dictionary
-                            if (alreadyIndexedWithStemming) {
-                                boolean checksOut = checkIfTheSameAndLoaded(tempPostingPath.getText(), false);
-                                loadCityDictionary = false;
-                                if (!checksOut)
-                                    return;
+                            if (loadCityDictionary) {
+                                Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
+                                Indexer.readDictionaryForShowToMemory(tempPostingPath.getText() + "\\languages");
                             }
-                            alreadyIndexedWithoutStemming = true;
+                            Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
+                            postingPathText = tempPostingPath.getText();
+                            Indexer.indexedCities = true;
+                            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                            alert.setContentText("Dictionaries Loaded Successfully!");
+                            alert.show();
+                            if (firstLoad) {
+                                loadStopWordsButton.setVisible(true);
+                                stopWordsInstructionsText.setVisible(true);
+                            }
+                        } catch (IOException | ClassNotFoundException e) {
+                            showErrorAlert("Not all dictionary files found in path! Try again");
+                            alreadyIndexedWithStemming = tempWithStemming;
+                            alreadyIndexedWithoutStemming = tempWithoutStemming;
+                            tempPostingPath = new TextField();
                         }
-                        if (loadCityDictionary) {
-                            Indexer.readDictionaryToMemory(tempPostingPath.getText() + "\\postingForCities\\cityDictionary", 3);
-                            Indexer.readDictionaryForShowToMemory(tempPostingPath.getText() + "\\languages");
-                        }
-                        Indexer.loadAllDictionariesToMemory(tempPostingPath.getText(), stemming);
-                        postingPathText = tempPostingPath.getText();
-                        Indexer.indexedCities = true;
-                        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                        alert.setContentText("Dictionaries Loaded Successfully!");
-                        alert.show();
-                        showPart2();
-                    } catch (IOException | ClassNotFoundException e) {
-                        showErrorAlert("Not all dictionary files found in path! Try again");
-                        alreadyIndexedWithStemming = tempWithStemming;
-                        alreadyIndexedWithoutStemming = tempWithoutStemming;
-                        tempPostingPath = new TextField();
                     }
-                }
+                    else
+                        showErrorAlert("Not all files exist in given path!");
             }
         }
         else
         if(alreadyIndexedAll())
             showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
+    }
+
+    /**
+     * checks all of the posting files on load exist
+     * @param postingPath - the path for the posting files
+     * @param stemming - stemming or not stemming
+     * @return - true if all the files exist. else - false
+     */
+    private boolean allPostingFilesExist(String postingPath, boolean stemming) {
+        if (stemming && (new File(postingPath + "\\postingFilesWithStemming")).exists() &&
+                (new File(postingPath + "\\languages")).exists() &&
+                (new File(postingPath + "\\postingForCities")).exists() &&
+                (new File(postingPath + "\\postingForCities\\cityDictionary")).exists() &&
+                (new File(postingPath + "\\postingForCities\\mainCityPosting")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\mainPosting")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\termDictionary")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\documentDictionary")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting")).exists())
+            return true;
+        if (!stemming && (new File(postingPath + "\\postingFilesWithoutStemming")).exists() &&
+                (new File(postingPath + "\\languages")).exists() &&
+                (new File(postingPath + "\\postingForCities")).exists() &&
+                (new File(postingPath + "\\postingForCities\\cityDictionary")).exists() &&
+                (new File(postingPath + "\\postingForCities\\mainCityPosting")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\mainPosting")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionary")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\documentDictionary")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting")).exists())
+            return true;
+        return false;
     }
 
     /**
@@ -320,6 +366,8 @@ public class Controller {
         runButton.setVisible(false);
         queryPath.setVisible(false);
         semanticTreatmentCheckBox.setVisible(false);
+        loadStopWordsButton.setVisible(false);
+        stopWordsInstructionsText.setVisible(false);
     }
 
     /**
@@ -409,10 +457,32 @@ public class Controller {
         return alreadyIndexedWithStemming && alreadyIndexedWithoutStemming;
     }
 
+    /**
+     * Pops an an error alert containing a given string as a message
+     * @param error - a given string
+     */
     private void showErrorAlert(String error) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setContentText(error);
         alert.show();
+    }
+
+    /**
+     * Loads the stop words file if the posting files were loaded
+     * @param actionEvent = unused
+     */
+    public void onLoadStopWords(ActionEvent actionEvent) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Choose a path");
+        File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
+        if (selectedFile != null && selectedFile.exists() && selectedFile.getName().equals("stop_words.txt")) {
+            stopWordsPath = selectedFile.getAbsolutePath();
+            loadStopWordsButton.setVisible(false);
+            stopWordsInstructionsText.setVisible(false);
+            showPart2();
+        }
+        else
+            showErrorAlert("You must choose a valid stop words file with the name: \"stop_words.txt\"!");
     }
 
     /**
@@ -524,6 +594,7 @@ public class Controller {
             demiButton6.setVisible(false);
 
             Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
 
             confirmSelection.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
@@ -578,7 +649,7 @@ public class Controller {
      * @param queryId - a given query's id
      */
     private void runQuery(String query, String queryId) {
-        Searcher searcher = new Searcher(query);
+        Searcher searcher = new Searcher(query, stopWordsPath);
         Queue<String> relevantDocs = searcher.processQuery();
 
         // makes sure there are any relevant documents for the given query
@@ -588,13 +659,16 @@ public class Controller {
             ObservableList<String> list = FXCollections.observableArrayList(relevantDocs);
             ListView<String> listView = new ListView<>(list);
             Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
             StackPane pane = new StackPane();
             Scene scene = new Scene(pane, 600, 500);
             stage.setScene(scene);
-            pane.getChildren().add(listView);
-            Button saveResultsButton = new Button("Save Results");
-            saveResultsButton.setWrapText(true);
-            saveResultsButton.setOnAction(new EventHandler<ActionEvent>() {
+            Button saveButton = new Button("Save Results");
+            saveButton.setWrapText(true);
+            VBox vBox = new VBox();
+            vBox.getChildren().addAll(listView,saveButton);
+            pane.getChildren().add(vBox);
+            saveButton.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
                     DirectoryChooser directoryChooser = new DirectoryChooser();
@@ -630,15 +704,114 @@ public class Controller {
      * @param document - the document
      */
     private void showEntities(String document) {
-        List<String> entitiesList = new LinkedList<>(); // TODO : NEED REPLACE WITH THE ACTUAL ENTITIES OF THE GIVEN DOCUMENT
-        ObservableList<String> entities = FXCollections.observableArrayList(entitiesList);
-        ListView<String> listView = new ListView<>(entities);
-        Stage stage = new Stage();
-        StackPane pane = new StackPane();
-        Scene scene = new Scene(pane, 600, 500);
-        stage.setScene(scene);
-        pane.getChildren().add(listView);
-        stage.show();
+        RandomAccessFile ram;
+        try {
+            if (Indexer.isDictionaryStemmed)
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\documentToEntitiesPosting", "r");
+            else
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\documentToEntitiesPosting", "r");
+            int postingLinePointer = Integer.valueOf(Indexer.documentDictionary.get(document)[5]);
+            ram.seek(postingLinePointer);
+            String postingLine = ram.readLine();
+            ram.close();
+            Queue<String> entitiesList = getEntitiesFromPostingLine(postingLine, document);
+            if (entitiesList.isEmpty())
+                showErrorAlert("No entities found in this document!");
+            else {
+                ObservableList<String> entities = FXCollections.observableArrayList(entitiesList);
+                ListView<String> listView = new ListView<>(entities);
+                Stage stage = new Stage();
+                stage.initModality(Modality.APPLICATION_MODAL);
+                StackPane pane = new StackPane();
+                Scene scene = new Scene(pane, 600, 500);
+                stage.setScene(scene);
+                pane.getChildren().add(listView);
+                stage.show();
+            }
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Sorts and gets all the entities of a document
+     * @param postingLine - the posting line containing the entities of a dcoument
+     * @param document - the document
+     * @return - a list of the entities of a document
+     */
+    private Queue<String> getEntitiesFromPostingLine(String postingLine, String document) {
+        PriorityQueue<String[]> entitiesSortingQueue = new PriorityQueue<>(new Comparator<String[]>() {
+            @Override
+            public int compare(String[] o1, String[] o2) {
+                double value1 = Double.valueOf(o1[1]);
+                double value2 = Double.valueOf(o2[1]);
+                return Double.compare(value2, value1);
+            }
+        });
+
+        // calculating the dominance for each entity and adding it to the priority queue
+        RandomAccessFile ram;
+        try {
+            if (Indexer.isDictionaryStemmed)
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\mainPosting", "r");
+            else
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\mainPosting", "r");
+            // going through all the entities of the document and filtering the unwanted ones
+            String[] entities = (postingLine.split(":")[1]).split(";");
+            for (String entity : entities) {
+                // filtering the unwanted entities
+                if (Indexer.termDictionary.containsKey(entity)) {
+                    String[] entityArr = new String[2];
+                    entityArr[0] = entity;
+                    int postingLinePointer = Indexer.termDictionary.get(entity)[2];
+                    ram.seek(postingLinePointer);
+                    String mainPostingLine = ram.readLine();
+                    String[] mainPostingSplit = (mainPostingLine.split(":")[1]).split(";");
+                    // searching for the tf of the entity in the document
+                    for (String entry : mainPostingSplit) {
+                        String[] entrySplit = entry.split(",");
+                        if (entrySplit[0].equals(document)) {
+                            double tf = (Double.valueOf(entrySplit[1]))/Double.valueOf(Indexer.documentDictionary.get(document)[0]);
+                            double N = Indexer.totalDocuments;
+                            double maxTf = Indexer.termDictionary.get(entity)[0];
+                            double idf = Math.log10(N/maxTf);
+                            double tfIdf = tf * idf;
+                            double title = 0;
+                            double tenPercent = 0;
+                            if (entrySplit[2].charAt(1) == '1')
+                                title = 1;
+                            if (entrySplit[2].charAt(2) == '1')
+                                tenPercent = 1;
+                            // the final calculation for the dominance of the entity
+                            double totalValue = (0.85 * tfIdf) + (0.1 * title) + (0.05 * tenPercent);
+                            String totalValueOfString = String.valueOf(totalValue);
+                            entityArr[1] = totalValueOfString;
+                            break;
+                        }
+                    }
+                    entitiesSortingQueue.add(entityArr);
+                }
+            }
+            ram.close();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        Queue<String> entitiesList = new LinkedList<>();
+
+        // creating a normal queue for the 5 most dominant entities
+        int i = 0;
+        while (!entitiesSortingQueue.isEmpty() && i < 5) {
+            String[] entity = entitiesSortingQueue.poll();
+            String entityRank = entity[1];
+            if (entityRank.length() > 8) {
+                entityRank = entityRank.substring(0, 8);
+            }
+            entitiesList.add("The entity \"" + entity[0] + "\" has a dominance value of " + entityRank);
+            i++;
+        }
+        return entitiesList;
     }
 
     /**
@@ -660,10 +833,11 @@ public class Controller {
             button.setOnAction(new EventHandler<ActionEvent>() {
                 @Override
                 public void handle(ActionEvent event) {
-                    showEntities(lastItem.split(" ")[0]);
+                    showEntities(lastItem);
                 }
             });
         }
+
         @Override
         protected void updateItem(String item, boolean empty) {
             super.updateItem(item, empty);
@@ -677,6 +851,5 @@ public class Controller {
                 setGraphic(hbox);
             }
         }
-
     }
 }
