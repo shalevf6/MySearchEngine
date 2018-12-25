@@ -547,6 +547,7 @@ public class Controller {
      */
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
         LinkedList<String> queries = new LinkedList<>();
+        queryResults = new HashMap<>();
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -1046,7 +1047,7 @@ public class Controller {
         HBox hbox = new HBox();
         Label label = new Label("(empty)");
         Pane pane = new Pane();
-        Button button = new Button("Identify Entities");
+        Button button = new Button("Show Results");
 
         String lastItem;
 
