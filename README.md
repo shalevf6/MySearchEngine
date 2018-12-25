@@ -10,7 +10,7 @@ In order to run the application, simply download the file "MySearchEngine.jar" a
 
 ## List of the buttons and other elements in the main window and their respective functionalities:
 ### There are 2 "Browse" buttons that open up a File Chooser window:
-1. The upper "Browse" button is for getting the path of the folder of the corpus(the
+1. The upper "Browse" button is for getting the path that contains the folder of the corpus(the
    data set) and within it the stop words file. It's important that the corpuse's
    folder will be named "corpus" (without the apostrophes), and that the stop words
    file will be named: "stop_words.text", or the application will not run.
