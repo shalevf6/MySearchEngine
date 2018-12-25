@@ -9,7 +9,7 @@ import java.io.RandomAccessFile;
 import java.util.*;
 
 /**
- * will rank all the documents in the corpus according to given query
+ * This class ranks all the documents in the corpus according to a given query
  */
 public class Ranker {
     private double avgAllDocsLength;

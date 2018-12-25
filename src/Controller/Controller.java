@@ -46,6 +46,7 @@ public class Controller {
     private TextField tempPostingPath = new TextField();
     public static List<String> languages = new LinkedList<>();
     public static HashMap<String,Integer> citiesToFilter = new HashMap<>();
+    private List<HashMap<String[], Queue<String>>> queryResults = new LinkedList<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -215,24 +216,43 @@ public class Controller {
                 listView.setEditable(false);
                 listView.prefWidth(805);
                 listView.prefHeight(500);
-                AnchorPane root = new AnchorPane();
-                root.getChildren().addAll(listView);
-                AnchorPane.setBottomAnchor(listView, 0.0);
-                AnchorPane.setTopAnchor(listView, 0.0);
-                AnchorPane.setRightAnchor(listView, 0.0);
-                AnchorPane.setLeftAnchor(listView, 0.0);
+                StackPane root = new StackPane();
                 root.prefWidth(805);
                 root.prefWidth(500);
+                Button backButton = new Button("Back");
+                Button demiButton1 = new Button("button");
+                Button demiButton2 = new Button("button");
+                Button demiButton3 = new Button("button");
+                Button demiButton4 = new Button("button");
+                Button demiButton5 = new Button("button");
+                Button demiButton6 = new Button("button");
+                demiButton1.setVisible(false);
+                demiButton2.setVisible(false);
+                demiButton3.setVisible(false);
+                demiButton4.setVisible(false);
+                demiButton5.setVisible(false);
+                demiButton6.setVisible(false);
+                backButton.setWrapText(true);
+                VBox vBox = new VBox();
+                HBox hBox = new HBox();
+                hBox.setSpacing(10);
+                hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, demiButton4, demiButton5, backButton);
+                vBox.getChildren().addAll(listView, hBox);
+                backButton.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        stage.close();
+                    }
+                });
+                root.getChildren().addAll(vBox);
                 Scene scene = new Scene(root, 805, 500);
                 stage.initModality(Modality.APPLICATION_MODAL);
                 stage.setScene(scene);
                 stage.show();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
-        else
+        } else
             showErrorAlert("No dictionary to show!");
     }
 
@@ -526,6 +546,7 @@ public class Controller {
      * @param allQueries - a StringBuilder which contains the text of all the text in a query file
      */
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
+        LinkedList<String> queries = new LinkedList<>();
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -542,10 +563,127 @@ public class Controller {
             String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
 
             // runs the query through the corpus
-            runQuery(queryString, queryNum);
+            queryResults.add(runQuery(queryString, queryNum));
+
+            queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
             queryStart = allQueries.indexOf("<title>", queryLimit);
         }
+
+        for (HashMap<String[],Queue<String>> results : queryResults) {
+            String[] queryArr = null;
+            for (String[] s : results.keySet()) {
+                queryArr = s;
+            }
+        }
+
+        ObservableList<String> list = FXCollections.observableArrayList(queries);
+        ListView<String> listView = new ListView<>(list);
+        Stage stage = new Stage();
+        stage.setTitle("Inserted Queries:");
+        stage.initModality(Modality.APPLICATION_MODAL);
+        StackPane pane = new StackPane();
+        Scene scene = new Scene(pane, 600, 500);
+        stage.setScene(scene);
+        Button saveButton = new Button("Save Results");
+        Button backButton = new Button("Back");
+        Button demiButton1 = new Button("button");
+        Button demiButton2 = new Button("button");
+        Button demiButton3 = new Button("button");
+        Button demiButton4 = new Button("button");
+        demiButton1.setVisible(false);
+        demiButton2.setVisible(false);
+        demiButton3.setVisible(false);
+        demiButton4.setVisible(false);
+        backButton.setWrapText(true);
+        saveButton.setWrapText(true);
+        VBox vBox = new VBox();
+        HBox hBox = new HBox();
+        hBox.setSpacing(10);
+        hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
+        vBox.getChildren().addAll(listView, hBox);
+        pane.getChildren().add(vBox); /*
+        String[] finalQueryArr = queryArr;
+        saveButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setTitle("Choose a path");
+                File selectedDirectory = directoryChooser.showDialog(stage);
+                if (selectedDirectory != null)
+                    showErrorAlert("No Directory was chose, so the results were not saved!");
+                else {
+                    File resultsFile;
+                    if (finalQueryArr[1] == null) {
+                        int id = 1;
+                        while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
+                            id++;
+                        resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
+                    } else
+                        resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + finalQueryArr[1]);
+                    try {
+                        resultsFile.createNewFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        */
+        backButton.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                stage.close();
+            }
+        });
+        listView.setCellFactory(param -> new queriesCell());
+        stage.show();
+    }
+
+    /**
+     * shows a chosen query's results
+     * @param lastItem - the query and query number line
+     */
+    private void showQuery(String lastItem) {
+        /*
+        if (relevantDocuments.isEmpty()) {
+            showErrorAlert("No relevant documents found for the query: " + queryArr[0]);
+        }
+        else {
+            ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
+            ListView<String> listView = new ListView<>(list);
+            Stage stage = new Stage();
+            stage.setTitle("Results for the query: " + queryArr[0]);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            StackPane pane = new StackPane();
+            Scene scene = new Scene(pane, 600, 500);
+            stage.setScene(scene);
+            Button backButton = new Button("Back");
+            Button demiButton1 = new Button("button");
+            Button demiButton2 = new Button("button");
+            Button demiButton3 = new Button("button");
+            Button demiButton4 = new Button("button");
+            demiButton1.setVisible(false);
+            demiButton2.setVisible(false);
+            demiButton3.setVisible(false);
+            demiButton4.setVisible(false);
+            backButton.setWrapText(true);
+            VBox vBox = new VBox();
+            HBox hBox = new HBox();
+            hBox.setSpacing(11);
+            hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton);
+            vBox.getChildren().addAll(listView, hBox);
+            pane.getChildren().add(vBox);
+            backButton.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    stage.close();
+                }
+            });
+            listView.setCellFactory(param -> new entitiesCell());
+            stage.show(); // TODO : MAKE SURE THAT FOR A QUERY FILE INPUT, IT WAITS UNTIL WINDOW CLOSES FOR NEXT QUERY
+        }
+        */
     }
 
     /**
@@ -557,7 +695,78 @@ public class Controller {
             if (queryPath.getText().equals(""))
                 showErrorAlert("You must fill a query in order to run it!");
             else {
-                runQuery(queryPath.getText(), null);
+                HashMap<String[],Queue<String>> queryResults = runQuery(queryPath.getText(), null);
+                    String[] queryArr = null;
+                    for (String[] s : queryResults.keySet()) {
+                        queryArr = s;
+                    }
+                    Queue<String> relevantDocuments = queryResults.get(queryArr);
+                // makes sure there are any relevant documents for the given query
+                if (relevantDocuments.isEmpty()) {
+                    showErrorAlert("No relevant documents found for the query: " + queryArr[0]);
+                }
+                else {
+                    ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
+                    ListView<String> listView = new ListView<>(list);
+                    Stage stage = new Stage();
+                    stage.setTitle("Results for the query: " + queryArr[0]);
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                    StackPane pane = new StackPane();
+                    Scene scene = new Scene(pane, 600, 500);
+                    stage.setScene(scene);
+                    Button saveButton = new Button("Save Results");
+                    Button backButton = new Button("Back");
+                    Button demiButton1 = new Button("button");
+                    Button demiButton2 = new Button("button");
+                    Button demiButton3 = new Button("button");
+                    Button demiButton4 = new Button("button");
+                    demiButton1.setVisible(false);
+                    demiButton2.setVisible(false);
+                    demiButton3.setVisible(false);
+                    demiButton4.setVisible(false);
+                    backButton.setWrapText(true);
+                    saveButton.setWrapText(true);
+                    VBox vBox = new VBox();
+                    HBox hBox = new HBox();
+                    hBox.setSpacing(10);
+                    hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
+                    vBox.getChildren().addAll(listView, hBox);
+                    pane.getChildren().add(vBox);
+                    String[] finalQueryArr = queryArr;
+                    saveButton.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            DirectoryChooser directoryChooser = new DirectoryChooser();
+                            directoryChooser.setTitle("Choose a path");
+                            File selectedDirectory = directoryChooser.showDialog(stage);
+                            if (selectedDirectory != null)
+                                showErrorAlert("No Directory was chose, so the results were not saved!");
+                            else {
+                                File resultsFile;
+                                if (finalQueryArr[1] == null) {
+                                    int id = 1;
+                                    while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
+                                        id++;
+                                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
+                                } else
+                                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + finalQueryArr[1]);
+                                try {
+                                    resultsFile.createNewFile();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                    backButton.setOnAction(new EventHandler<ActionEvent>() {
+                        @Override
+                        public void handle(ActionEvent event) {
+                            stage.close();
+                        }
+                    });
+                    listView.setCellFactory(param -> new entitiesCell());
+                    stage.show();
+                }
             }
         }
         else
@@ -647,56 +856,14 @@ public class Controller {
      * Runs a given query through the corpus
      * @param query - a given query
      * @param queryId - a given query's id
+     * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
-    private void runQuery(String query, String queryId) {
+    private HashMap<String[],Queue<String>> runQuery(String query, String queryId) {
         Searcher searcher = new Searcher(query, stopWordsPath);
         Queue<String> relevantDocs = searcher.processQuery();
-
-        // makes sure there are any relevant documents for the given query
-        if (relevantDocs.isEmpty())
-            showErrorAlert("No relevant documents found for the query: " + query);
-        else {
-            ObservableList<String> list = FXCollections.observableArrayList(relevantDocs);
-            ListView<String> listView = new ListView<>(list);
-            Stage stage = new Stage();
-            stage.initModality(Modality.APPLICATION_MODAL);
-            StackPane pane = new StackPane();
-            Scene scene = new Scene(pane, 600, 500);
-            stage.setScene(scene);
-            Button saveButton = new Button("Save Results");
-            saveButton.setWrapText(true);
-            VBox vBox = new VBox();
-            vBox.getChildren().addAll(listView,saveButton);
-            pane.getChildren().add(vBox);
-            saveButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    DirectoryChooser directoryChooser = new DirectoryChooser();
-                    directoryChooser.setTitle("Choose a path");
-                    File selectedDirectory = directoryChooser.showDialog(stage);
-                    if (selectedDirectory != null)
-                        showErrorAlert("No Directory was chose, so the results were not saved!");
-                    else {
-                        File resultsFile;
-                        if (queryId == null) {
-                            int id = 1;
-                            while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
-                                id++;
-                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
-                        }
-                        else
-                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + queryId);
-                        try {
-                            resultsFile.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            });
-            listView.setCellFactory(param -> new Cell());
-            stage.show(); // TODO : MAKE SURE THAT FOR A QUERY FILE INPUT, IT WAITS UNTIL WINDOW CLOSES FOR NEXT QUERY
-        }
+        HashMap<String[],Queue<String>> queryResults = new HashMap<>();
+        queryResults.put(new String[]{query,queryId},relevantDocs);
+        return queryResults;
     }
 
     /**
@@ -722,10 +889,31 @@ public class Controller {
                 ListView<String> listView = new ListView<>(entities);
                 Stage stage = new Stage();
                 stage.initModality(Modality.APPLICATION_MODAL);
+                Button backButton = new Button("Back");
+                Button demiButton1 = new Button("button");
+                Button demiButton2 = new Button("button");
+                Button demiButton3 = new Button("button");
+                Button demiButton4 = new Button("button");
+                demiButton1.setVisible(false);
+                demiButton2.setVisible(false);
+                demiButton3.setVisible(false);
+                demiButton4.setVisible(false);
+                backButton.setWrapText(true);
+                VBox vBox = new VBox();
+                HBox hBox = new HBox();
+                hBox.setSpacing(10);
+                hBox.getChildren().addAll(demiButton1,demiButton2,demiButton3,backButton);
+                vBox.getChildren().addAll(listView,hBox);
+                backButton.setOnAction(new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        stage.close();
+                    }
+                });
                 StackPane pane = new StackPane();
                 Scene scene = new Scene(pane, 600, 500);
                 stage.setScene(scene);
-                pane.getChildren().add(listView);
+                pane.getChildren().add(vBox);
                 stage.show();
             }
         }
@@ -818,7 +1006,7 @@ public class Controller {
      * A class for showing each doc number relevant to the query, with its ranking grade and a button to show its entities
      * The code for the class was found at: https://stackoverflow.com/questions/15661500/javafx-listview-item-with-an-image-button
      */
-    class Cell extends ListCell<String> {
+    class entitiesCell extends ListCell<String> {
         HBox hbox = new HBox();
         Label label = new Label("(empty)");
         Pane pane = new Pane();
@@ -826,7 +1014,7 @@ public class Controller {
 
         String lastItem;
 
-        Cell() {
+        entitiesCell() {
             super();
             hbox.getChildren().addAll(label, pane, button);
             HBox.setHgrow(pane, Priority.ALWAYS);
@@ -834,6 +1022,45 @@ public class Controller {
                 @Override
                 public void handle(ActionEvent event) {
                     showEntities(lastItem);
+                }
+            });
+        }
+
+        @Override
+        protected void updateItem(String item, boolean empty) {
+            super.updateItem(item, empty);
+            setText(null);  // No text in label of super class
+            if (empty) {
+                lastItem = null;
+                setGraphic(null);
+            } else {
+                lastItem = item;
+                label.setText(item!=null ? item : "<null>");
+                setGraphic(hbox);
+            }
+        }
+    }
+
+    /**
+     * A class for showing each doc number relevant to the query, with its ranking grade and a button to show its entities
+     * The code for the class was found at: https://stackoverflow.com/questions/15661500/javafx-listview-item-with-an-image-button
+     */
+    class queriesCell extends ListCell<String> {
+        HBox hbox = new HBox();
+        Label label = new Label("(empty)");
+        Pane pane = new Pane();
+        Button button = new Button("Identify Entities");
+
+        String lastItem;
+
+        queriesCell() {
+            super();
+            hbox.getChildren().addAll(label, pane, button);
+            HBox.setHgrow(pane, Priority.ALWAYS);
+            button.setOnAction(new EventHandler<ActionEvent>() {
+                @Override
+                public void handle(ActionEvent event) {
+                    showQuery(lastItem);
                 }
             });
         }

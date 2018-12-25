@@ -32,7 +32,7 @@ public class Searcher {
      */
     public Queue<String> processQuery() {
         Query queryObject = new Query(query);
-        Parse parse = new Parse(stopWordsPath, true, queryObject); // TODO : FIND THE PATH OF THE STOP WORDS FILE FOR THE PARSE CLASS
+        Parse parse = new Parse(stopWordsPath, true, queryObject);
         parse.run();
         Ranker ranker = new Ranker();
 
