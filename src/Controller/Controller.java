@@ -46,7 +46,8 @@ public class Controller {
     private TextField tempPostingPath = new TextField();
     public static List<String> languages = new LinkedList<>();
     public static HashMap<String,Integer> citiesToFilter = new HashMap<>();
-    private HashMap<String[], Queue<String>> queryResults = new HashMap<>();
+    private HashMap<String, Queue<String>> queryResults = new HashMap<>();
+    private HashMap<String, String> queryIds = new HashMap<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -548,6 +549,7 @@ public class Controller {
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
         LinkedList<String> queries = new LinkedList<>();
         queryResults = new HashMap<>();
+        queryIds = new HashMap<>();
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -564,7 +566,8 @@ public class Controller {
             String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
 
             // runs the query through the corpus
-            queryResults.put(new String[]{queryString,queryNum},runQuery(queryString, queryNum));
+            queryResults.put(queryString,runQuery(queryString, queryNum));
+            queryIds.put(queryString, queryNum);
 
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
@@ -641,11 +644,9 @@ public class Controller {
     private void showQuery(String lastItem) {
         int queryNumberIndex = lastItem.indexOf("Query Number: ");
         int queryIndex = lastItem.indexOf("Query: ");
-        String query = lastItem.substring(queryIndex + 7, queryNumberIndex - 1);
-        String queryNumber = lastItem.substring(queryNumberIndex + 14);
+        String query = lastItem.substring(queryIndex + 7, queryNumberIndex - 2);
 
-        String[] queryArr = new String[]{query, queryNumber};
-        Queue<String> relevantDocuments = queryResults.get(new String[]{query,queryNumber});
+        Queue<String> relevantDocuments = queryResults.get(query);
 
         if (relevantDocuments.isEmpty()) {
             showErrorAlert("No relevant documents found for the query: " + query);
