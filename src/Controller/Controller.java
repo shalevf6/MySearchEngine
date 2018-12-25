@@ -46,7 +46,7 @@ public class Controller {
     private TextField tempPostingPath = new TextField();
     public static List<String> languages = new LinkedList<>();
     public static HashMap<String,Integer> citiesToFilter = new HashMap<>();
-    private List<HashMap<String[], Queue<String>>> queryResults = new LinkedList<>();
+    private HashMap<String[], Queue<String>> queryResults = new HashMap<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -563,18 +563,11 @@ public class Controller {
             String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
 
             // runs the query through the corpus
-            queryResults.add(runQuery(queryString, queryNum));
+            queryResults.put(new String[]{queryString,queryNum},runQuery(queryString, queryNum));
 
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
             queryStart = allQueries.indexOf("<title>", queryLimit);
-        }
-
-        for (HashMap<String[],Queue<String>> results : queryResults) {
-            String[] queryArr = null;
-            for (String[] s : results.keySet()) {
-                queryArr = s;
-            }
         }
 
         ObservableList<String> list = FXCollections.observableArrayList(queries);
@@ -645,15 +638,22 @@ public class Controller {
      * @param lastItem - the query and query number line
      */
     private void showQuery(String lastItem) {
-        /*
+        int queryNumberIndex = lastItem.indexOf("Query Number: ");
+        int queryIndex = lastItem.indexOf("Query: ");
+        String query = lastItem.substring(queryIndex + 7, queryNumberIndex - 1);
+        String queryNumber = lastItem.substring(queryNumberIndex + 14);
+
+        String[] queryArr = new String[]{query, queryNumber};
+        Queue<String> relevantDocuments = queryResults.get(new String[]{query,queryNumber});
+
         if (relevantDocuments.isEmpty()) {
-            showErrorAlert("No relevant documents found for the query: " + queryArr[0]);
+            showErrorAlert("No relevant documents found for the query: " + query);
         }
         else {
             ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
             ListView<String> listView = new ListView<>(list);
             Stage stage = new Stage();
-            stage.setTitle("Results for the query: " + queryArr[0]);
+            stage.setTitle("Results for the query: " + query);
             stage.initModality(Modality.APPLICATION_MODAL);
             StackPane pane = new StackPane();
             Scene scene = new Scene(pane, 600, 500);
@@ -681,9 +681,8 @@ public class Controller {
                 }
             });
             listView.setCellFactory(param -> new entitiesCell());
-            stage.show(); // TODO : MAKE SURE THAT FOR A QUERY FILE INPUT, IT WAITS UNTIL WINDOW CLOSES FOR NEXT QUERY
+            stage.show();
         }
-        */
     }
 
     /**
@@ -695,21 +694,18 @@ public class Controller {
             if (queryPath.getText().equals(""))
                 showErrorAlert("You must fill a query in order to run it!");
             else {
-                HashMap<String[],Queue<String>> queryResults = runQuery(queryPath.getText(), null);
-                    String[] queryArr = null;
-                    for (String[] s : queryResults.keySet()) {
-                        queryArr = s;
-                    }
-                    Queue<String> relevantDocuments = queryResults.get(queryArr);
+                // gets the relevant documents for the query
+                Queue<String> relevantDocuments = runQuery(queryPath.getText(), null);
+
                 // makes sure there are any relevant documents for the given query
                 if (relevantDocuments.isEmpty()) {
-                    showErrorAlert("No relevant documents found for the query: " + queryArr[0]);
+                    showErrorAlert("No relevant documents found for the query: " + queryPath.getText());
                 }
                 else {
                     ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
                     ListView<String> listView = new ListView<>(list);
                     Stage stage = new Stage();
-                    stage.setTitle("Results for the query: " + queryArr[0]);
+                    stage.setTitle("Results for the query: " + queryPath.getText());
                     stage.initModality(Modality.APPLICATION_MODAL);
                     StackPane pane = new StackPane();
                     Scene scene = new Scene(pane, 600, 500);
@@ -732,7 +728,7 @@ public class Controller {
                     hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
                     vBox.getChildren().addAll(listView, hBox);
                     pane.getChildren().add(vBox);
-                    String[] finalQueryArr = queryArr;
+                    /*
                     saveButton.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event) {
@@ -758,6 +754,7 @@ public class Controller {
                             }
                         }
                     });
+                    */
                     backButton.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event) {
@@ -858,12 +855,12 @@ public class Controller {
      * @param queryId - a given query's id
      * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
-    private HashMap<String[],Queue<String>> runQuery(String query, String queryId) {
+    private Queue<String> runQuery(String query, String queryId) {
         Searcher searcher = new Searcher(query, stopWordsPath);
         Queue<String> relevantDocs = searcher.processQuery();
-        HashMap<String[],Queue<String>> queryResults = new HashMap<>();
-        queryResults.put(new String[]{query,queryId},relevantDocs);
-        return queryResults;
+//        HashMap<String[],Queue<String>> queryResults = new HashMap<>();
+//        queryResults.put(new String[]{query,queryId},relevantDocs);
+        return relevantDocs;
     }
 
     /**
