@@ -28,7 +28,7 @@ public class Controller {
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
     public TextField queryPath;
-    public CheckBox semanticTreatmentCheckBox;
+    public static CheckBox semanticTreatmentCheckBox;
     public Text part2Text;
     public Text loadQueryText;
     public Button browseQueryButton;
