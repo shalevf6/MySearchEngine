@@ -566,7 +566,7 @@ public class Controller {
             String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
 
             // runs the query through the corpus
-            queryResults.put(queryString,runQuery(queryString, queryNum));
+            queryResults.put(queryString,runQuery(queryString));
             queryIds.put(queryString, queryNum);
 
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
@@ -599,34 +599,41 @@ public class Controller {
         hBox.setSpacing(10);
         hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
         vBox.getChildren().addAll(listView, hBox);
-        pane.getChildren().add(vBox); /*
-        String[] finalQueryArr = queryArr;
+        pane.getChildren().add(vBox);
         saveButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 DirectoryChooser directoryChooser = new DirectoryChooser();
                 directoryChooser.setTitle("Choose a path");
                 File selectedDirectory = directoryChooser.showDialog(stage);
-                if (selectedDirectory != null)
-                    showErrorAlert("No Directory was chose, so the results were not saved!");
+                if (selectedDirectory == null)
+                    showErrorAlert("No directory was chosen!");
                 else {
                     File resultsFile;
-                    if (finalQueryArr[1] == null) {
-                        int id = 1;
-                        while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
-                            id++;
-                        resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
-                    } else
-                        resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + finalQueryArr[1]);
+                    int id = 1;
+                    while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id)).exists())
+                        id++;
+                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id);
                     try {
                         resultsFile.createNewFile();
+                        BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
+                        for (String queryLine : queries) {
+                            int queryNumberIndex = queryLine.indexOf("Query Number: ");
+                            int queryIndex = queryLine.indexOf("Query: ");
+                            String query = queryLine.substring(queryIndex + 7, queryNumberIndex - 2);
+                            String queryNumber = queryLine.substring(queryNumberIndex + 14);
+                            Queue<String> relevantDocuments = queryResults.get(query);
+                            for (String docNumber : relevantDocuments) {
+                                toResultsFile.write(queryNumber + " 0 " + docNumber + " 1  40 mt\n");
+                            }
+                        }
+                        toResultsFile.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
-        */
         backButton.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -697,7 +704,7 @@ public class Controller {
                 showErrorAlert("You must fill a query in order to run it!");
             else {
                 // gets the relevant documents for the query
-                Queue<String> relevantDocuments = runQuery(queryPath.getText(), null);
+                Queue<String> relevantDocuments = runQuery(queryPath.getText());
 
                 // makes sure there are any relevant documents for the given query
                 if (relevantDocuments.isEmpty()) {
@@ -730,33 +737,33 @@ public class Controller {
                     hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
                     vBox.getChildren().addAll(listView, hBox);
                     pane.getChildren().add(vBox);
-                    /*
                     saveButton.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event) {
                             DirectoryChooser directoryChooser = new DirectoryChooser();
                             directoryChooser.setTitle("Choose a path");
                             File selectedDirectory = directoryChooser.showDialog(stage);
-                            if (selectedDirectory != null)
-                                showErrorAlert("No Directory was chose, so the results were not saved!");
+                            if (selectedDirectory == null)
+                                showErrorAlert("No directory was chosen!");
                             else {
                                 File resultsFile;
-                                if (finalQueryArr[1] == null) {
-                                    int id = 1;
-                                    while ((new File(selectedDirectory.getAbsolutePath() + "\\" + id)).exists())
-                                        id++;
-                                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + id);
-                                } else
-                                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\" + finalQueryArr[1]);
+                                int id = 1;
+                                while ((new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id)).exists())
+                                    id++;
+                                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id);
                                 try {
                                     resultsFile.createNewFile();
+                                    BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
+                                    for (String docNumber : list) {
+                                        toResultsFile.write("666" + " 0 " + docNumber + " 1  40 mt\n");
+                                    }
+                                    toResultsFile.close();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
                             }
                         }
                     });
-                    */
                     backButton.setOnAction(new EventHandler<ActionEvent>() {
                         @Override
                         public void handle(ActionEvent event) {
@@ -854,14 +861,11 @@ public class Controller {
     /**
      * Runs a given query through the corpus
      * @param query - a given query
-     * @param queryId - a given query's id
      * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
-    private Queue<String> runQuery(String query, String queryId) {
+    private Queue<String> runQuery(String query) {
         Searcher searcher = new Searcher(query, stopWordsPath);
         Queue<String> relevantDocs = searcher.processQuery();
-//        HashMap<String[],Queue<String>> queryResults = new HashMap<>();
-//        queryResults.put(new String[]{query,queryId},relevantDocs);
         return relevantDocs;
     }
 
