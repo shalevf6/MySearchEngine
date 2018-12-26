@@ -815,7 +815,8 @@ public class Parse implements Runnable {
                         if(tempArr[0].equals(""))
                             current = "0"+current;
                     }
-                    updateDictionaries(current);
+                    if(!current.equals("_Dollars") && !current.equals(" Dollars"))
+                        updateDictionaries(current);
                     String current2Lower = current2.toLowerCase();
                     if (current2Lower.equals("dollars"))
                         add2Counter = 2;
@@ -884,6 +885,8 @@ public class Parse implements Runnable {
      */
     private int HandelDashNUms(String current, String current2, String current3, String current4, int counter) {
         int ToAdd2Counter = 0;
+        String numRegex   = ".*[0-9].*";
+        String alphaRegex = ".*[A-Z].*";
         //------current has Dash-------//
         if (current.contains("-")) {
             String[] DashSplit = current.split("-");
@@ -944,8 +947,16 @@ public class Parse implements Runnable {
                     tempCurrent = changeNumToRegularNum(tempCurrent);
                 if(!tempCurrent.contains("%") && !tempCurrent.contains("$"))
                     updateDictionaries(tempCurrent);
-                if(!current.contains("%") && !current.contains("$"))
-                    updateDictionaries(current);
+                if(!current.contains("%") && !current.contains("$")) {
+                    if(current.matches(numRegex) && current.matches(alphaRegex) && (current.charAt(current.length()-1)=='M' ||
+                    current.charAt(current.length()-1)=='B' ||current.charAt(current.length()-1)=='K'))
+                        updateDictionaries(current);
+                    else if(!current.matches(numRegex) || !current.matches(alphaRegex)){
+                        String[] splitt = current.split("\\.");
+                        if(splitt.length <= 2)
+                            updateDictionaries(current);
+                    }
+                }
                 updateDictionaries(tempCurrent + "-" + current);
                 return ToAdd2Counter + 1;
             }
@@ -1091,9 +1102,27 @@ public class Parse implements Runnable {
                     current = current + "B";
                     ToAdd2Counter = ToAdd2Counter + 1;
                 }
-                if(!current.contains("%") && !current.contains("%"))
-                    updateDictionaries(current);
-                if(!current.contains("%") && !current.contains("$"))
+                if(!current.contains("%") && !current.contains("%")) {
+                    if (current.matches(numRegex) && current.matches(alphaRegex) && (current.charAt(current.length() - 1) == 'M' || current.charAt(current.length() - 1) == 'B' || current.charAt(current.length() - 1) == 'K'))
+                        updateDictionaries(current);
+                    else if(!current.matches(numRegex) || !current.matches(alphaRegex)) {
+                        String[] spli = current.split("\\.");
+                        if(spli.length <= 2) {
+                            counter++;
+                            counter--;
+                            updateDictionaries(current);
+                        }
+                    }
+                }
+                if(!Temp2Current2.contains("%") && !Temp2Current2.contains("$")){
+                    if (Temp2Current2.matches(numRegex) && Temp2Current2.matches(alphaRegex) && (Temp2Current2.charAt(current.length() - 1) == 'M' || Temp2Current2.charAt(current.length() - 1) == 'B' || Temp2Current2.charAt(current.length() - 1) == 'K'))
+                        updateDictionaries(Temp2Current2);
+                    else if(!Temp2Current2.matches(numRegex) || !Temp2Current2.matches(alphaRegex)) {
+                        String[] split = current.split("\\.");
+                        if(split.length <= 2)
+                            updateDictionaries(current);
+                    }
+                }
                     updateDictionaries(Temp2Current2);
                 updateDictionaries(current + "-" + Temp2Current2);
                 return ToAdd2Counter + 1;

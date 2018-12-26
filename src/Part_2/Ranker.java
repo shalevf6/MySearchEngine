@@ -165,7 +165,7 @@ public class Ranker {
                 if(mergedDataByDoc.get(DocNum)[k] !=null )
                     docDate[k] = Integer.parseInt(mergedDataByDoc.get(DocNum)[k][6]);
             }
-            arr[1] = Double.toString(getScore(tfs,numberOfDocs,docLength,avgAllDocsLength,docFrequency));
+            arr[1] = Double.toString(getScore(tfs,numberOfDocs,docLength,avgAllDocsLength,docFrequency,docCity,docDate,doc10Present,docTitle));
             if(Double.parseDouble(arr[1]) > 0)
                 docsAfterBM25.add(arr);
         }
@@ -200,10 +200,24 @@ public class Ranker {
      * @param docFrequency number of documents contains Q_i
      * @return
      */
-    public double getScore( double[]  tf, double numOfDocs,double[] docLength, double avgDocLength, double[] docFrequency){
+    public double getScore( double[]  tf, double numOfDocs,double[] docLength, double avgDocLength, double[] docFrequency,int[] docCity,int[] docDate,int[] doc10Percent,int[] docTitle ){
         double ans = 0.0;
         for(int i = 0 ; i < tf.length ; i++){
-            ans = ans + getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength,docFrequency[i]  );
+            double tempAns = getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength,docFrequency[i]  );
+            double tempAnsToMultiply = 0.1*tempAns;
+            //----if is in the City----//
+            if(docCity[i]==1)
+                tempAns+=tempAnsToMultiply;
+            //----if is in the Date----//
+            if(docDate[i]==1)
+                tempAns+=tempAnsToMultiply;
+            //----if is in the 10 Percent----//
+            if(doc10Percent[i]==1)
+                tempAns+=tempAnsToMultiply;
+            //----if is in the Title----//
+            if(docTitle[i]==1)
+                tempAns+=tempAnsToMultiply;
+            ans = ans + tempAns;
         }
         return ans;
     }
