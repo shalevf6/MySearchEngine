@@ -15,6 +15,9 @@ public class Ranker {
     private double avgAllDocsLength;
     private double numberOfDocs;
 
+    /**
+     * default constructor for the ranker class
+     */
     public Ranker(){
         this.numberOfDocs = Indexer.totalDocuments;
         avgAllDocsLength = calcAvgDocLength(numberOfDocs);
@@ -36,6 +39,10 @@ public class Ranker {
         return ans;
     }
 
+    /**main ranking function in the Ranker class
+     * @param query is the query that the user typed after parsing and semantics if needed
+     * @return queue with the best 50 documents for the query given
+     */
     Queue<String> rank(String[] query) {
         Queue<String> rankToReturn = new LinkedList<>();
         HashMap<String, String[]>[] allMaps = new HashMap[query.length];
@@ -192,19 +199,24 @@ public class Ranker {
         return idf;
     }
 
+
     /**returns the whole Query score by in a specific document.
      * @param tf term frequency
      * @param numOfDocs number of documents in the corpus
      * @param docLength the length of the document
      * @param avgDocLength average document length in the corpus
      * @param docFrequency number of documents contains Q_i
-     * @return
+     * @param docCity array of ints-- 1 if term is in the city doc, 0 if not
+     * @param docDate array of ints-- 1 if term is in the Date doc, 0 if not
+     * @param doc10Percent array of ints-- 1 if term is in the first 10% of the text,0 if not
+     * @param docTitle array of ints- 1 if term is in the title of the doc, 0 if not
+     * @return the rank of the whole query.
      */
     public double getScore( double[]  tf, double numOfDocs,double[] docLength, double avgDocLength, double[] docFrequency,int[] docCity,int[] docDate,int[] doc10Percent,int[] docTitle ){
         double ans = 0.0;
         for(int i = 0 ; i < tf.length ; i++){
             double tempAns = getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength,docFrequency[i]  );
-            double tempAnsToMultiply = 0.1*tempAns;
+            double tempAnsToMultiply = 0.05*tempAns;
             //----if is in the City----//
             if(docCity[i]==1)
                 tempAns+=tempAnsToMultiply;
