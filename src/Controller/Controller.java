@@ -175,26 +175,34 @@ public class Controller {
      */
     public void onReset(ActionEvent actionEvent) {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
-            corpusPath.setText("");
-            postingPath.setText("");
-            stemmingCheckBox.setSelected(true);
-            File dir = new File(postingPathText);
-            if (dir != null)
-                for (File dir2 : dir.listFiles()) {
-                    if (dir2.listFiles() != null) {
-                        for (File f : dir2.listFiles())
-                            f.delete();
-                    }
-                    dir2.delete();
-                }
-            alreadyIndexedWithStemming = false;
-            alreadyIndexedWithoutStemming = false;
-            languages = new LinkedList<>();
-            stopWordsPath = null;
-            Parse.resetAll();
-            Indexer.resetAll();
-            tempPostingPath = new TextField();
-            hidePart2();
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to reset?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
+            alert.showAndWait();
+            if (alert.getResult() == ButtonType.YES) {
+                corpusPath.setText("");
+                postingPath.setText("");
+                stemmingCheckBox.setSelected(true);
+                File dir = new File(postingPathText);
+                if (dir != null)
+                    if (dir.listFiles() != null)
+                        for (File dir2 : dir.listFiles()) {
+                            if (dir2.listFiles() != null) {
+                                for (File f : dir2.listFiles())
+                                    f.delete();
+                            }
+                            dir2.delete();
+                        }
+                alreadyIndexedWithStemming = false;
+                alreadyIndexedWithoutStemming = false;
+                languages = new LinkedList<>();
+                stopWordsPath = null;
+                Parse.resetAll();
+                Indexer.resetAll();
+                tempPostingPath = new TextField();
+                hidePart2();
+            }
+        }
+        else {
+            showErrorAlert("No data to be reset!");
         }
     }
 
