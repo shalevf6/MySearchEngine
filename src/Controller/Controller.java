@@ -553,16 +553,26 @@ public class Controller {
             int queryNumStart = allQueries.indexOf("<num>", queryStart);
             int queryNumEnd = allQueries.indexOf("<title>", queryBeginning);
 
+            int queryDescStart = allQueries.indexOf("<desc>", queryStart);
+            int queryDescEnd = allQueries.indexOf("<narr>", queryBeginning);
+
             // gets the query's id
             String queryNum = ((allQueries.substring(queryNumStart + 5, queryNumEnd).trim()).split(":"))[1].trim();
 
             // gets the query from the text
             String queryString = allQueries.substring(queryBeginning + 7, queryEnd).trim();
 
+            // gets the description of the query
+            String queryDescription = allQueries.substring(queryDescStart + 9, queryDescEnd).trim();
+
+            queries.add("Query: " + queryString + "  Query Number: " + queryNum);
+
+            // add the description to the query for better results
+            queryString = queryString + " " + queryDescription;
+
             // runs the query through the corpus
             queryResults.put(queryString, runQuery(queryString));
 
-            queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
             queryStart = allQueries.indexOf("<top>", queryLimit);
         }
