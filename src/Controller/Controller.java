@@ -551,7 +551,7 @@ public class Controller {
             int queryEnd = allQueries.indexOf("<desc>", queryStart);
 
             int queryNumStart = allQueries.indexOf("<num>", queryStart);
-            int queryNumEnd = allQueries.indexOf("<title>", queryNumStart);
+            int queryNumEnd = allQueries.indexOf("<title>", queryBeginning);
 
             // gets the query's id
             String queryNum = ((allQueries.substring(queryNumStart + 5, queryNumEnd).trim()).split(":"))[1].trim();
@@ -564,7 +564,7 @@ public class Controller {
 
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
-            queryStart = allQueries.indexOf("<title>", queryLimit);
+            queryStart = allQueries.indexOf("<top>", queryLimit);
         }
 
         ObservableList<String> list = FXCollections.observableArrayList(queries);
