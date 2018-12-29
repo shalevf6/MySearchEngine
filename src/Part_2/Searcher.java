@@ -87,7 +87,7 @@ public class Searcher {
      */
     private boolean containsCity(String document) {
         try {
-            RandomAccessFile raf = new RandomAccessFile(Controller.postingPathText + "\\postingForCities\\mainCityPosting", "r");
+            RandomAccessFile raf = new RandomAccessFile(Controller.postingPathText + "\\postingForCities\\mainCityPosting.txt", "r");
             Set<String> citiesToFilter = Controller.citiesToFilter.keySet();
             String cityOfDocument = Indexer.documentDictionary.get(document)[2];
             int pointerToCity;

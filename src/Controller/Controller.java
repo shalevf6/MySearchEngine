@@ -470,7 +470,6 @@ public class Controller {
 
     /**
      * checks if the corpus has already been indexed by every option available
-     *
      * @return - true ir true. else - false
      */
     private boolean alreadyIndexedAll() {
@@ -479,7 +478,6 @@ public class Controller {
 
     /**
      * Pops an an error alert containing a given string as a message
-     *
      * @param error - a given string
      */
     private void showErrorAlert(String error) {
@@ -604,9 +602,9 @@ public class Controller {
             else {
                 File resultsFile;
                 int id = 1;
-                while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id)).exists())
+                while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt")).exists())
                     id++;
-                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id);
+                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt");
                 try {
                     resultsFile.createNewFile();
                     BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
@@ -726,9 +724,9 @@ public class Controller {
                         else {
                             File resultsFile;
                             int id = 1;
-                            while ((new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id)).exists())
+                            while ((new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id + ".txt")).exists())
                                 id++;
-                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id);
+                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id + ".txt");
                             try {
                                 resultsFile.createNewFile();
                                 BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
@@ -845,9 +843,9 @@ public class Controller {
         RandomAccessFile ram;
         try {
             if (Indexer.isDictionaryStemmed)
-                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\documentToEntitiesPosting", "r");
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\documentToEntitiesPosting.txt", "r");
             else
-                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\documentToEntitiesPosting", "r");
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\documentToEntitiesPosting.txt", "r");
             int postingLinePointer = Integer.valueOf(Indexer.documentDictionary.get(document)[5]);
             ram.seek(postingLinePointer);
             String postingLine = ram.readLine();
@@ -905,9 +903,9 @@ public class Controller {
         RandomAccessFile ram;
         try {
             if (Indexer.isDictionaryStemmed)
-                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\mainPosting", "r");
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithStemming\\mainPosting.txt", "r");
             else
-                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\mainPosting", "r");
+                ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\mainPosting.txt", "r");
             // going through all the entities of the document and filtering the unwanted ones
             String[] entities = (postingLine.split(":")[1]).split(";");
             for (String entity : entities) {
