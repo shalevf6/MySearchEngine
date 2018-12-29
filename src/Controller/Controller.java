@@ -6,8 +6,6 @@ import Part_1.ReadFile;
 import Part_2.Searcher;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
@@ -28,7 +26,7 @@ public class Controller {
     public TextField corpusPath;
     public CheckBox stemmingCheckBox;
     public TextField queryPath;
-    public static CheckBox semanticTreatmentCheckBox;
+    public CheckBox semanticTreatmentCheckBox;
     public Text part2Text;
     public Text loadQueryText;
     public Button browseQueryButton;
@@ -45,33 +43,29 @@ public class Controller {
     private boolean alreadyIndexedWithoutStemming = false;
     private TextField tempPostingPath = new TextField();
     public static List<String> languages = new LinkedList<>();
-    public static HashMap<String,Integer> citiesToFilter = new HashMap<>();
+    public static HashMap<String, Integer> citiesToFilter = new HashMap<>();
     private HashMap<String, Queue<String>> queryResults = new HashMap<>();
-    private HashMap<String, String> queryIds = new HashMap<>();
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
-     * @param actionEvent - unused
      */
-    public void onCorpusBrowse(ActionEvent actionEvent) {
+    public void onCorpusBrowse() {
         if (!startsIndexing)
             chooseAndSaveDirectoryPath(corpusPath);
     }
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the posting files
-     * @param actionEvent - unused
      */
-    public void onPostingBrowse(ActionEvent actionEvent) {
+    public void onPostingBrowse() {
         if (!startsIndexing)
             chooseAndSaveDirectoryPath(postingPath);
     }
 
     /**
      * activates the indexing process
-     * @param actionEvent - unused
      */
-    public void onActivate(ActionEvent actionEvent) {
+    public void onActivate() {
         if (!alreadyIndexedAll() && !startsIndexing) {
             Parse.stemming = stemmingCheckBox.isSelected();
             String alert = checkIfIndexed();
@@ -150,14 +144,13 @@ public class Controller {
                     }
                 }
             }
-        }
-        else
-            if(alreadyIndexedAll())
-                showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
+        } else if (alreadyIndexedAll())
+            showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
     }
 
     /**
      * check if there was already an indexing done before
+     *
      * @return - the appropriate error if true. else - returns an empty string
      */
     private String checkIfIndexed() {
@@ -171,9 +164,8 @@ public class Controller {
 
     /**
      * resets all the data saved on the disk regarding the corpus and posting files
-     * @param actionEvent - unused
      */
-    public void onReset(ActionEvent actionEvent) {
+    public void onReset() {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Are you sure you want to reset?", ButtonType.YES, ButtonType.NO, ButtonType.CANCEL);
             alert.showAndWait();
@@ -182,15 +174,20 @@ public class Controller {
                 postingPath.setText("");
                 stemmingCheckBox.setSelected(true);
                 File dir = new File(postingPathText);
-                if (dir != null)
-                    if (dir.listFiles() != null)
-                        for (File dir2 : dir.listFiles()) {
-                            if (dir2.listFiles() != null) {
-                                for (File f : dir2.listFiles())
-                                    f.delete();
+
+                File[] dirFiles = dir.listFiles();
+                if (dirFiles != null) {
+                    for (File dirFile : dirFiles) {
+                        File[] dir2Files = dirFile.listFiles();
+                        if (dir2Files != null) {
+                            for (File dir2File : dir2Files) {
+                                dir2File.delete();
                             }
-                            dir2.delete();
                         }
+                        dirFile.delete();
+                    }
+                }
+
                 alreadyIndexedWithStemming = false;
                 alreadyIndexedWithoutStemming = false;
                 languages = new LinkedList<>();
@@ -200,17 +197,15 @@ public class Controller {
                 tempPostingPath = new TextField();
                 hidePart2();
             }
-        }
-        else {
+        } else {
             showErrorAlert("No data to be reset!");
         }
     }
 
     /**
      * shows the dictionary for the corpus
-     * @param actionEvent - unused
      */
-    public void onDictionaryShow(ActionEvent actionEvent) {
+    public void onDictionaryShow() {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             try {
                 Stage stage = new Stage();
@@ -220,44 +215,44 @@ public class Controller {
                     dictionaryList = Indexer.readDictionaryForShowToMemory(postingPathText + "\\postingFilesWithStemming\\termDictionaryForShow");
                 else
                     dictionaryList = Indexer.readDictionaryForShowToMemory(postingPathText + "\\postingFilesWithoutStemming\\termDictionaryForShow");
-                ListView<String> listView = new ListView<>();
-                listView.getItems().setAll(FXCollections.observableList(dictionaryList));
-                listView.setEditable(false);
-                listView.prefWidth(805);
-                listView.prefHeight(500);
-                StackPane root = new StackPane();
-                root.prefWidth(805);
-                root.prefWidth(500);
-                Button backButton = new Button("Back");
-                Button demiButton1 = new Button("button");
-                Button demiButton2 = new Button("button");
-                Button demiButton3 = new Button("button");
-                Button demiButton4 = new Button("button");
-                Button demiButton5 = new Button("button");
-                Button demiButton6 = new Button("button");
-                demiButton1.setVisible(false);
-                demiButton2.setVisible(false);
-                demiButton3.setVisible(false);
-                demiButton4.setVisible(false);
-                demiButton5.setVisible(false);
-                demiButton6.setVisible(false);
-                backButton.setWrapText(true);
-                VBox vBox = new VBox();
-                HBox hBox = new HBox();
-                hBox.setSpacing(10);
-                hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, demiButton4, demiButton5, backButton);
-                vBox.getChildren().addAll(listView, hBox);
-                backButton.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        stage.close();
-                    }
-                });
-                root.getChildren().addAll(vBox);
-                Scene scene = new Scene(root, 805, 500);
-                stage.initModality(Modality.APPLICATION_MODAL);
-                stage.setScene(scene);
-                stage.show();
+                if (dictionaryList != null) {
+                    ListView<String> listView = new ListView<>();
+                    listView.getItems().setAll(FXCollections.observableList(dictionaryList));
+                    listView.setEditable(false);
+                    listView.prefWidth(805);
+                    listView.prefHeight(500);
+                    StackPane root = new StackPane();
+                    root.prefWidth(805);
+                    root.prefWidth(500);
+                    Button backButton = new Button("Back");
+                    Button demiButton1 = new Button("button");
+                    Button demiButton2 = new Button("button");
+                    Button demiButton3 = new Button("button");
+                    Button demiButton4 = new Button("button");
+                    Button demiButton5 = new Button("button");
+                    Button demiButton6 = new Button("button");
+                    demiButton1.setVisible(false);
+                    demiButton2.setVisible(false);
+                    demiButton3.setVisible(false);
+                    demiButton4.setVisible(false);
+                    demiButton5.setVisible(false);
+                    demiButton6.setVisible(false);
+                    backButton.setWrapText(true);
+                    VBox vBox = new VBox();
+                    HBox hBox = new HBox();
+                    hBox.setSpacing(10);
+                    hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, demiButton4, demiButton5, backButton);
+                    vBox.getChildren().addAll(listView, hBox);
+                    backButton.setOnAction(event -> stage.close());
+                    root.getChildren().addAll(vBox);
+                    Scene scene = new Scene(root, 805, 500);
+                    stage.initModality(Modality.APPLICATION_MODAL);
+                    stage.setScene(scene);
+                    stage.show();
+                }
+                else {
+                    showErrorAlert("Dictionary is null!");
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -267,9 +262,8 @@ public class Controller {
 
     /**
      * loads a new dictionary for the corpus
-     * @param actionEvent - unused
      */
-    public void onDictionaryLoad(ActionEvent actionEvent) {
+    public void onDictionaryLoad() {
         if (!startsIndexing && (!alreadyIndexedAll())) {
             boolean stemming = stemmingCheckBox.isSelected();
             if ((stemming && alreadyIndexedWithStemming) || (!stemming && alreadyIndexedWithoutStemming))
@@ -325,20 +319,18 @@ public class Controller {
                             alreadyIndexedWithoutStemming = tempWithoutStemming;
                             tempPostingPath = new TextField();
                         }
-                    }
-                    else
+                    } else
                         showErrorAlert("Not all files exist in given path!");
             }
-        }
-        else
-        if(alreadyIndexedAll())
+        } else if (alreadyIndexedAll())
             showErrorAlert("Already indexed / loaded all options!!\n(stemming / non stemming)");
     }
 
     /**
      * checks all of the posting files on load exist
+     *
      * @param postingPath - the path for the posting files
-     * @param stemming - stemming or not stemming
+     * @param stemming    - stemming or not stemming
      * @return - true if all the files exist. else - false
      */
     private boolean allPostingFilesExist(String postingPath, boolean stemming) {
@@ -353,7 +345,7 @@ public class Controller {
                 (new File(postingPath + "\\postingFilesWithStemming\\documentDictionary")).exists() &&
                 (new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting")).exists())
             return true;
-        if (!stemming && (new File(postingPath + "\\postingFilesWithoutStemming")).exists() &&
+        return !stemming && (new File(postingPath + "\\postingFilesWithoutStemming")).exists() &&
                 (new File(postingPath + "\\languages")).exists() &&
                 (new File(postingPath + "\\postingForCities")).exists() &&
                 (new File(postingPath + "\\postingForCities\\cityDictionary")).exists() &&
@@ -362,9 +354,7 @@ public class Controller {
                 (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionary")).exists() &&
                 (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow")).exists() &&
                 (new File(postingPath + "\\postingFilesWithoutStemming\\documentDictionary")).exists() &&
-                (new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting")).exists())
-            return true;
-        return false;
+                (new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting")).exists();
     }
 
     /**
@@ -401,9 +391,8 @@ public class Controller {
 
     /**
      * opens a new window with a choice box of languages from the corpus (if the corpus was indexer / loaded before)
-     * @param actionEvent - unused
      */
-    public void handleLanguagesChoosing(ActionEvent actionEvent) {
+    public void handleLanguagesChoosing() {
         if (!startsIndexing && (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming)) {
             Stage stage = new Stage();
             stage.setTitle("Available Languages");
@@ -424,14 +413,14 @@ public class Controller {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setScene(scene);
             stage.show();
-        }
-        else
+        } else
             showErrorAlert("Need to index / load at least\nonce to choose a language!");
     }
 
     /**
      * checks if the load of the dictionaries has the same corpus details as the last load
-     * @param path - the posting files path
+     *
+     * @param path     - the posting files path
      * @param stemming - is the dictionary loaded is stemmed or not
      * @return - true if everything is in order. else - false
      */
@@ -446,11 +435,11 @@ public class Controller {
         }
         File documentDictionary;
         if (stemming)
-            documentDictionary = new File (postingPathText + "\\postingFilesWithStemming\\documentDictionary");
+            documentDictionary = new File(postingPathText + "\\postingFilesWithStemming\\documentDictionary");
         else
-            documentDictionary = new File (postingPathText + "\\postingFilesWithoutStemming\\documentDictionary");
+            documentDictionary = new File(postingPathText + "\\postingFilesWithoutStemming\\documentDictionary");
         ObjectInputStream objectInputStream;
-        HashMap<String,int[]> documentDictionaryObject;
+        HashMap<String, int[]> documentDictionaryObject;
         try {
             objectInputStream = new ObjectInputStream(new FileInputStream(documentDictionary));
             documentDictionaryObject = (HashMap<String, int[]>) objectInputStream.readObject();
@@ -468,6 +457,7 @@ public class Controller {
 
     /**
      * chooses and sets a path for a given directory
+     *
      * @param path - the text field of the given path
      */
     private void chooseAndSaveDirectoryPath(TextField path) {
@@ -480,6 +470,7 @@ public class Controller {
 
     /**
      * checks if the corpus has already been indexed by every option available
+     *
      * @return - true ir true. else - false
      */
     private boolean alreadyIndexedAll() {
@@ -488,6 +479,7 @@ public class Controller {
 
     /**
      * Pops an an error alert containing a given string as a message
+     *
      * @param error - a given string
      */
     private void showErrorAlert(String error) {
@@ -498,9 +490,8 @@ public class Controller {
 
     /**
      * Loads the stop words file if the posting files were loaded
-     * @param actionEvent = unused
      */
-    public void onLoadStopWords(ActionEvent actionEvent) {
+    public void onLoadStopWords() {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Choose a path");
         File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
@@ -509,22 +500,20 @@ public class Controller {
             loadStopWordsButton.setVisible(false);
             stopWordsInstructionsText.setVisible(false);
             showPart2();
-        }
-        else
+        } else
             showErrorAlert("You must choose a valid stop words file with the name: \"stop_words.txt\"!");
     }
 
     /**
      * Loads and runs through a file with queries
-     * @param actionEvent - unused
      */
-    public void onQueryLoad(ActionEvent actionEvent) {
+    public void onQueryLoad() {
         if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
             FileChooser fileChooser = new FileChooser();
             fileChooser.setTitle("Choose a query file");
             File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
             if (selectedFile != null) {
-                BufferedReader bufferedReader = null;
+                BufferedReader bufferedReader;
                 try {
                     // read all the text from the queries file
                     bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile)));
@@ -544,20 +533,19 @@ public class Controller {
                     e.printStackTrace();
                 }
             }
-        }
-        else
+        } else
             showErrorAlert("Need to load \\ index a data set before running a query!");
     }
 
     /**
      * goes through the text from a query file, gets the queries from it and runs it through the corpus
+     *
      * @param queryStart - the index of the first query in the text
      * @param allQueries - a StringBuilder which contains the text of all the text in a query file
      */
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
         LinkedList<String> queries = new LinkedList<>();
         queryResults = new HashMap<>();
-        queryIds = new HashMap<>();
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -571,11 +559,10 @@ public class Controller {
             String queryNum = ((allQueries.substring(queryNumStart + 5, queryNumEnd).trim()).split(":"))[1].trim();
 
             // gets the query from the text
-            String queryString = allQueries.substring(queryBeginning + 7,queryEnd).trim();
+            String queryString = allQueries.substring(queryBeginning + 7, queryEnd).trim();
 
             // runs the query through the corpus
-            queryResults.put(queryString,runQuery(queryString));
-            queryIds.put(queryString, queryNum);
+            queryResults.put(queryString, runQuery(queryString));
 
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
@@ -608,52 +595,45 @@ public class Controller {
         hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
         vBox.getChildren().addAll(listView, hBox);
         pane.getChildren().add(vBox);
-        saveButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                DirectoryChooser directoryChooser = new DirectoryChooser();
-                directoryChooser.setTitle("Choose a path");
-                File selectedDirectory = directoryChooser.showDialog(stage);
-                if (selectedDirectory == null)
-                    showErrorAlert("No directory was chosen!");
-                else {
-                    File resultsFile;
-                    int id = 1;
-                    while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id)).exists())
-                        id++;
-                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id);
-                    try {
-                        resultsFile.createNewFile();
-                        BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
-                        for (String queryLine : queries) {
-                            int queryNumberIndex = queryLine.indexOf("Query Number: ");
-                            int queryIndex = queryLine.indexOf("Query: ");
-                            String query = queryLine.substring(queryIndex + 7, queryNumberIndex - 2);
-                            String queryNumber = queryLine.substring(queryNumberIndex + 14);
-                            Queue<String> relevantDocuments = queryResults.get(query);
-                            for (String docNumber : relevantDocuments) {
-                                toResultsFile.write(queryNumber + " 0 " + docNumber + " 1  40 mt\n");
-                            }
+        saveButton.setOnAction(event -> {
+            DirectoryChooser directoryChooser = new DirectoryChooser();
+            directoryChooser.setTitle("Choose a path");
+            File selectedDirectory = directoryChooser.showDialog(stage);
+            if (selectedDirectory == null)
+                showErrorAlert("No directory was chosen!");
+            else {
+                File resultsFile;
+                int id = 1;
+                while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id)).exists())
+                    id++;
+                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id);
+                try {
+                    resultsFile.createNewFile();
+                    BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
+                    for (String queryLine : queries) {
+                        int queryNumberIndex = queryLine.indexOf("Query Number: ");
+                        int queryIndex = queryLine.indexOf("Query: ");
+                        String query = queryLine.substring(queryIndex + 7, queryNumberIndex - 2);
+                        String queryNumber = queryLine.substring(queryNumberIndex + 14);
+                        Queue<String> relevantDocuments = queryResults.get(query);
+                        for (String docNumber : relevantDocuments) {
+                            toResultsFile.write(queryNumber + " 0 " + docNumber + " 1  40 mt\n");
                         }
-                        toResultsFile.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
+                    toResultsFile.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
-        backButton.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                stage.close();
-            }
-        });
+        backButton.setOnAction(event -> stage.close());
         listView.setCellFactory(param -> new queriesCell());
         stage.show();
     }
 
     /**
      * shows a chosen query's results
+     *
      * @param lastItem - the query and query number line
      */
     private void showQuery(String lastItem) {
@@ -665,8 +645,7 @@ public class Controller {
 
         if (relevantDocuments.isEmpty()) {
             showErrorAlert("No relevant documents found for the query: " + query);
-        }
-        else {
+        } else {
             ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
             ListView<String> listView = new ListView<>(list);
             Stage stage = new Stage();
@@ -691,12 +670,7 @@ public class Controller {
             hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton);
             vBox.getChildren().addAll(listView, hBox);
             pane.getChildren().add(vBox);
-            backButton.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    stage.close();
-                }
-            });
+            backButton.setOnAction(event -> stage.close());
             listView.setCellFactory(param -> new entitiesCell());
             stage.show();
         }
@@ -704,9 +678,8 @@ public class Controller {
 
     /**
      * Runs a given query
-     * @param actionEvent - unused
      */
-    public void onQueryRun(ActionEvent actionEvent) {
+    public void onQueryRun() {
         if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
             if (queryPath.getText().equals(""))
                 showErrorAlert("You must fill a query in order to run it!");
@@ -717,8 +690,7 @@ public class Controller {
                 // makes sure there are any relevant documents for the given query
                 if (relevantDocuments.isEmpty()) {
                     showErrorAlert("No relevant documents found for the query: " + queryPath.getText());
-                }
-                else {
+                } else {
                     ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
                     ListView<String> listView = new ListView<>(list);
                     Stage stage = new Stage();
@@ -745,59 +717,49 @@ public class Controller {
                     hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
                     vBox.getChildren().addAll(listView, hBox);
                     pane.getChildren().add(vBox);
-                    saveButton.setOnAction(new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent event) {
-                            DirectoryChooser directoryChooser = new DirectoryChooser();
-                            directoryChooser.setTitle("Choose a path");
-                            File selectedDirectory = directoryChooser.showDialog(stage);
-                            if (selectedDirectory == null)
-                                showErrorAlert("No directory was chosen!");
-                            else {
-                                File resultsFile;
-                                int id = 1;
-                                while ((new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id)).exists())
-                                    id++;
-                                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id);
-                                try {
-                                    resultsFile.createNewFile();
-                                    BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
-                                    for (String docNumber : list) {
-                                        toResultsFile.write("666" + " 0 " + docNumber + " 1  40 mt\n");
-                                    }
-                                    toResultsFile.close();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                    saveButton.setOnAction(event -> {
+                        DirectoryChooser directoryChooser = new DirectoryChooser();
+                        directoryChooser.setTitle("Choose a path");
+                        File selectedDirectory = directoryChooser.showDialog(stage);
+                        if (selectedDirectory == null)
+                            showErrorAlert("No directory was chosen!");
+                        else {
+                            File resultsFile;
+                            int id = 1;
+                            while ((new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id)).exists())
+                                id++;
+                            resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\runQueryResults" + id);
+                            try {
+                                resultsFile.createNewFile();
+                                BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
+                                for (String docNumber : list) {
+                                    toResultsFile.write("666" + " 0 " + docNumber + " 1  40 mt\n");
                                 }
+                                toResultsFile.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     });
-                    backButton.setOnAction(new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent event) {
-                            stage.close();
-                        }
-                    });
+                    backButton.setOnAction(event -> stage.close());
                     listView.setCellFactory(param -> new entitiesCell());
                     stage.show();
                 }
             }
-        }
-        else
+        } else
             showErrorAlert("Need to load \\ index a data set before running a query!");
     }
 
     /**
      * Shows all the corpus's cities and gets the choice\s of the use
-     * @param actionEvent - unused
      */
-    public void onShowAndChooseCities(ActionEvent actionEvent) {
+    public void onShowAndChooseCities() {
         // check if there are any cities in the corpus
         if (Indexer.corpusCityDictionary.size() > 0) {
             citiesToFilter = new HashMap<>();
             ObservableList<String> citiesToShow = FXCollections.observableArrayList();
             Set<String> cities = Indexer.corpusCityDictionary.keySet();
-            ListView<String> listView = new ListView<String>();
+            ListView<String> listView = new ListView<>();
             listView.setItems(citiesToShow);
 
             Label instructions = new Label("Hold the control button while left clicking your choices for choosing cities, and than click \"Confirm Selection\"");
@@ -819,27 +781,24 @@ public class Controller {
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
 
-            confirmSelection.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    List<String> selected = listView.getSelectionModel().getSelectedItems();
-                    for (String selectedCity : selected) {
-                        citiesToFilter.put(selectedCity, 1);
-                    }
-                    stage.close();
+            confirmSelection.setOnAction(event -> {
+                List<String> selected = listView.getSelectionModel().getSelectedItems();
+                for (String selectedCity : selected) {
+                    citiesToFilter.put(selectedCity, 1);
                 }
+                stage.close();
             });
 
             // Create the VBox for the Buttons
             VBox buttons = new VBox();
             // Add the Buttons to the VBox
-            buttons.getChildren().addAll(demiButton1,demiButton2,demiButton3,demiButton4,demiButton5,instructions,demiButton6,confirmSelection);
+            buttons.getChildren().addAll(demiButton1, demiButton2, demiButton3, demiButton4, demiButton5, instructions, demiButton6, confirmSelection);
             // Create the Selection HBox
             HBox selection = new HBox();
             // Set Spacing to 10 pixels
             selection.setSpacing(10);
             // Add the List and the Buttons to the HBox
-            selection.getChildren().addAll(listView,buttons);
+            selection.getChildren().addAll(listView, buttons);
             // Create the GridPane
             GridPane root = new GridPane();
             // Set the horizontal and vertical gaps between children
@@ -868,17 +827,18 @@ public class Controller {
 
     /**
      * Runs a given query through the corpus
+     *
      * @param query - a given query
      * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
     private Queue<String> runQuery(String query) {
-        Searcher searcher = new Searcher(query, stopWordsPath);
-        Queue<String> relevantDocs = searcher.processQuery();
-        return relevantDocs;
+        Searcher searcher = new Searcher(query, stopWordsPath, semanticTreatmentCheckBox.isSelected());
+        return searcher.processQuery();
     }
 
     /**
      * Shows the 5 most dominant entities in a document
+     *
      * @param document - the document
      */
     private void showEntities(String document) {
@@ -913,40 +873,32 @@ public class Controller {
                 VBox vBox = new VBox();
                 HBox hBox = new HBox();
                 hBox.setSpacing(10);
-                hBox.getChildren().addAll(demiButton1,demiButton2,demiButton3,backButton);
-                vBox.getChildren().addAll(listView,hBox);
-                backButton.setOnAction(new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        stage.close();
-                    }
-                });
+                hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton);
+                vBox.getChildren().addAll(listView, hBox);
+                backButton.setOnAction(event -> stage.close());
                 StackPane pane = new StackPane();
                 Scene scene = new Scene(pane, 600, 500);
                 stage.setScene(scene);
                 pane.getChildren().add(vBox);
                 stage.show();
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
      * Sorts and gets all the entities of a document
+     *
      * @param postingLine - the posting line containing the entities of a dcoument
-     * @param document - the document
+     * @param document    - the document
      * @return - a list of the entities of a document
      */
     private Queue<String> getEntitiesFromPostingLine(String postingLine, String document) {
-        PriorityQueue<String[]> entitiesSortingQueue = new PriorityQueue<>(new Comparator<String[]>() {
-            @Override
-            public int compare(String[] o1, String[] o2) {
-                double value1 = Double.valueOf(o1[1]);
-                double value2 = Double.valueOf(o2[1]);
-                return Double.compare(value2, value1);
-            }
+        PriorityQueue<String[]> entitiesSortingQueue = new PriorityQueue<>((o1, o2) -> {
+            double value1 = Double.valueOf(o1[1]);
+            double value2 = Double.valueOf(o2[1]);
+            return Double.compare(value2, value1);
         });
 
         // calculating the dominance for each entity and adding it to the priority queue
@@ -971,10 +923,10 @@ public class Controller {
                     for (String entry : mainPostingSplit) {
                         String[] entrySplit = entry.split(",");
                         if (entrySplit[0].equals(document)) {
-                            double tf = (Double.valueOf(entrySplit[1]))/Double.valueOf(Indexer.documentDictionary.get(document)[0]);
+                            double tf = (Double.valueOf(entrySplit[1])) / Double.valueOf(Indexer.documentDictionary.get(document)[0]);
                             double N = Indexer.totalDocuments;
                             double maxTf = Indexer.termDictionary.get(entity)[0];
-                            double idf = Math.log10(N/maxTf);
+                            double idf = Math.log10(N / maxTf);
                             double tfIdf = tf * idf;
                             double title = 0;
                             double tenPercent = 0;
@@ -993,8 +945,7 @@ public class Controller {
                 }
             }
             ram.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         Queue<String> entitiesList = new LinkedList<>();
@@ -1003,12 +954,15 @@ public class Controller {
         int i = 0;
         while (!entitiesSortingQueue.isEmpty() && i < 5) {
             String[] entity = entitiesSortingQueue.poll();
-            String entityRank = entity[1];
-            if (entityRank.length() > 8) {
-                entityRank = entityRank.substring(0, 8);
+            String entityRank;
+            if (entity != null) {
+                entityRank = entity[1];
+                if (entityRank.length() > 8) {
+                    entityRank = entityRank.substring(0, 8);
+                }
+                entitiesList.add("The entity \"" + entity[0] + "\" has a dominance value of " + entityRank);
+                i++;
             }
-            entitiesList.add("The entity \"" + entity[0] + "\" has a dominance value of " + entityRank);
-            i++;
         }
         return entitiesList;
     }
@@ -1029,24 +983,19 @@ public class Controller {
             super();
             hbox.getChildren().addAll(label, pane, button);
             HBox.setHgrow(pane, Priority.ALWAYS);
-            button.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    showEntities(lastItem);
-                }
-            });
+            button.setOnAction(event -> showEntities(lastItem));
         }
 
         @Override
         protected void updateItem(String item, boolean empty) {
             super.updateItem(item, empty);
-            setText(null);  // No text in label of super class
+            setText(null);
             if (empty) {
                 lastItem = null;
                 setGraphic(null);
             } else {
                 lastItem = item;
-                label.setText(item!=null ? item : "<null>");
+                label.setText(item != null ? item : "<null>");
                 setGraphic(hbox);
             }
         }
@@ -1068,24 +1017,19 @@ public class Controller {
             super();
             hbox.getChildren().addAll(label, pane, button);
             HBox.setHgrow(pane, Priority.ALWAYS);
-            button.setOnAction(new EventHandler<ActionEvent>() {
-                @Override
-                public void handle(ActionEvent event) {
-                    showQuery(lastItem);
-                }
-            });
+            button.setOnAction(event -> showQuery(lastItem));
         }
 
         @Override
         protected void updateItem(String item, boolean empty) {
             super.updateItem(item, empty);
-            setText(null);  // No text in label of super class
+            setText(null);
             if (empty) {
                 lastItem = null;
                 setGraphic(null);
             } else {
                 lastItem = item;
-                label.setText(item!=null ? item : "<null>");
+                label.setText(item != null ? item : "<null>");
                 setGraphic(hbox);
             }
         }

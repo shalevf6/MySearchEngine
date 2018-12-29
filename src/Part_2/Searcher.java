@@ -22,11 +22,13 @@ public class Searcher {
     public static HashMap<String, int[]> queryDictionary;
     private String query;
     private String stopWordsPath;
+    private boolean semanticTreatment;
 
-    public Searcher(String query, String stopWordsPath) {
+    public Searcher(String query, String stopWordsPath, boolean semanticTreatment) {
         queryDictionary = new HashMap<>();
         this.query = query;
         this.stopWordsPath = stopWordsPath;
+        this.semanticTreatment = semanticTreatment;
     }
 
     /**
@@ -34,7 +36,7 @@ public class Searcher {
      * @return - a queue of the relevant documents sorted by their rank (according to the query)
      */
     public Queue<String> processQuery() {
-        if(Controller.semanticTreatmentCheckBox.isSelected())
+        if(semanticTreatment)
             query =bigSemantic(query);
         Query queryObject = new Query(query);
         Parse parse = new Parse(stopWordsPath, true, queryObject);
@@ -135,7 +137,7 @@ public class Searcher {
      * @param str
      * @return
      */
-    public String bigSemantic(String str){
+    private String bigSemantic(String str){
         String[] strings = str.split(" ");
         String toReturn = "";
         int i = 0;
@@ -146,11 +148,12 @@ public class Searcher {
         return toReturn;
     }
 
-    /**finds similar words from the api to make the search better
+    /**
+     * finds similar words from the api to make the search better
      * @param str the string that we want to find similar words to
      * @return the string given + 3 most similar words
      */
-    public String semantic (String str) {
+    private String semantic(String str) {
         String res = "";
         String [] arr = str.split(" ");
         String toApi = "";
@@ -195,12 +198,4 @@ public class Searcher {
         str = str + res;
         return str;
     }
-    /*
-    public static void main(String args[]){
-        String stopWords = "C:\\Users\\עידן\\Pictures";
-        Searcher searcher = new Searcher("car house street",stopWords);
-        System.out.println(searcher.bigSemantic("car house street"));
-    }
-    */
-
 }

@@ -11,14 +11,14 @@ import java.util.*;
 /**
  * This class ranks all the documents in the corpus according to a given query
  */
-public class Ranker {
+class Ranker {
     private double avgAllDocsLength;
     private double numberOfDocs;
 
     /**
      * default constructor for the ranker class
      */
-    public Ranker(){
+    Ranker(){
         this.numberOfDocs = Indexer.totalDocuments;
         avgAllDocsLength = calcAvgDocLength(numberOfDocs);
     }
@@ -189,7 +189,7 @@ public class Ranker {
      * @param docFrequency number of documents contains Q_i
      * @return idf
      */
-    public double getRankIdf(double tf, double numOfDocs, double docLength, double avgDocLength, double docFrequency){
+    private double getRankIdf(double tf, double numOfDocs, double docLength, double avgDocLength, double docFrequency){
         double k_1 = 1.2;
         double b = 0.75;
         double k = k_1 * ( (  1 - b ) + ( ( b * docLength ) / avgDocLength ) );
@@ -212,7 +212,7 @@ public class Ranker {
      * @param docTitle array of ints- 1 if term is in the title of the doc, 0 if not
      * @return the rank of the whole query.
      */
-    public double getScore( double[]  tf, double numOfDocs,double[] docLength, double avgDocLength, double[] docFrequency,int[] docCity,int[] docDate,int[] doc10Percent,int[] docTitle ){
+    private double getScore(double[] tf, double numOfDocs, double[] docLength, double avgDocLength, double[] docFrequency, int[] docCity, int[] docDate, int[] doc10Percent, int[] docTitle){
         double ans = 0.0;
         for(int i = 0 ; i < tf.length ; i++){
             double tempAns = getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength,docFrequency[i]  );
