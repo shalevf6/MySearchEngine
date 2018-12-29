@@ -36,8 +36,8 @@ public class Searcher {
      * @return - a queue of the relevant documents sorted by their rank (according to the query)
      */
     public Queue<String> processQuery() {
-        if(semanticTreatment)
-            query =bigSemantic(query);
+        if (semanticTreatment)
+            query = bigSemantic(query);
         Query queryObject = new Query(query);
         Parse parse = new Parse(stopWordsPath, true, queryObject);
         parse.run();
@@ -82,6 +82,7 @@ public class Searcher {
 
     /**
      * checks whether a given document has any of the cities the user chose to filter the query with
+     *
      * @param document - a given document
      * @return - true if it contains one of the cities to filter. Else - false
      */
@@ -93,7 +94,7 @@ public class Searcher {
             int pointerToCity;
             // goes through all the cities to filter
             boolean[] hasCities = new boolean[citiesToFilter.size()];
-            for (int i = 0; i < hasCities.length; i ++)
+            for (int i = 0; i < hasCities.length; i++)
                 hasCities[i] = false;
             int i = 0;
             for (String cityToFilter : citiesToFilter) {
@@ -133,16 +134,18 @@ public class Searcher {
         }
     }
 
-    /** returns the query plus 3 similar words for each word in the query
+    /**
+     * returns the query plus 3 similar words for each word in the query
+     *
      * @param str
      * @return
      */
-    private String bigSemantic(String str){
+    private String bigSemantic(String str) {
         String[] strings = str.split(" ");
         String toReturn = "";
         int i = 0;
-        while (i< strings.length){
-            toReturn = toReturn + " " +semantic(strings[i]);
+        while (i < strings.length) {
+            toReturn = toReturn + " " + semantic(strings[i]);
             i++;
         }
         return toReturn;
@@ -150,12 +153,13 @@ public class Searcher {
 
     /**
      * finds similar words from the api to make the search better
+     *
      * @param str the string that we want to find similar words to
      * @return the string given + 3 most similar words
      */
     private String semantic(String str) {
         String res = "";
-        String [] arr = str.split(" ");
+        String[] arr = str.split(" ");
         String toApi = "";
         for (int i = 0; i < arr.length; i++) {
             if (i == arr.length - 1)
@@ -174,7 +178,7 @@ public class Searcher {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        String json ="{\"result\":";
+        String json = "{\"result\":";
         Scanner scan = null;
         try {
             scan = new Scanner(address.openStream());
@@ -189,10 +193,10 @@ public class Searcher {
         JSONArray result = jsonObject.getJSONArray("result");
         int i = 0;
         for (Object obj : result) {
-            JSONObject data = (JSONObject)obj;
-            if(i == 3)
+            JSONObject data = (JSONObject) obj;
+            if (i == 3)
                 break;
-            res =  res + " "+ data.getString("word");
+            res = res + " " + data.getString("word");
             i++;
         }
         str = str + res;

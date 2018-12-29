@@ -615,7 +615,7 @@ public class Controller {
                         String queryNumber = queryLine.substring(queryNumberIndex + 14);
                         Queue<String> relevantDocuments = queryResults.get(query);
                         for (String docNumber : relevantDocuments) {
-                            toResultsFile.write(queryNumber + " 0 " + docNumber + " 1  40 mt\n");
+                            toResultsFile.write(queryNumber + " 0 " + docNumber + " 0  0 id\n");
                         }
                     }
                     toResultsFile.close();
