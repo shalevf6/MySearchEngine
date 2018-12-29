@@ -338,23 +338,23 @@ public class Controller {
                 (new File(postingPath + "\\languages")).exists() &&
                 (new File(postingPath + "\\postingForCities")).exists() &&
                 (new File(postingPath + "\\postingForCities\\cityDictionary")).exists() &&
-                (new File(postingPath + "\\postingForCities\\mainCityPosting")).exists() &&
-                (new File(postingPath + "\\postingFilesWithStemming\\mainPosting")).exists() &&
+                (new File(postingPath + "\\postingForCities\\mainCityPosting.txt")).exists() &&
+                (new File(postingPath + "\\postingFilesWithStemming\\mainPosting.txt")).exists() &&
                 (new File(postingPath + "\\postingFilesWithStemming\\termDictionary")).exists() &&
                 (new File(postingPath + "\\postingFilesWithStemming\\termDictionaryForShow")).exists() &&
                 (new File(postingPath + "\\postingFilesWithStemming\\documentDictionary")).exists() &&
-                (new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting")).exists())
+                (new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting.txt")).exists())
             return true;
         return !stemming && (new File(postingPath + "\\postingFilesWithoutStemming")).exists() &&
                 (new File(postingPath + "\\languages")).exists() &&
                 (new File(postingPath + "\\postingForCities")).exists() &&
                 (new File(postingPath + "\\postingForCities\\cityDictionary")).exists() &&
-                (new File(postingPath + "\\postingForCities\\mainCityPosting")).exists() &&
-                (new File(postingPath + "\\postingFilesWithoutStemming\\mainPosting")).exists() &&
+                (new File(postingPath + "\\postingForCities\\mainCityPosting.txt")).exists() &&
+                (new File(postingPath + "\\postingFilesWithoutStemming\\mainPosting.txt")).exists() &&
                 (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionary")).exists() &&
                 (new File(postingPath + "\\postingFilesWithoutStemming\\termDictionaryForShow")).exists() &&
                 (new File(postingPath + "\\postingFilesWithoutStemming\\documentDictionary")).exists() &&
-                (new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting")).exists();
+                (new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting.txt")).exists();
     }
 
     /**
