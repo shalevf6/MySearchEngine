@@ -41,7 +41,7 @@ public class Ranker {
 
     /**main ranking function in the Ranker class
      * @param query is the query that the user typed after parsing and semantics if needed
-     * @return queue with the best 50 documents for the query given
+     * @return queue with the best   documents for the query given
      */
     Queue<String> rank(String[] query) {
         Queue<String> rankToReturn = new LinkedList<>();

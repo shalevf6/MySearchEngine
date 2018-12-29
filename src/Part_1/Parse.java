@@ -1115,15 +1115,32 @@ public class Parse implements Runnable {
                     }
                 }
                 if(!Temp2Current2.contains("%") && !Temp2Current2.contains("$")){
-                    if (Temp2Current2.matches(numRegex) && Temp2Current2.matches(alphaRegex) && (Temp2Current2.charAt(current.length() - 1) == 'M' || Temp2Current2.charAt(current.length() - 1) == 'B' || Temp2Current2.charAt(current.length() - 1) == 'K'))
-                        updateDictionaries(Temp2Current2);
+                    if (Temp2Current2.matches(numRegex) && Temp2Current2.matches(alphaRegex) && Temp2Current2.length()>=2 &&(Temp2Current2.charAt(Temp2Current2.length() - 1) == 'M' || Temp2Current2.charAt(Temp2Current2.length() - 1) == 'B' || Temp2Current2.charAt(Temp2Current2.length() - 1) == 'K')){
+                        if(Temp2Current2.contains("/") ){
+                            String[] splitedAfterAll = Temp2Current2.split("/");
+                            if(splitedAfterAll.length==2 && isNumeric(splitedAfterAll[0]) && isNumeric(splitedAfterAll[1])){
+                                updateDictionaries(Temp2Current2);
+                            }
+                            else {
+                                for (int i = 0; i < splitedAfterAll.length; i++)
+                                {
+                                    if(isNumeric(splitedAfterAll[i])||splitedAfterAll.length > 1)
+                                        updateDictionaries(splitedAfterAll[i]);
+                                }
+                            }
+                        }
+                        else
+                            updateDictionaries(Temp2Current2);
+                    }
                     else if(!Temp2Current2.matches(numRegex) || !Temp2Current2.matches(alphaRegex)) {
                         String[] split = current.split("\\.");
                         if(split.length <= 2)
                             updateDictionaries(current);
                     }
                 }
+                else {
                     updateDictionaries(Temp2Current2);
+                }
                 updateDictionaries(current + "-" + Temp2Current2);
                 return ToAdd2Counter + 1;
             }
