@@ -2,7 +2,6 @@ package Part_1;
 
 import Controller.Controller;
 import javafx.scene.control.Alert;
-
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;

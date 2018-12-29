@@ -2,7 +2,6 @@ package Part_2;
 
 import Controller.Controller;
 import Part_1.Indexer;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -51,13 +50,13 @@ class Ranker {
         if (Indexer.isDictionaryStemmed) {           //First,Open RandomAccessFile//
 
             try {
-                ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithStemming\\mainPosting", "r");
+                ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithStemming\\mainPosting.txt", "r");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         } else {
             try {
-                ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\mainPosting", "r");
+                ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\mainPosting.txt", "r");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }

@@ -2,7 +2,6 @@ package Part_1;
 
 import Controller.Controller;
 import GeneralClasses.Document;
-
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -73,9 +72,9 @@ public class Indexer implements Runnable {
         // create the document posting file
         File docPostingFile;
         if (Parse.stemming)
-            docPostingFile = new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting");
+            docPostingFile = new File(postingPath + "\\postingFilesWithStemming\\documentToEntitiesPosting.txt");
         else
-            docPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting");
+            docPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\documentToEntitiesPosting.txt");
         docPostingFile.createNewFile();
         int docPostingPointer = 0;
 
@@ -165,10 +164,10 @@ public class Indexer implements Runnable {
                 try {
                     File tempPostingFile;
                     if (Parse.stemming) {
-                        tempPostingFile = new File(postingPath + "\\postingFilesWithStemming\\tempPosting" + tempPostingNum);
+                        tempPostingFile = new File(postingPath + "\\postingFilesWithStemming\\tempPosting" + tempPostingNum + ".txt");
                         tempPostingFile.createNewFile();
                     } else {
-                        tempPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\tempPosting" + tempPostingNum);
+                        tempPostingFile = new File(postingPath + "\\postingFilesWithoutStemming\\tempPosting" + tempPostingNum + ".txt");
                         tempPostingFile.createNewFile();
                     }
                     File tempPostingCityFile;
@@ -176,7 +175,7 @@ public class Indexer implements Runnable {
                     BufferedWriter cityBufferedWriter = null;
                     // --- IN ORDER TO NOT CREATE THE CITIES' POSTING FILES MORE THAN ONCE ---
                     if (!indexedCities) {
-                        tempPostingCityFile = new File(postingPath + "\\postingForCities\\tempPostingCity" + tempPostingNum);
+                        tempPostingCityFile = new File(postingPath + "\\postingForCities\\tempPostingCity" + tempPostingNum + ".txt");
                         cityBufferedWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(tempPostingCityFile)));
                     }
                     tempPostingNum++;
@@ -260,7 +259,6 @@ public class Indexer implements Runnable {
 
     /**
      * deletes all the temp files from the posting path
-     *
      * @param postingPath - the posting path which the files are saved in
      */
     private void deleteAllTempFiles(String postingPath) {
@@ -280,11 +278,10 @@ public class Indexer implements Runnable {
 
     /**
      * merges all the temp Posting Files into one
-     *
      * @param postingPath - the path for the location of all the temp posting files
      */
     private void mergePostingFiles(String postingPath) {
-        File mainPostingFile = new File(postingPath + "\\mainPosting");
+        File mainPostingFile = new File(postingPath + "\\mainPosting.txt");
         try {
             mainPostingFile.createNewFile();
         } catch (IOException e) {
@@ -297,7 +294,7 @@ public class Indexer implements Runnable {
         // create a buffered reader for each of the sorted temp posting files
         while (counter - 1 < totalTempPostingFiles) {
             try {
-                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPosting" + counter))));
+                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPosting" + counter + ".txt"))));
                 counter++;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -325,9 +322,6 @@ public class Indexer implements Runnable {
                     term = term.toUpperCase();
                 }
             }
-
-            // sorts the posting line's entries by normalized tf
-//            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // write first line separately so the main posting file won't end with a \n (new line)
             bw.write(postingLineToAdd);
@@ -360,9 +354,6 @@ public class Indexer implements Runnable {
                         term = term.toUpperCase();
                     }
                 }
-
-                // sorts the posting line's entries by normalized tf
-//                postingLineToAdd = sortByTf(postingLineToAdd);
 
                 // writes the posting line
                 postingLineToAdd = '\n' + postingLineToAdd;
@@ -400,7 +391,7 @@ public class Indexer implements Runnable {
      * @param postingPath - the path for the location of all the temp city posting files
      */
     private void mergeCityPostingFiles(String postingPath) {
-        File mainCityPostingFile = new File(postingPath + "\\mainCityPosting");
+        File mainCityPostingFile = new File(postingPath + "\\mainCityPosting.txt");
         try {
             mainCityPostingFile.createNewFile();
         } catch (IOException e) {
@@ -413,7 +404,7 @@ public class Indexer implements Runnable {
         // create a buffered reader for each of the sorted temp posting files
         while (counter - 1 < totalTempPostingFiles) {
             try {
-                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPostingCity" + counter))));
+                bufferedReaders[counter - 1] = new BufferedReader(new InputStreamReader(new FileInputStream(new File(postingPath + "\\tempPostingCity" + counter + ".txt"))));
                 counter++;
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -431,9 +422,6 @@ public class Indexer implements Runnable {
 
             // check and merge all duplicate posting lines that are of the same term
             String postingLineToAdd = checkAndMergePostingLines();
-
-            // sorts the posting line's entries by normalized tf
-//            postingLineToAdd = sortByTf(postingLineToAdd);
 
             // initiates the bytes counter for the posting pointer
             int postingPointer = 0;
@@ -458,9 +446,6 @@ public class Indexer implements Runnable {
 
                 // checks and merges all duplicate posting lines that are of the same term
                 postingLineToAdd = checkAndMergePostingLines();
-
-                // sorts the posting line's entries by normalized tf
-//            postingLineToAdd = sortByTf(postingLineToAdd);
 
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
@@ -498,7 +483,6 @@ public class Indexer implements Runnable {
 
     /**
      * reads the first posting lines from each of the temp posting files into a given postingLines array
-     *
      * @param bufferedReaders - a buffered readers array for reading posting lines from each of the temp posting files
      * @param postingLines    - a string array to insert input of the posting lines from the temp posting files
      */
@@ -551,7 +535,6 @@ public class Indexer implements Runnable {
     /**
      * gets a posting line from the queue, while adding a new posting line from the same temp sorted
      * posting file the line received was from
-     *
      * @return - a string array which has a posting line and a buffered reader number in it
      */
     private String[] getAndAddToQueue() {
@@ -569,7 +552,6 @@ public class Indexer implements Runnable {
 
     /**
      * turns the dictionary into a sorted string
-     *
      * @return - a string representing the sorted dictionary
      */
     private static List<String> getDictionaryString() {
@@ -600,8 +582,7 @@ public class Indexer implements Runnable {
 
     /**
      * writes a certain dictionary (term / document / city) into a file in the disk
-     *
-     * @param path        - the path in which the file will be created
+     * @param path - the path in which the file will be created
      * @param whatToWrite - to know which dictionary to write to a file in the disk
      */
     private void writeDictionaryToDisk(String path, int whatToWrite) {
@@ -625,8 +606,7 @@ public class Indexer implements Runnable {
 
     /**
      * write the dictionary's string list or the languages string list to a file in the disk
-     *
-     * @param path            - the path which the dictionary's string should be written to
+     * @param path - the path which the dictionary's string should be written to
      * @param writeDictionary - true, if needs to write the term dictionary for show. false, if needs to write the languages list
      */
     private void writeTermDictionaryForShowToDisk(String path, boolean writeDictionary) {
@@ -647,7 +627,6 @@ public class Indexer implements Runnable {
 
     /**
      * reads a dictionary's sorted string list or the languages string list from a file in the disk to the main memory
-     *
      * @return - the dictionary's sorted string list
      */
     public static List<String> readDictionaryForShowToMemory(String path) {
