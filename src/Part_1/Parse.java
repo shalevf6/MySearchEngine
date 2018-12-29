@@ -38,6 +38,7 @@ public class Parse implements Runnable {
         getStopWords(path);
         this.forQuery = forQuery;
         this.query = query;
+        stemming = Indexer.isDictionaryStemmed;
     }
 
     /**
@@ -73,10 +74,6 @@ public class Parse implements Runnable {
                     termDictionary = Searcher.queryDictionary;
                     documents = new String[1];
                     documents[0] = query.getQueryText();
-                    if (Indexer.isDictionaryStemmed)
-                        stemming = true;
-                    else
-                        stemming = false;
                 }
                 else
                     termDictionary = Indexer.termDictionary;
@@ -898,10 +895,6 @@ public class Parse implements Runnable {
                 current = DashSplit[1];
                 if (current.contains(","))
                     current = changeNumToRegularNum(current);
-                else{
-                    //current =handleZero(current);
-                    //tempCurrent =handleZero(current);
-                }
                 if (isNumeric2(current)) {
 
                     //--------NUMBER-NUMBER FRACTION----//
@@ -1108,8 +1101,6 @@ public class Parse implements Runnable {
                     else if(!current.matches(numRegex) || !current.matches(alphaRegex)) {
                         String[] spli = current.split("\\.");
                         if(spli.length <= 2) {
-                            counter++;
-                            counter--;
                             updateDictionaries(current);
                         }
                     }
@@ -1163,8 +1154,6 @@ public class Parse implements Runnable {
                     Double temp12 = Double.parseDouble(Temp2Current2);
                     temp12 = temp12 * 1000;
                     int temp22 = temp12.intValue();
-                    counter++;
-                    counter--;
                     Temp2Current2 = String.valueOf(temp22);
                     Temp2Current2 = Temp2Current2 + "B";
                     ToAdd2Counter = ToAdd2Counter + (2 - 1);
@@ -2297,7 +2286,7 @@ public class Parse implements Runnable {
                 }
                 if (tempString.length() != 0)
                     ans = nums[0] + '.' + nums[1] + tempString + 'M';
-                else if (tempString.length() == 0) {
+                else {
                     if (tempString2.equals("") && !ans.contains("M"))
                         ans = nums[0] + tempString2 + tempString + 'M';
                 }
@@ -2397,7 +2386,6 @@ public class Parse implements Runnable {
             }
         }
         if (ans.contains("M")) {
-            String tempi = ans.substring(ans.length() - 1);
             ans = ans.substring(0, ans.length() - 1);
             ans = handleDot(ans);
             ans = ans + "M";

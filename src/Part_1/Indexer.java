@@ -354,8 +354,6 @@ public class Indexer implements Runnable {
                 // checks if the term should be in capital letters
                 toCut = postingLineToAdd.indexOf(':');
                 term = postingLineToAdd.substring(0, toCut);
-                if (termDictionary.containsKey(term.toLowerCase()) && termDictionary.containsKey(term.toUpperCase()))
-                    System.out.println(term);
                 if (!termDictionary.containsKey(term)) {
                     if (termDictionary.containsKey(term.toUpperCase())) {
                         postingLineToAdd = term.toUpperCase() + ":" + postingLineToAdd.substring(toCut + 1);
@@ -745,13 +743,5 @@ public class Indexer implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    public static void main (String[] args) throws IOException, ClassNotFoundException { // TODO : DELETE THIS
-        int termToFind;
-        readDictionaryToMemory("C:\\Users\\Shalev\\Downloads\\POSTINGS\\postingFilesWithoutStemming\\termDictionary", 1);
-
-        System.out.println(termDictionary.get("NOVEMBER")[2]);
-        System.out.println();
     }
 }
