@@ -1,8 +1,8 @@
 package Part_1;
 
+import Controller.Controller;
 import GeneralClasses.Document;
 import GeneralClasses.Query;
-import Part_2.Searcher;
 import java.io.*;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -34,11 +34,11 @@ public class Parse implements Runnable {
      * @param path - the path to the stop words file
      * @param forQuery - decides if the parse is for a query or for a corpus
      */
-    public Parse(String path, boolean forQuery, Query query) {
+    public Parse(String path, boolean forQuery, Query query, boolean stemming) {
         getStopWords(path);
         this.forQuery = forQuery;
         this.query = query;
-        stemming = Indexer.isDictionaryStemmed;
+        Parse.stemming = stemming;
     }
 
     /**
@@ -66,12 +66,13 @@ public class Parse implements Runnable {
      * This is the main Parse Function
      */
     private void parseAll() {
+        boolean queryStop = false;
         while (true) {
             if (!docQueue.isEmpty() || query != null) {
                 String[] documents = null;
                 // for fixing the parser to stem / not stem according to the indexed corpus
                 if (forQuery) {
-                    termDictionary = Searcher.queryDictionary;
+                    termDictionary = new HashMap<>();
                     documents = new String[1];
                     documents[0] = query.getQueryText();
                 }
@@ -456,8 +457,8 @@ public class Parse implements Runnable {
                     }
                 }
                 else {
-                    stop = true;
-                    query = null;
+                    query.setQueryTermDictionary(termDictionary);
+                    break;
                 }
             } else {
                 if (stop) {

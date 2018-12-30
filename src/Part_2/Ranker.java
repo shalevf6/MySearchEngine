@@ -54,6 +54,7 @@ class Ranker {
                 ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithStemming\\mainPosting.txt", "r");
             else
                 ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\mainPosting.txt", "r");
+            System.out.println("Start ranker data getting: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
             for (int i = 0; i < query.length; i++) {  //For every term in the query:
                 allMaps[i] = new HashMap<String,String[]>();
                 HashMap<String, String[]> allDocsInQuery = new HashMap<>(); //HashMap contains Document Number and all info that need for the calculation//
@@ -109,11 +110,13 @@ class Ranker {
                 }
                 allMaps[i] = allDocsInQuery;
             }
+            System.out.println("End ranker data getting: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
             //-------Merging all HashMaps------//
             Set<String> mergedDocNums = new HashSet<>();
             for (HashMap allMap : allMaps) {
                 mergedDocNums.addAll(allMap.keySet());
             }
+            System.out.println("End ranker merge data: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
             // defining a priority queue for sorting the documents retrieved by rank
             PriorityQueue<String[]> docsAfterBM25 = new PriorityQueue<>((o1, o2) -> {
                 double ans;
@@ -169,6 +172,8 @@ class Ranker {
                     docsAfterBM25.add(scoreArray);
             }
 
+            System.out.println("End ranker BM25: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
+
             // frees some more memory space
             allMaps = null;
 
@@ -221,7 +226,6 @@ class Ranker {
 
     /**
      * returns the whole Query's score in a specific document.
-     *
      * @param tf           term frequency
      * @param numOfDocs    number of documents in the corpus
      * @param docLength    the length of the document
@@ -237,7 +241,7 @@ class Ranker {
         double ans = 0.0;
         for (int i = 0; i < tf.length; i++) {
             double tempAns = getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength, docFrequency[i]);
-            double tempAnsToMultiply = 0.05*tempAns;
+            double tempAnsToMultiply = 0.05 * tempAns;
             //----if is in the City----//
             if(docCity[i]==1)
                 tempAns+=tempAnsToMultiply;

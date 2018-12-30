@@ -1,6 +1,8 @@
 package Part_2;
 
+import Controller.Controller;
 import GeneralClasses.Query;
+import Part_1.Indexer;
 import Part_1.Parse;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -11,15 +13,14 @@ import java.util.*;
 /**
  * This class processes a given query and check what relevant documents are in the corpus
  */
-public class Searcher {
+public class Searcher implements Runnable {
 
-    public static HashMap<String, int[]> queryDictionary;
     private String query;
     private String stopWordsPath;
     private boolean semanticTreatment;
+    private Queue<String> relevantDocuments;
 
     public Searcher(String query, String stopWordsPath, boolean semanticTreatment) {
-        queryDictionary = new HashMap<>();
         this.query = query;
         this.stopWordsPath = stopWordsPath;
         this.semanticTreatment = semanticTreatment;
@@ -27,17 +28,19 @@ public class Searcher {
 
     /**
      * sends the query Parse to get parsed, and ranks the documents according to the query
-     * @return - a queue of the relevant documents sorted by their rank (according to the query)
      */
-    public Queue<String> processQuery() {
+    private void processQuery() {
         if (semanticTreatment)
             query = bigSemantic(query);
+        System.out.println("Start searcher parse: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
         Query queryObject = new Query(query);
-        Parse parse = new Parse(stopWordsPath, true, queryObject);
+        Parse parse = new Parse(stopWordsPath, true, queryObject, Indexer.isDictionaryStemmed);
         parse.run();
         Ranker ranker = new Ranker();
+        System.out.println("End searcher parse: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
 
         // turn all the query terms in to an array for ranking
+        HashMap<String, int[]> queryDictionary = queryObject.getQueryTermDictionary();
         String[] queryTerms = new String[queryDictionary.size()];
         Set<String> queryKeys = queryDictionary.keySet();
         int i = 0;
@@ -46,7 +49,8 @@ public class Searcher {
             i++;
         }
 
-        return ranker.rank(queryTerms);
+        System.out.println("Start searcher rank: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
+        relevantDocuments = ranker.rank(queryTerms);
     }
 
     /**
@@ -141,5 +145,18 @@ public class Searcher {
         } catch (IOException e) {
             return null;
         }
+    }
+
+    /**
+     * gets the relevant documents of the query
+     * @return - a queue with the relevant documents of the query
+     */
+    public Queue<String> getRelevantDocuments() {
+        return relevantDocuments;
+    }
+
+    @Override
+    public void run() {
+        processQuery();
     }
 }
