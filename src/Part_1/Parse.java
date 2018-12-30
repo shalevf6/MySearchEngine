@@ -135,7 +135,7 @@ public class Parse implements Runnable {
                         int countWord = 0;
 
                         // removes any extra delimiters in the start / end of every word
-                        while (countWord < afterSplitLength - 1) {
+                        while (countWord < afterSplitLength) {
                             afterSplit[countWord] = removeExtraDelimiters(afterSplit[countWord]);
                             countWord++;
                         }
@@ -145,6 +145,11 @@ public class Parse implements Runnable {
                             firstPartCounter--;
                             current = afterSplit[counter];
                             String currentLower = current.toLowerCase();
+                            // removes redundant query terms from the description
+                            if (forQuery && (currentLower.equals("identify") || currentLower.equals("documents"))) {
+                                counter++;
+                                continue;
+                            }
                             // checks if the current string is a stop word (and not the word between) or the word may
                             if (current.equals("") || (!(currentLower.equals("may")) && !(currentLower.equals("between")) &&
                                     StopWords.containsKey(currentLower))) {
@@ -1796,7 +1801,7 @@ public class Parse implements Runnable {
     }
 
     /**
-     * removes any extra delimiters from a given word's start or and twice (that we didn't remove when we split the words in the text prior)
+     * removes any extra delimiters from a given word's start or end recursively (that we didn't remove when we split the words in the text prior)
      * except U.S.
      * @param word - a given word
      * @return - the given word after the delimiter removal (if necessary)
