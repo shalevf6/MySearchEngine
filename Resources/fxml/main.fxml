@@ -75,5 +75,10 @@
             <Font size="14.0" />
          </font>
       </Text>
+      <Text fx:id="filterQueryText" layoutX="207.0" layoutY="420.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Filter search through cities:" visible="false">
+         <font>
+            <Font size="14.0" />
+         </font>
+      </Text>
    </children>
 </AnchorPane>

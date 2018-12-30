@@ -422,16 +422,12 @@ public class ReadFile implements Runnable {
     }
 
     /**
-     * removes any extra delimiters from a given word's start or and twice (that we didn't remove when we split the words in the text prior)
-     * except U.S.
+     * removes any extra delimiters from a given word's start or end recursively
      * @param word - a given word
      * @return - the given word after the delimiter removal (if necessary)
      */
     private String removeExtraDelimiters(String word) {
         if(!word.equals("")) {
-
-            if(word.equals("U.S."))
-                return word;
 
             int length = word.length();
 

@@ -36,6 +36,7 @@ public class Controller {
     public Button runButton;
     public Button loadStopWordsButton;
     public Text stopWordsInstructionsText;
+    public Text filterQueryText;
     private String stopWordsPath;
     public static String postingPathText;
     private boolean startsIndexing = false;
@@ -370,6 +371,7 @@ public class Controller {
         runButton.setVisible(true);
         queryPath.setVisible(true);
         semanticTreatmentCheckBox.setVisible(true);
+        filterQueryText.setVisible(true);
     }
 
     /**
@@ -387,6 +389,7 @@ public class Controller {
         semanticTreatmentCheckBox.setVisible(false);
         loadStopWordsButton.setVisible(false);
         stopWordsInstructionsText.setVisible(false);
+        filterQueryText.setVisible(false);
     }
 
     /**
@@ -526,7 +529,6 @@ public class Controller {
                     bufferedReader.close();
                     int queryStart = allQueries.indexOf("<top>");
                     getAndRunQueries(queryStart, allQueries);
-//                path.setText(selectedDirectory.getAbsolutePath());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -563,16 +565,13 @@ public class Controller {
             String queryString = allQueries.substring(queryBeginning + 7, queryEnd).trim();
 
             // gets the description of the query
-            String queryDescription = allQueries.substring(queryDescStart + 9, queryDescEnd).trim();
+            String queryDescription = allQueries.substring(queryDescStart + 19, queryDescEnd).trim();
 
+            // runs the query through the corpus with it description
+            queryResults.put(queryString, runQuery(queryString + " " + queryDescription));
+
+            // adds the query and query number to the query list
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
-
-            // add the description to the query for better results
-            queryString = queryString + " " + queryDescription;
-
-            // runs the query through the corpus
-            queryResults.put(queryString, runQuery(queryString));
-
 
             queryStart = allQueries.indexOf("<top>", queryLimit);
         }
