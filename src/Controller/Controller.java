@@ -46,6 +46,7 @@ public class Controller {
     public static List<String> languages = new LinkedList<>();
     public static HashMap<String, Integer> citiesToFilter = new HashMap<>();
     private HashMap<String, Queue<String>> queryResults = new HashMap<>();
+    static public double time;
 
     /**
      * opens a Directory Chooser window in order to choose a directory path for the corpus and for the stop words file
@@ -68,7 +69,6 @@ public class Controller {
      */
     public void onActivate() {
         if (!alreadyIndexedAll() && !startsIndexing) {
-            Parse.stemming = stemmingCheckBox.isSelected();
             String alert = checkIfIndexed();
             if (!alert.equals(""))
                 showErrorAlert(alert);
@@ -85,9 +85,8 @@ public class Controller {
                         } else {
                             File stopWords = new File(dirPath + "\\corpus\\stop_words.txt");
                             if (stopWords.exists()) {
-                                Parse.stemming = stemmingCheckBox.isSelected();
                                 stopWordsPath = stopWords.getAbsolutePath();
-                                if (Parse.stemming) {
+                                if (stemmingCheckBox.isSelected()) {
                                     (new File(postingPathText + "\\postingFilesWithStemming")).mkdir();
                                     alreadyIndexedWithStemming = true;
                                 } else {
@@ -95,7 +94,7 @@ public class Controller {
                                     alreadyIndexedWithoutStemming = true;
                                 }
                                 (new File(postingPathText + "\\postingForCities")).mkdir();
-                                Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt", false, null);
+                                Parse parse = new Parse(dirPath + "\\corpus\\stop_words.txt", false, null, stemmingCheckBox.isSelected());
                                 ReadFile readFile = new ReadFile(dirPath);
                                 Indexer indexer = new Indexer();
                                 Parse.resetPartially();
@@ -117,7 +116,7 @@ public class Controller {
                                 } finally {
                                     // ------ THE FINAL ALERT BOX INDICATING THE INDEXING PROCESS IS DONE ------
                                     startsIndexing = false;
-                                    if (Parse.stemming)
+                                    if (stemmingCheckBox.isSelected())
                                         alreadyIndexedWithStemming = true;
                                     else
                                         alreadyIndexedWithoutStemming = true;
@@ -151,11 +150,10 @@ public class Controller {
 
     /**
      * check if there was already an indexing done before
-     *
      * @return - the appropriate error if true. else - returns an empty string
      */
     private String checkIfIndexed() {
-        boolean stemming = Parse.stemming;
+        boolean stemming = stemmingCheckBox.isSelected();
         if (stemming && alreadyIndexedWithStemming)
             return "Already indexed with stemming!";
         if (!stemming && alreadyIndexedWithoutStemming)
@@ -516,6 +514,7 @@ public class Controller {
             if (selectedFile != null) {
                 BufferedReader bufferedReader;
                 try {
+                    time = System.nanoTime();
                     // read all the text from the queries file
                     bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile)));
                     StringBuilder allQueries = new StringBuilder();
@@ -546,6 +545,10 @@ public class Controller {
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
         LinkedList<String> queries = new LinkedList<>();
         queryResults = new HashMap<>();
+        ArrayList<String[]> queriesToRun = new ArrayList<>();
+
+        System.out.println("Start Load: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -567,13 +570,44 @@ public class Controller {
             // gets the description of the query
             String queryDescription = allQueries.substring(queryDescStart + 19, queryDescEnd).trim();
 
-            // runs the query through the corpus with it description
-            queryResults.put(queryString, runQuery(queryString + " " + queryDescription));
+            // adds the query's details to the ArrayList for queries to run
+            queriesToRun.add(new String[]{queryString,queryString + " " + queryDescription});
 
             // adds the query and query number to the query list
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
 
             queryStart = allQueries.indexOf("<top>", queryLimit);
+        }
+
+        System.out.println("Start thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+
+        // create a thread to run each query
+        Searcher[] searchers = new Searcher[queriesToRun.size()];
+        Thread[] threadsForQueryRuns = new Thread[queriesToRun.size()];
+        int i = 0;
+        for (String[] query : queriesToRun) {
+            searchers[i] = new Searcher(query[1], stopWordsPath, semanticTreatmentCheckBox.isSelected());
+            threadsForQueryRuns[i] = new Thread(searchers[i]);
+            threadsForQueryRuns[i].start();
+            i++;
+            System.out.println("Start thread number " + i + ": " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+        }
+
+        // wait until all the threads are finished
+        for (Thread t : threadsForQueryRuns) {
+            try {
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("Finish thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+        // get the query results
+        i = 0;
+        for (Searcher searcher : searchers) {
+            queryResults.put(queriesToRun.get(i)[0], searcher.getRelevantDocuments());
+            i++;
         }
 
         ObservableList<String> list = FXCollections.observableArrayList(queries);
@@ -834,13 +868,19 @@ public class Controller {
 
     /**
      * Runs a given query through the corpus
-     *
      * @param query - a given query
      * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
     private Queue<String> runQuery(String query) {
         Searcher searcher = new Searcher(query, stopWordsPath, semanticTreatmentCheckBox.isSelected());
-        return searcher.processQuery();
+        Thread queryRunThread = new Thread(searcher);
+        queryRunThread.start();
+        try {
+            queryRunThread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return searcher.getRelevantDocuments();
     }
 
     /**

@@ -62,7 +62,6 @@ public class Indexer implements Runnable {
 
     /**
      * the primary index function
-     *
      * @param postingPath - the path for saving the posting files
      */
     private void indexAll(String postingPath) throws IOException {
