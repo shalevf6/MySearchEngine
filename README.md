@@ -107,7 +107,7 @@ checked the "Semantic Treatment" checkbox or not.
 
 The query process can be done with filtering of cities, depending whether the user chose
 a city / cities after clicking the "Show & Choose Cities" button.
-#### The new window that opens after the conclusing of the processing of the queries:
+#### The new window that opens after the conclusion of the processing of the queries:
 When the processing of the queries is done, a new window will open with the list of all
 the queries from the file with their unique query number, and a "Show Results" button beside
 each query. In addition, there is a "Save Results" button in the bottom of the window (its
@@ -127,7 +127,7 @@ checked the "Semantic Treatment" checkbox or not.
 The query process can be done with filtering of cities, depending whether the user chose
 a city / cities after clicking the "Show & Choose Cities" button.
 
-#### The new window that opens after the conclusing of the processing of the query:
+#### The new window that opens after the conclusion of the processing of the query:
 When the processing of the query is done, a new window will open with the list of the 50 (or less,
 if there are less than 50) most relevant documents' numbers of the query, starting from the most
 relevant document at the top, and the least relevant in the bottom. Beside each document there is
