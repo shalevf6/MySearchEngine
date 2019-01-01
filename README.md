@@ -117,6 +117,9 @@ The "Show Results" button opens a new window with a list of the 50 (or less, if 
 less than 50) most relevant documents' numbers of the query, starting from the most relevant
 document at the top, and the least relevant in the bottom. Beside each document there is a
 "Show Entities" button (its functionality is explained further down the ReadMe file).
+
+Also, the query and the amount of relevant documents retrieved is displayed in the title of the
+window
 ### The "Run" button:
 The "Run" button is for running a single query that was typed into the text box next to it. If
 there is no text in the text box, an appropriate error will pop.
@@ -134,6 +137,9 @@ relevant document at the top, and the least relevant in the bottom. Beside each 
 a "Show Entities" button (its functionality is explained further down the ReadMe file). In addition,
 there is a "Save Results" button in the bottom of the window (its functionality is explained further
 down the ReadMe file).
+
+Also, the query and the amount of relevant documents retrieved is displayed in the title of the
+window
 ### The "Semantic Treatment" checkbox:
 If checked, it will add semantic treatment to the next quey run / load.
 
