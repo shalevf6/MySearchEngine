@@ -18,7 +18,7 @@ public class ReadFile implements Runnable {
     private HashMap<String,Integer> notCities = new HashMap<>();
 
     /**
-     * A construct  or for the ReadFile class
+     * A construct or for the ReadFile class
      * @param dirPath - the directory path in which the corpus is found
      */
     public ReadFile(String dirPath) {
@@ -27,6 +27,9 @@ public class ReadFile implements Runnable {
         notCities.put("AIR",1);
         notCities.put("CHINA",1);
         notCities.put("NEWS",1);
+        notCities.put("MAY",1);
+        notCities.put("FOR",1);
+        notCities.put("THE",1);
     }
 
     /**
