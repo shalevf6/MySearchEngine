@@ -214,7 +214,7 @@ class Ranker {
      * @return idf
      */
     private double getRankIdf(double tf, double numOfDocs, double docLength, double avgDocLength, double docFrequency) {
-        double k_1 = 1.6;
+        double k_1 = 1.2;
         double b = 0.75;
         double k = k_1 * ((1 - b) + ((b * docLength) / avgDocLength));
         double weight = (((k_1 + 1) * tf) / (k + tf));
@@ -222,7 +222,6 @@ class Ranker {
         double idf = weight * Math.log10((numOfDocs - docFrequency + 0.5) / (docFrequency + 0.5));
         return idf;
     }
-
 
     /**
      * returns the whole Query's score in a specific document.
@@ -241,19 +240,19 @@ class Ranker {
         double ans = 0.0;
         for (int i = 0; i < tf.length; i++) {
             double tempAns = getRankIdf(tf[i], numOfDocs, docLength[i], avgDocLength, docFrequency[i]);
-            double tempAnsToMultiply = 0.05 * tempAns;
+            double tempAnsToMultiply = 0.13 * tempAns;
             //----if is in the City----//
-            if(docCity[i]==1)
-                tempAns+=tempAnsToMultiply;
+            if (docCity[i] == 1)
+                tempAns += tempAnsToMultiply;
             //----if is in the Date----//
-            if(docDate[i]==1)
-                tempAns+=tempAnsToMultiply;
+            if (docDate[i] == 1)
+                tempAns += tempAnsToMultiply;
             //----if is in the 10 Percent----//
-            if(doc10Percent[i]==1)
-                tempAns+=tempAnsToMultiply;
+            if (doc10Percent[i] == 1)
+                tempAns += tempAnsToMultiply;
             //----if is in the Title----//
-            if(docTitle[i]==1)
-                tempAns+=tempAnsToMultiply;
+            if (docTitle[i] == 1)
+                tempAns += tempAnsToMultiply;
             ans = ans + tempAns;
         }
         return ans;

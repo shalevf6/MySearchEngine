@@ -507,13 +507,13 @@ public class Controller {
      * Loads and runs through a file with queries
      */
     public void onQueryLoad() {
-        if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
-            FileChooser fileChooser = new FileChooser();
-            fileChooser.setTitle("Choose a query file");
-            File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
-            if (selectedFile != null) {
-                BufferedReader bufferedReader;
-                try {
+        try {
+            if (alreadyIndexedWithStemming || alreadyIndexedWithoutStemming) {
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setTitle("Choose a query file");
+                File selectedFile = fileChooser.showOpenDialog(postingPath.getScene().getWindow());
+                if (selectedFile != null) {
+                    BufferedReader bufferedReader;
                     time = System.nanoTime();
                     // read all the text from the queries file
                     bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(selectedFile)));
@@ -528,12 +528,13 @@ public class Controller {
                     bufferedReader.close();
                     int queryStart = allQueries.indexOf("<top>");
                     getAndRunQueries(queryStart, allQueries);
-                } catch (IOException e) {
-                    e.printStackTrace();
                 }
-            }
-        } else
-            showErrorAlert("Need to load \\ index a data set before running a query!");
+            } else
+                showErrorAlert("Need to load \\ index a data set before running a query!");
+        }
+        catch (IOException e) {
+            showErrorAlert("Query file was not in the right format!");
+        }
     }
 
     /**
@@ -571,7 +572,7 @@ public class Controller {
             String queryDescription = allQueries.substring(queryDescStart + 19, queryDescEnd).trim();
 
             // adds the query's details to the ArrayList for queries to run
-            queriesToRun.add(new String[]{queryString,queryString + " " + queryDescription});
+            queriesToRun.add(new String[]{queryString,queryString, queryDescription});
 
             // adds the query and query number to the query list
             queries.add("Query: " + queryString + "  Query Number: " + queryNum);
@@ -586,7 +587,7 @@ public class Controller {
         Thread[] threadsForQueryRuns = new Thread[queriesToRun.size()];
         int i = 0;
         for (String[] query : queriesToRun) {
-            searchers[i] = new Searcher(query[1], stopWordsPath, semanticTreatmentCheckBox.isSelected());
+            searchers[i] = new Searcher(query[1], query[2], stopWordsPath, semanticTreatmentCheckBox.isSelected());
             threadsForQueryRuns[i] = new Thread(searchers[i]);
             threadsForQueryRuns[i].start();
             i++;
@@ -852,13 +853,13 @@ public class Controller {
 
             listView.setPrefHeight(800);
             listView.setPrefWidth(605);
+
             // add all the cities to the ListView object
             for (String city : cities) {
                 citiesToShow.add(city);
             }
 
             listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-
             Scene scene = new Scene(root, 805, 500);
             stage.setScene(scene);
             stage.show();
@@ -872,7 +873,7 @@ public class Controller {
      * @return - a hashmap with the query and a queue, sorted by rank, of retrieved document numbers according to the given query
      */
     private Queue<String> runQuery(String query) {
-        Searcher searcher = new Searcher(query, stopWordsPath, semanticTreatmentCheckBox.isSelected());
+        Searcher searcher = new Searcher(query, null, stopWordsPath, semanticTreatmentCheckBox.isSelected());
         Thread queryRunThread = new Thread(searcher);
         queryRunThread.start();
         try {
@@ -896,9 +897,12 @@ public class Controller {
             else
                 ram = new RandomAccessFile(postingPathText + "\\postingFilesWithoutStemming\\documentToEntitiesPosting.txt", "r");
             int postingLinePointer = Integer.valueOf(Indexer.documentDictionary.get(document)[5]);
+            // get the ram pointer to point to the start of the line of the relevant document
             ram.seek(postingLinePointer);
+            // gets the posting line of the document
             String postingLine = ram.readLine();
             ram.close();
+            // get a queue of the 5 most dominant entities in the document (or less than 5 if there are less than 5 entities in the document)
             Queue<String> entitiesList = getEntitiesFromPostingLine(postingLine, document);
             if (entitiesList.isEmpty())
                 showErrorAlert("No entities found in this document!");
@@ -969,6 +973,7 @@ public class Controller {
                     // searching for the tf of the entity in the document
                     for (String entry : mainPostingSplit) {
                         String[] entrySplit = entry.split(",");
+                        // getting all the necessary information for the entity's rank
                         if (entrySplit[0].equals(document)) {
                             double tf = (Double.valueOf(entrySplit[1])) / Double.valueOf(Indexer.documentDictionary.get(document)[0]);
                             double N = Indexer.totalDocuments;
@@ -988,6 +993,7 @@ public class Controller {
                             break;
                         }
                     }
+                    // adding an array containing the entity's name and the entity's rank to the priority queue
                     entitiesSortingQueue.add(entityArr);
                 }
             }
