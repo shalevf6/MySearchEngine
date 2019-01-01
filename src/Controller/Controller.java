@@ -581,103 +581,108 @@ public class Controller {
             queryStart = allQueries.indexOf("<top>", queryLimit);
         }
 
-        System.out.println("Start thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+        // checks if the query file given had any queries in it
+        if (queries.size() == 0)
+            showErrorAlert("Query file doesn't have any queries, or the queries aren't in the right format!");
+        else {
+            System.out.println("Start thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
 
-        // reset the documents after filtering hash set if necessary
-        if (citiesToFilter.size() > 0)
-            Searcher.documentsAfterCityFiltering = getDocumentsAfterFiltering();
+            // reset the documents after filtering hash set if necessary
+            if (citiesToFilter.size() > 0)
+                Searcher.documentsAfterCityFiltering = getDocumentsAfterFiltering();
 
-        // create a thread to run each query
-        Searcher[] searchers = new Searcher[queriesToRun.size()];
-        Thread[] threadsForQueryRuns = new Thread[queriesToRun.size()];
-        int i = 0;
-        for (String[] query : queriesToRun) {
-            searchers[i] = new Searcher(query[1], query[2], stopWordsPath, semanticTreatmentCheckBox.isSelected());
-            threadsForQueryRuns[i] = new Thread(searchers[i]);
-            threadsForQueryRuns[i].start();
-            i++;
-            System.out.println("Start thread number " + i + ": " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
-        }
-
-        // wait until all the threads are finished
-        for (Thread t : threadsForQueryRuns) {
-            try {
-                t.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+            // create a thread to run each query
+            Searcher[] searchers = new Searcher[queriesToRun.size()];
+            Thread[] threadsForQueryRuns = new Thread[queriesToRun.size()];
+            int i = 0;
+            for (String[] query : queriesToRun) {
+                searchers[i] = new Searcher(query[1], query[2], stopWordsPath, semanticTreatmentCheckBox.isSelected());
+                threadsForQueryRuns[i] = new Thread(searchers[i]);
+                threadsForQueryRuns[i].start();
+                i++;
+                System.out.println("Start thread number " + i + ": " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
             }
-        }
 
-        System.out.println("Finish thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
-        // get the query results
-        i = 0;
-        for (Searcher searcher : searchers) {
-            queryResults.put(queriesToRun.get(i)[0], searcher.getRelevantDocuments());
-            i++;
-        }
-
-        ObservableList<String> list = FXCollections.observableArrayList(queries);
-        ListView<String> listView = new ListView<>(list);
-        Stage stage = new Stage();
-        stage.setTitle("Inserted Queries:");
-        stage.initModality(Modality.APPLICATION_MODAL);
-        StackPane pane = new StackPane();
-        Scene scene = new Scene(pane, 600, 500);
-        stage.setScene(scene);
-        Button saveButton = new Button("Save Results");
-        Button backButton = new Button("Back");
-        Button demiButton1 = new Button("button");
-        Button demiButton2 = new Button("button");
-        Button demiButton3 = new Button("button");
-        Button demiButton4 = new Button("button");
-        demiButton1.setVisible(false);
-        demiButton2.setVisible(false);
-        demiButton3.setVisible(false);
-        demiButton4.setVisible(false);
-        backButton.setWrapText(true);
-        saveButton.setWrapText(true);
-        VBox vBox = new VBox();
-        HBox hBox = new HBox();
-        hBox.setSpacing(10);
-        hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
-        vBox.getChildren().addAll(listView, hBox);
-        pane.getChildren().add(vBox);
-        saveButton.setOnAction(event -> {
-            DirectoryChooser directoryChooser = new DirectoryChooser();
-            directoryChooser.setTitle("Choose a path");
-            File selectedDirectory = directoryChooser.showDialog(stage);
-            if (selectedDirectory == null)
-                showErrorAlert("No directory was chosen!");
-            else {
-                File resultsFile;
-                int id = 1;
-                while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt")).exists())
-                    id++;
-                resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt");
+            // wait until all the threads are finished
+            for (Thread t : threadsForQueryRuns) {
                 try {
-                    resultsFile.createNewFile();
-                    BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
-                    for (String queryLine : queries) {
-                        int queryNumberIndex = queryLine.indexOf("Query Number: ");
-                        int queryIndex = queryLine.indexOf("Query: ");
-                        String query = queryLine.substring(queryIndex + 7, queryNumberIndex - 2);
-                        String queryNumber = queryLine.substring(queryNumberIndex + 14);
-                        Queue<String> relevantDocuments = queryResults.get(query);
-                        for (String docNumber : relevantDocuments) {
-                            toResultsFile.write(queryNumber + " 0 " + docNumber + " 0  0 id\n");
-                        }
-                    }
-                    toResultsFile.close();
-                } catch (IOException e) {
+                    t.join();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
-        });
-        backButton.setOnAction(event -> stage.close());
-        listView.setCellFactory(param -> new queriesCell());
-        // to free memory
-        Searcher.documentsAfterCityFiltering = new HashSet<>();
-        stage.show();
+
+            System.out.println("Finish thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+            // get the query results
+            i = 0;
+            for (Searcher searcher : searchers) {
+                queryResults.put(queriesToRun.get(i)[0], searcher.getRelevantDocuments());
+                i++;
+            }
+
+            ObservableList<String> list = FXCollections.observableArrayList(queries);
+            ListView<String> listView = new ListView<>(list);
+            Stage stage = new Stage();
+            stage.setTitle("Inserted Queries:");
+            stage.initModality(Modality.APPLICATION_MODAL);
+            StackPane pane = new StackPane();
+            Scene scene = new Scene(pane, 600, 500);
+            stage.setScene(scene);
+            Button saveButton = new Button("Save Results");
+            Button backButton = new Button("Back");
+            Button demiButton1 = new Button("button");
+            Button demiButton2 = new Button("button");
+            Button demiButton3 = new Button("button");
+            Button demiButton4 = new Button("button");
+            demiButton1.setVisible(false);
+            demiButton2.setVisible(false);
+            demiButton3.setVisible(false);
+            demiButton4.setVisible(false);
+            backButton.setWrapText(true);
+            saveButton.setWrapText(true);
+            VBox vBox = new VBox();
+            HBox hBox = new HBox();
+            hBox.setSpacing(10);
+            hBox.getChildren().addAll(demiButton1, demiButton2, demiButton3, backButton, saveButton);
+            vBox.getChildren().addAll(listView, hBox);
+            pane.getChildren().add(vBox);
+            saveButton.setOnAction(event -> {
+                DirectoryChooser directoryChooser = new DirectoryChooser();
+                directoryChooser.setTitle("Choose a path");
+                File selectedDirectory = directoryChooser.showDialog(stage);
+                if (selectedDirectory == null)
+                    showErrorAlert("No directory was chosen!");
+                else {
+                    File resultsFile;
+                    int id = 1;
+                    while ((new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt")).exists())
+                        id++;
+                    resultsFile = new File(selectedDirectory.getAbsolutePath() + "\\loadQueryResults" + id + ".txt");
+                    try {
+                        resultsFile.createNewFile();
+                        BufferedWriter toResultsFile = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultsFile)));
+                        for (String queryLine : queries) {
+                            int queryNumberIndex = queryLine.indexOf("Query Number: ");
+                            int queryIndex = queryLine.indexOf("Query: ");
+                            String query = queryLine.substring(queryIndex + 7, queryNumberIndex - 2);
+                            String queryNumber = queryLine.substring(queryNumberIndex + 14);
+                            Queue<String> relevantDocuments = queryResults.get(query);
+                            for (String docNumber : relevantDocuments) {
+                                toResultsFile.write(queryNumber + " 0 " + docNumber + " 0  0 id\n");
+                            }
+                        }
+                        toResultsFile.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            backButton.setOnAction(event -> stage.close());
+            listView.setCellFactory(param -> new queriesCell());
+            // to free memory
+            Searcher.documentsAfterCityFiltering = new HashSet<>();
+            stage.show();
+        }
     }
 
     /**
