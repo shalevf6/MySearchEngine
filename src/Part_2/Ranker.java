@@ -47,7 +47,6 @@ class Ranker {
     Queue<String> rank(String[] query) {
         Queue<String> rankToReturn = new LinkedList<>();
         HashMap[] allMaps = new HashMap[query.length];
-        //PriorityQueue[] allQueryTerms = new PriorityQueue[query.length];
         RandomAccessFile ToCheck;
         try {
             if (Indexer.isDictionaryStemmed)          //First,Open RandomAccessFile//
@@ -56,7 +55,7 @@ class Ranker {
                 ToCheck = new RandomAccessFile(Controller.postingPathText + "\\postingFilesWithoutStemming\\mainPosting.txt", "r");
             System.out.println("Start ranker data getting: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
             for (int i = 0; i < query.length; i++) {  //For every term in the query:
-                allMaps[i] = new HashMap<String,String[]>();
+                allMaps[i] = new HashMap<String, String[]>();
                 HashMap<String, String[]> allDocsInQuery = new HashMap<>(); //HashMap contains Document Number and all info that need for the calculation//
                 String temp = query[i];
                 int termToFind;
@@ -69,8 +68,7 @@ class Ranker {
                         if (Indexer.termDictionary.containsKey(temp.toLowerCase())) {
                             termToFind = Indexer.termDictionary.get(temp.toLowerCase())[2];
                             temp = temp.toLowerCase();
-                        }
-                        else
+                        } else
                             continue;
                     } else {
                         // term exists in term dictionary in upper case letters
@@ -88,6 +86,9 @@ class Ranker {
                 String[] allTermDocs = termLine.split(";"); //divides the info to all documents with this term to array of strings//
                 for (String allTermDoc : allTermDocs) {
                     String[] DocInfo = allTermDoc.split(","); //divides all info of this term in specific document to string array//
+                    // if there is a filtering by cities, makes sure the document we're about to rank contains one of the filtered cities
+                    if (Controller.citiesToFilter.size() > 0 && !Searcher.documentsAfterCityFiltering.contains(DocInfo[0]))
+                        continue;
                     //-----NOW WE WILL PUT THE INFO NEEDED IN THE STRING ARRAY----//
                     String[] docInfoToPut = new String[7];
                     docInfoToPut[0] = DocInfo[1]; //tf
@@ -106,7 +107,6 @@ class Ranker {
                     else
                         docInfoToPut[6] = "0";//date
                     allDocsInQuery.put(DocInfo[0], docInfoToPut);
-
                 }
                 allMaps[i] = allDocsInQuery;
             }
@@ -179,24 +179,13 @@ class Ranker {
 
             // adds all the documents to the final queue
             int i = 0;
-            // checks and filters the documents according to the cities the user chose
-            if (Controller.citiesToFilter.size() > 0) {
-                while (!docsAfterBM25.isEmpty() && i < 50) {
-                    String document = docsAfterBM25.poll()[0];
-                    if (containsCities(document)) {
-                        rankToReturn.add(document);
-                        i++;
-                    }
-                }
-                return rankToReturn;
+            // adding only the 50 highest ranking documents to the queue we return
+            while (!docsAfterBM25.isEmpty() && i < 50) {
+                rankToReturn.add(docsAfterBM25.poll()[0]);
+                i++;
             }
-            else {
-                while (!docsAfterBM25.isEmpty() && i < 50) {
-                    rankToReturn.add(docsAfterBM25.poll()[0]);
-                    i++;
-                }
-                return rankToReturn;
-            }
+            return rankToReturn;
+//            }
         } catch (IOException e) {
             e.printStackTrace();
             return rankToReturn;
@@ -256,58 +245,5 @@ class Ranker {
             ans = ans + tempAns;
         }
         return ans;
-    }
-
-    /**
-     * checks whether a given document has any of the cities the user chose to filter the query with
-     * @param document - a given document
-     * @return - true if it contains one of the cities to filter. Else - false
-     */
-    private boolean containsCities(String document) {
-        try {
-            RandomAccessFile raf = new RandomAccessFile(Controller.postingPathText + "\\postingForCities\\mainCityPosting.txt", "r");
-            Set<String> citiesToFilter = Controller.citiesToFilter.keySet();
-            String cityOfDocument = Indexer.documentDictionary.get(document)[2];
-            int pointerToCity;
-            // goes through all the cities to filter
-            boolean[] hasCities = new boolean[citiesToFilter.size()];
-            for (int i = 0; i < hasCities.length; i++)
-                hasCities[i] = false;
-            int i = 0;
-            for (String cityToFilter : citiesToFilter) {
-                // checks whether the current city is the document's city
-                if (cityOfDocument != null && cityOfDocument.equals(cityToFilter)) {
-                    hasCities[i] = true;
-                    i++;
-                    continue;
-                }
-                // checks if the city exists somewhere else in the document by accessing the cities posting file
-                pointerToCity = Integer.valueOf(Indexer.corpusCityDictionary.get(cityToFilter)[3]);
-                raf.seek(pointerToCity);
-                String cityPostingLine = raf.readLine();
-                String[] splitByDocs = (cityPostingLine.split(":"))[1].split(";");
-                for (String docFromPosting : splitByDocs) {
-                    if ((docFromPosting.split(",")[0]).equals(document)) {
-                        hasCities[i] = true;
-                        break;
-                    }
-                }
-                // to check whether there was a city with no appearances in the doc at all
-                if (hasCities[i])
-                    i++;
-                else
-                    return false;
-            }
-
-            // TODO : probably an unnecessary check. Consider removing it
-            for (i = 0; i < hasCities.length; i++)
-                if (!hasCities[i])
-                    return false;
-
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-            return false;
-        }
     }
 }

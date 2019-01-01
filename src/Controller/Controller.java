@@ -546,6 +546,7 @@ public class Controller {
     private void getAndRunQueries(int queryStart, StringBuilder allQueries) {
         LinkedList<String> queries = new LinkedList<>();
         queryResults = new HashMap<>();
+        Searcher.documentsAfterCityFiltering = new HashSet<>();
         ArrayList<String[]> queriesToRun = new ArrayList<>();
 
         System.out.println("Start Load: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
@@ -581,6 +582,10 @@ public class Controller {
         }
 
         System.out.println("Start thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
+
+        // reset the documents after filtering hash set if necessary
+        if (citiesToFilter.size() > 0)
+            Searcher.documentsAfterCityFiltering = getDocumentsAfterFiltering();
 
         // create a thread to run each query
         Searcher[] searchers = new Searcher[queriesToRun.size()];
@@ -670,12 +675,53 @@ public class Controller {
         });
         backButton.setOnAction(event -> stage.close());
         listView.setCellFactory(param -> new queriesCell());
+        // to free memory
+        Searcher.documentsAfterCityFiltering = new HashSet<>();
         stage.show();
     }
 
     /**
+     * creates a hash set of documents that contain the cities to filter the search results with
+     * @return - a hash set of documents that contain the cities to filter the search results with
+     */
+    private HashSet<String> getDocumentsAfterFiltering() {
+        HashSet<String> documentsAfterFiltering = new HashSet<>();
+        try {
+            RandomAccessFile raf = new RandomAccessFile(Controller.postingPathText + "\\postingForCities\\mainCityPosting.txt", "r");
+            Set<String> citiesToFilter = Controller.citiesToFilter.keySet();
+            ArrayList<HashSet<String>> cityDocumentsSetArray = new ArrayList<>();
+            // initializes all the hash sets for every city to filter
+            for (int i = 0; i < Controller.citiesToFilter.size(); i++) {
+                HashSet<String> toAdd = new HashSet<>();
+                cityDocumentsSetArray.add(toAdd);
+            }
+            int i = 0;
+            // goes through every city's posting line from the filtered cities
+            for (String city : citiesToFilter) {
+                int pointerToCity = Integer.valueOf(Indexer.corpusCityDictionary.get(city)[3]);
+                raf.seek(pointerToCity);
+                String cityPostingLine = raf.readLine();
+                String[] splitByDocs = (cityPostingLine.split(":"))[1].split(";");
+                // adds every document that has the city in it to the hash set
+                for (String docFromPosting : splitByDocs) {
+                    String document = docFromPosting.split(",")[0];
+                    cityDocumentsSetArray.get(i).add(document);
+                }
+                i++;
+            }
+            // create an intersection between every city's hash set to get only the documents that contains all of the cities
+            documentsAfterFiltering = cityDocumentsSetArray.remove(0);
+            while (cityDocumentsSetArray.size() > 0) {
+                documentsAfterFiltering.retainAll(cityDocumentsSetArray.remove(0));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return documentsAfterFiltering;
+    }
+
+    /**
      * shows a chosen query's results
-     *
      * @param lastItem - the query and query number line
      */
     private void showQuery(String lastItem) {
@@ -691,7 +737,7 @@ public class Controller {
             ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
             ListView<String> listView = new ListView<>(list);
             Stage stage = new Stage();
-            stage.setTitle("Results for the query: " + query);
+            stage.setTitle(relevantDocuments.size() + " results for the query: " + query);
             stage.initModality(Modality.APPLICATION_MODAL);
             StackPane pane = new StackPane();
             Scene scene = new Scene(pane, 600, 500);
@@ -726,6 +772,9 @@ public class Controller {
             if (queryPath.getText().equals(""))
                 showErrorAlert("You must fill a query in order to run it!");
             else {
+                // reset the documents after filtering hash set if necessary
+                if (citiesToFilter.size() > 0)
+                    Searcher.documentsAfterCityFiltering = getDocumentsAfterFiltering();
                 // gets the relevant documents for the query
                 Queue<String> relevantDocuments = runQuery(queryPath.getText());
 
@@ -736,7 +785,7 @@ public class Controller {
                     ObservableList<String> list = FXCollections.observableArrayList(relevantDocuments);
                     ListView<String> listView = new ListView<>(list);
                     Stage stage = new Stage();
-                    stage.setTitle("Results for the query: " + queryPath.getText());
+                    stage.setTitle(relevantDocuments.size() + " results for the query: " + queryPath.getText());
                     stage.initModality(Modality.APPLICATION_MODAL);
                     StackPane pane = new StackPane();
                     Scene scene = new Scene(pane, 600, 500);
@@ -801,6 +850,20 @@ public class Controller {
             citiesToFilter = new HashMap<>();
             ObservableList<String> citiesToShow = FXCollections.observableArrayList();
             Set<String> cities = Indexer.corpusCityDictionary.keySet();
+            PriorityQueue<String> sortedCities = new PriorityQueue<>(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    return o1.compareTo(o2);
+                }
+            });
+            // add all the cities to the priority queue for comparison
+            for (String city : cities) {
+                sortedCities.add(city);
+            }
+            while (!sortedCities.isEmpty())
+                citiesToShow.add(sortedCities.poll());
+            // add all the cities to the ListView object
+//            citiesToShow.addAll(sortedCities);
             ListView<String> listView = new ListView<>();
             listView.setItems(citiesToShow);
 
@@ -853,11 +916,6 @@ public class Controller {
 
             listView.setPrefHeight(800);
             listView.setPrefWidth(605);
-
-            // add all the cities to the ListView object
-            for (String city : cities) {
-                citiesToShow.add(city);
-            }
 
             listView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             Scene scene = new Scene(root, 805, 500);

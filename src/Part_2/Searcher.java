@@ -15,6 +15,7 @@ import java.util.*;
  */
 public class Searcher implements Runnable {
 
+    public static HashSet<String> documentsAfterCityFiltering;
     private String query;
     private String description;
     private String stopWordsPath;
