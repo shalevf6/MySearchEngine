@@ -16,12 +16,14 @@ import java.util.*;
 public class Searcher implements Runnable {
 
     private String query;
+    private String description;
     private String stopWordsPath;
     private boolean semanticTreatment;
     private Queue<String> relevantDocuments;
 
-    public Searcher(String query, String stopWordsPath, boolean semanticTreatment) {
+    public Searcher(String query, String description, String stopWordsPath, boolean semanticTreatment) {
         this.query = query;
+        this.description = description;
         this.stopWordsPath = stopWordsPath;
         this.semanticTreatment = semanticTreatment;
     }
@@ -33,7 +35,29 @@ public class Searcher implements Runnable {
         if (semanticTreatment)
             query = bigSemantic(query);
         System.out.println("Start searcher parse: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
-        Query queryObject = new Query(query);
+        Query queryObject;
+        // if the query is from a file of queries, we add to the processing of the query its description
+        if (description != null) {
+            String[] descriptionSplit = description.split(" ");
+            StringBuilder correctedDescription = new StringBuilder();
+            int i = 0;
+            while (i < descriptionSplit.length) {
+                descriptionSplit[i] = removeExtraDelimiters(descriptionSplit[i]);
+                String lowerCase = descriptionSplit[i].toLowerCase();
+                // removes redundant query terms from the description
+                if (lowerCase.equals("identify") || lowerCase.equals("documents") || lowerCase.equals("document") || lowerCase.equals("discuss") || lowerCase.equals("associated")
+                        || lowerCase.equals("issues")) {
+                    i++;
+                    continue;
+                }
+                correctedDescription.append(" ").append(descriptionSplit[i]);
+                i++;
+            }
+            description = correctedDescription.toString();
+            queryObject = new Query(query + " " + description);
+        }
+        else
+            queryObject = new Query(query);
         Parse parse = new Parse(stopWordsPath, true, queryObject, Indexer.isDictionaryStemmed);
         parse.run();
         Ranker ranker = new Ranker();
@@ -54,9 +78,9 @@ public class Searcher implements Runnable {
     }
 
     /**
-     * returns the query plus 3 similar words for each word in the query
+     * returns 3 similar words for each word in the query
      * @param str - a given string
-     * @return - the string with its semantic addition
+     * @return - its semantic addition
      */
     private String bigSemantic(String str) {
         String[] strings = str.split(" ");
@@ -64,15 +88,9 @@ public class Searcher implements Runnable {
         int i = 0;
         while (i < strings.length) {
             strings[i] = removeExtraDelimiters(strings[i]);
-            String lowerCase = strings[i].toLowerCase();
-            // removes redundant query terms from the description
-            if (lowerCase.equals("identify") || lowerCase.equals("documents")) {
-                i++;
-                continue;
-            }
             String result = semantic(strings[i]);
             if (result != null)
-                toReturn.append(" ").append(result);
+                toReturn.append(result);
             else
                 toReturn.append(strings[i]);
             i++;
@@ -82,7 +100,6 @@ public class Searcher implements Runnable {
 
     /**
      * removes any extra delimiters from a given word's start or end recursively
-     *
      * @param word - a given word
      * @return - the given word after the delimiter removal (if necessary)
      */
@@ -134,14 +151,13 @@ public class Searcher implements Runnable {
             JSONArray result = jsonObject.getJSONArray("result");
             int i = 0;
             for (Object obj : result) {
-                JSONObject data = (JSONObject) obj;
-                if (i == 2)
+                if (i == 1)
                     break;
+                JSONObject data = (JSONObject) obj;
                 res.append(" ").append(data.getString("word"));
                 i++;
             }
-            str = str + res;
-            return str;
+            return res.toString();
         } catch (IOException e) {
             return null;
         }

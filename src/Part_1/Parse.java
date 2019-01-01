@@ -1,6 +1,5 @@
 package Part_1;
 
-import Controller.Controller;
 import GeneralClasses.Document;
 import GeneralClasses.Query;
 import java.io.*;
@@ -66,7 +65,6 @@ public class Parse implements Runnable {
      * This is the main Parse Function
      */
     private void parseAll() {
-        boolean queryStop = false;
         while (true) {
             if (!docQueue.isEmpty() || query != null) {
                 String[] documents = null;
@@ -1795,9 +1793,16 @@ public class Parse implements Runnable {
             if (firstPartCounter > 0)
                 cityData[3] = 1;
             currentTermDictionary.put(city, cityData);
-            int[] corpusTermData = termDictionary.get(city);
-            corpusTermData[1] = corpusTermData[1] + 1;
-            corpusTermData[0] = corpusTermData[0] + 1;
+            if (!termDictionary.containsKey(city)) {
+                int[] corpusTermData = new int[3];
+                corpusTermData[0] = 1;
+                corpusTermData[1] = 1;
+                termDictionary.put(city, corpusTermData);
+            } else {
+                int[] corpusTermData = termDictionary.get(city);
+                corpusTermData[1] = corpusTermData[1] + 1;
+                corpusTermData[0] = corpusTermData[0] + 1;
+            }
         }
     }
 
