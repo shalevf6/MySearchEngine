@@ -102,22 +102,51 @@ The "Browse" button is for getting a file with queries in it, written in a forma
 was decided earlier. After choosing the file, the system will analyse all of the queries,
 a process that will take between 1 to 6 minutes for a file with 15 4 word queries (depends
 on your system and if you chose to use semantics).
-#### The new window that opens after the processing of the queries is complete:
+
+The query process can be done with / without semantic treatment, depending whether the user
+checked the "Semantic Treatment" checkbox or not.
+
+The query process can be done with filtering of cities, depending whether the user chose
+a city / cities after clicking the "Show & Choose Cities" button.
+#### The new window that opens after the conclusing of the processing of the queries:
 When the processing of the queries is done, a new window will open with the list of all
 the queries from the file with their unique query number, and a "Show Results" button beside
 each query. In addition, there is a "Save Results" button in the bottom of the window (its
 functionality is explained further down the ReadMe file).
 ##### The "Show Results" button:
-The "Show Results" button opens a new window with a list of all of the relevant documents' 
-numbers of the query, starting from the most relevant document at the top, and the least 
-relevant in the bottom. Beside each document there is a "Show Entities" button (its functionality
-is explained further down the ReadMe file).
+The "Show Results" button opens a new window with a list of the 50 (or less, if there are 
+less than 50) most relevant documents' numbers of the query, starting from the most relevant
+document at the top, and the least relevant in the bottom. Beside each document there is a
+"Show Entities" button (its functionality is explained further down the ReadMe file).
 ### The "Run" button:
+The "Run" button is for running a single query that was typed into the text box next to it. If
+there is no text in the text box, an appropriate error will pop.
 
+The query process can be done with / without semantic treatment, depending whether the user
+checked the "Semantic Treatment" checkbox or not.
+
+The query process can be done with filtering of cities, depending whether the user chose
+a city / cities after clicking the "Show & Choose Cities" button.
+
+#### The new window that opens after the conclusing of the processing of the query:
+When the processing of the query is done, a new window will open with the list of the 50 (or less,
+if there are less than 50) most relevant documents' numbers of the query, starting from the most
+relevant document at the top, and the least relevant in the bottom. Beside each document there is
+a "Show Entities" button (its functionality is explained further down the ReadMe file). In addition,
+there is a "Save Results" button in the bottom of the window (its functionality is explained further
+down the ReadMe file).
 ### The "Semantic Treatment" checkbox:
+If checked, it will add semantic treatment to the next quey run / load.
 
+If unchecked, it will not add semantic treatment to the next quey run / load.
 ### The "Show & Choose Cities" button:
+The "Show & Choose Cities" button opens a new window with a list of all of the cities that are
+in the corpus. You can choose one more city, using the control key, and than click on the
+"Confirm Selection" to confirm all of the cities you selected will use as filters for the
+processing of the query / query file.
 
+If you close the new window or click "Confirm Selection" with no cities selected, there will be
+no filtering of cities for the processing of the query.
 ### 2 buttons that appear after processing a query / query file
 #### The "Show Entities" button:
 The "Show Entities" button opens a new window with a list of the 5 (or less, if there were no
@@ -144,26 +173,30 @@ computer, under the path that was given as input in the lower "Browse" button or
 "Load Dictionary" button. I will now explain the structure of those files.
 
 If you were loading / indexing a corpus with stemming, a directory named "postingFilesWithStemming"
-will be created, and under it 4 files:
-1. mainPosting - which is the posting file for all the terms in the dictionary (stemmed). can also be
+will be created, and under it 5 files:
+1. mainPosting.txt - which is the posting file for all the terms in the dictionary (stemmed). can also be
 		 viewed as text.
 2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
 3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
 4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
 		       as an object, for when you click the "Show Dictionary" button.
+5. documentToEntitiesPosting.txt - which is a posting file from documents to all the entities in the
+				   documents (stemmed).
 
 If you were loading / indexing a corpus without stemming, a directory named "postingFilesWithoutStemming"
-will be created, and under it 4 files:
-1. mainPosting - which is the posting file for all the terms in the dictionary (not stemmed). can also
+will be created, and under it 5 files:
+1. mainPosting.txt - which is the posting file for all the terms in the dictionary (not stemmed). can also
 		 be viewed as text.
 2. termDictionary - which is a hashMap of all the terms as keys that is saved as an object.
 3. documentDictionary - which is a hashMap of all the documents as keys that is saved as an object.
 4. dictionaryForShow - that is a LinkedList<String> of all the terms in the dictionary, that is saved
 		       as an object, for when you click the "Show Dictionary" button.
+5. documentToEntitiesPosting.txt - which is a posting file from documents to all the entities in the
+				   documents (not stemmed).
 					   
 Additionaly, there will be another directory named "postingForCities" that will be created once after
 the first Indexing / Loading, with the 2 following files inside it:
-1. mainCityPosting - which is the posting file for all the cities in the dictionary. can also be
+1. mainCityPosting.txt - which is the posting file for all the cities in the dictionary. can also be
 		     viewed as text.
 2. cityDictionary - which is a hashMap of all the cities as keys that is saved as an object.
 
@@ -177,6 +210,8 @@ https://github.com/shalevf6/MySearchEngine
 A geobytes API for getting a city's details: http://geobytes.com/get-city-details-api/
 
 The Porter's Stemmer: http://snowball.tartarus.org/algorithms/porter/stemmer.html
+
+A datamuse API for getting semantic additions for a query: https://www.datamuse.com/api/
 
 ## Built With
 JavaFX
