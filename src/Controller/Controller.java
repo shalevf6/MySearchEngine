@@ -549,8 +549,6 @@ public class Controller {
         Searcher.documentsAfterCityFiltering = new HashSet<>();
         ArrayList<String[]> queriesToRun = new ArrayList<>();
 
-        System.out.println("Start Load: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
-
         while (queryStart != -1) {
             int queryLimit = allQueries.indexOf("</top>", queryStart);
 
@@ -585,8 +583,6 @@ public class Controller {
         if (queries.size() == 0)
             showErrorAlert("Query file doesn't have any queries, or the queries aren't in the right format!");
         else {
-            System.out.println("Start thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
-
             // reset the documents after filtering hash set if necessary
             if (citiesToFilter.size() > 0)
                 Searcher.documentsAfterCityFiltering = getDocumentsAfterFiltering();
@@ -600,7 +596,6 @@ public class Controller {
                 threadsForQueryRuns[i] = new Thread(searchers[i]);
                 threadsForQueryRuns[i].start();
                 i++;
-                System.out.println("Start thread number " + i + ": " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
             }
 
             // wait until all the threads are finished
@@ -612,7 +607,6 @@ public class Controller {
                 }
             }
 
-            System.out.println("Finish thread creation: " + (System.nanoTime() - time) * Math.pow(10, -9)); // TODO : DELETE
             // get the query results
             i = 0;
             for (Searcher searcher : searchers) {

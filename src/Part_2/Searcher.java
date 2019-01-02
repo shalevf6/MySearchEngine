@@ -35,7 +35,6 @@ public class Searcher implements Runnable {
     private void processQuery() {
         if (semanticTreatment)
             query = bigSemantic(query);
-        System.out.println("Start searcher parse: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
         Query queryObject;
         // if the query is from a file of queries, we add to the processing of the query its description
         if (description != null) {
@@ -62,7 +61,6 @@ public class Searcher implements Runnable {
         Parse parse = new Parse(stopWordsPath, true, queryObject, Indexer.isDictionaryStemmed);
         parse.run();
         Ranker ranker = new Ranker();
-        System.out.println("End searcher parse: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
 
         // turn all the query terms in to an array for ranking
         HashMap<String, int[]> queryDictionary = queryObject.getQueryTermDictionary();
@@ -74,7 +72,6 @@ public class Searcher implements Runnable {
             i++;
         }
 
-        System.out.println("Start searcher rank: " + (System.nanoTime() - Controller.time) * Math.pow(10, -9)); // TODO : DELETE
         relevantDocuments = ranker.rank(queryTerms);
     }
 

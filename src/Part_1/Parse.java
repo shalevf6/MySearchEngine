@@ -95,7 +95,6 @@ public class Parse implements Runnable {
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                    System.out.println(document.getDocId());
                     documents = document.getDocText();
                     if (documents == null)
                         turnToDocument = false;
