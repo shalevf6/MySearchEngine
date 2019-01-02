@@ -6,7 +6,9 @@ that answers the rules given by the course's stuff.
 ## Setup
 The application was written in Java, so see that Java is installed on your computer.
 
-In order to run the application, simply download the file "MySearchEngine.jar" and double click it.
+In order to run the application, simply download the files "MySearchEngine.jar", "json-20160810.jar", make
+sure the file "json-20160810.jar" is in the same folder as the file "MySearchEngine.jar", and double click
+on "MySearchEngine.jar".
 
 ## Part 1
 ### There are 2 "Browse" buttons that open up a File Chooser window:
