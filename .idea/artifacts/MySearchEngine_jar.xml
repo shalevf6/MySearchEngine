@@ -1,8 +1,11 @@
 <component name="ArtifactManager">
-  <artifact type="jar" build-on-make="true" name="MySearchEngine:jar">
+  <artifact name="MySearchEngine:jar">
     <output-path>$PROJECT_DIR$/out/artifacts/MySearchEngine_jar</output-path>
-    <root id="archive" name="MySearchEngine.jar">
-      <element id="module-output" name="MySearchEngine" />
+    <root id="root">
+      <element id="archive" name="MySearchEngine.jar">
+        <element id="module-output" name="MySearchEngine" />
+      </element>
+      <element id="library" level="project" name="Maven: org.json:json:20160810" />
     </root>
   </artifact>
 </component>
