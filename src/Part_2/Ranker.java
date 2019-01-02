@@ -24,7 +24,7 @@ class Ranker {
     /**
      * calculate corpus average document length
      *
-     * @param numberOfDocs
+     * @param numberOfDocs is the number of documents in the corpus
      * @return the average document length in the corpus.
      */
     private double calcAvgDocLength(double numberOfDocs) {
@@ -200,7 +200,7 @@ class Ranker {
      * @param docLength    document length
      * @param avgDocLength average all document length
      * @param docFrequency number of documents contains Q_i
-     * @return idf
+     * @return idf is the rank of the query term.
      */
     private double getRankIdf(double tf, double numOfDocs, double docLength, double avgDocLength, double docFrequency) {
         double k_1 = 1.2;
