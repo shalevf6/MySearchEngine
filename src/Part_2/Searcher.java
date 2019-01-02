@@ -150,7 +150,7 @@ public class Searcher implements Runnable {
             JSONArray result = jsonObject.getJSONArray("result");
             int i = 0;
             for (Object obj : result) {
-                if (i == 1)
+                if (i == 2)
                     break;
                 JSONObject data = (JSONObject) obj;
                 res.append(" ").append(data.getString("word"));
