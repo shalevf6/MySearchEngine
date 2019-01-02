@@ -87,7 +87,7 @@ public class Searcher implements Runnable {
         while (i < strings.length) {
             strings[i] = removeExtraDelimiters(strings[i]);
             String result = semantic(strings[i]);
-            if (result != null)
+            if (result != null && !result.equals(""))
                 toReturn.append(result);
             else
                 toReturn.append(strings[i]);
@@ -128,6 +128,7 @@ public class Searcher implements Runnable {
      */
     private String semantic(String str) {
         StringBuilder res = new StringBuilder();
+        res.append(str);
         String[] arr = str.split(" ");
         String toApi = "";
         for (int i = 0; i < arr.length; i++) {
